@@ -28,8 +28,8 @@ export function EventCard({ e }: { e: Row }) {
   const { day, month } = faDayMonth(e.startAt);
   return (
     <Link to={`/events/${s(e.slug)}`} className="group flex gap-4 rounded-2xl border bg-card p-4 transition hover:border-primary/40 hover:shadow-[var(--shadow-md)]">
-      <div className="flex w-16 shrink-0 flex-col items-center justify-center rounded-xl bg-secondary py-3 text-primary">
-        <span className="text-2xl font-black leading-none">{day}</span>
+      <div className="flex w-16 shrink-0 flex-col items-center justify-center girih-gold rounded-md bg-primary py-3 text-primary-foreground ring-1 ring-accent/50 ring-offset-2 ring-offset-card">
+        <span className="font-display text-2xl font-bold leading-none">{day}</span>
         <span className="mt-1 text-xs font-semibold">{month}</span>
       </div>
       <div className="min-w-0 flex-1">

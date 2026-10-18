@@ -7,6 +7,7 @@ import { Button } from '@project/components/ui/button';
 import { cn } from '@project/components/lib/utils';
 import { faNum } from '../../lib/format';
 import { IMG, fallbackPhoto } from '../../lib/brand';
+import { Shamseh } from './Ornaments';
 
 export function Cover({ src, alt, label, className }: { src?: unknown; alt: string; label?: string; className?: string }) {
   if (src) return <img src={String(src)} alt={alt} loading="lazy" className={cn('h-full w-full object-cover', className)} />;
@@ -21,12 +22,15 @@ export function Cover({ src, alt, label, className }: { src?: unknown; alt: stri
 
 export function SectionHeading({ eyebrow, title, action }: { eyebrow?: string; title: string; action?: ReactNode }) {
   return (
-    <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-      <div>
-        {eyebrow && <p className="mb-2 text-sm font-semibold text-accent">{eyebrow}</p>}
-        <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">{title}</h2>
+    <div className="mb-10">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          {eyebrow && <p className="mb-3 flex items-center gap-2 text-xs font-bold tracking-wide text-accent"><Shamseh className="h-3.5 w-3.5" />{eyebrow}</p>}
+          <h2 className="font-display text-2xl font-bold leading-snug sm:text-[2rem]">{title}</h2>
+        </div>
+        {action}
       </div>
-      {action}
+      <div aria-hidden className="mt-5 flex items-center gap-2"><span className="h-[3px] w-12 bg-accent" /><span className="h-px flex-1 bg-border" /></div>
     </div>
   );
 }
@@ -34,21 +38,24 @@ export function SectionHeading({ eyebrow, title, action }: { eyebrow?: string; t
 export function PageHero({ title, subtitle, children, image = IMG.campusAlt }: { title: string; subtitle?: string; children?: ReactNode; image?: string }) {
   return (
     <section className="relative isolate overflow-hidden bg-primary text-primary-foreground">
-      <img src={image} alt="" className="absolute inset-0 -z-20 h-full w-full object-cover" />
-      <div className="absolute inset-0 -z-10 bg-gradient-to-l from-primary via-primary/90 to-primary/60" />
-      <div className="container-page py-14 sm:py-20">
-        <div className="mb-4 flex items-center gap-2 text-xs font-semibold text-accent"><span className="h-px w-8 bg-accent" />دانشگاه شمال</div>
-        <h1 className="text-3xl font-black sm:text-[2.6rem] sm:leading-tight">{title}</h1>
-        {subtitle && <p className="mt-4 max-w-2xl leading-8 text-primary-foreground/80">{subtitle}</p>}
+      <img src={image} alt="" className="absolute inset-0 -z-30 h-full w-full object-cover opacity-35 mix-blend-luminosity" />
+      <div className="absolute inset-0 -z-20 bg-gradient-to-l from-primary via-primary/85 to-primary/40" />
+      <div aria-hidden className="girih-gold absolute inset-y-0 end-0 -z-10 w-1/2 opacity-70 [mask-image:linear-gradient(to_right,black,transparent)]" />
+      <div aria-hidden className="pointer-events-none absolute inset-3 -z-10 border border-accent/25 sm:inset-5" />
+      <div className="container-page relative py-16 sm:py-24">
+        <div className="mb-5 flex items-center gap-3 text-xs font-bold tracking-wide text-accent"><Shamseh className="h-4 w-4" />دانشگاه شمال<span className="h-px w-16 bg-accent/60" /></div>
+        <h1 className="font-display max-w-3xl text-3xl font-bold leading-snug sm:text-[2.8rem] sm:leading-[1.4]">{title}</h1>
+        {subtitle && <p className="mt-5 max-w-2xl leading-8 text-primary-foreground/80">{subtitle}</p>}
         {children}
       </div>
+      <div aria-hidden className="h-1.5 bg-accent" />
     </section>
   );
 }
 
 export function EmptyState({ title, text, action }: { title: string; text?: string; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center rounded-2xl border border-dashed bg-card px-6 py-14 text-center">
+    <div className="flex flex-col items-center girih-ink rounded-lg border border-dashed bg-card px-6 py-14 text-center">
       <div className="mb-4 rounded-full bg-secondary p-4 text-primary"><Inbox className="h-6 w-6" /></div>
       <p className="font-bold">{title}</p>
       {text && <p className="mt-2 max-w-md text-sm text-muted-foreground leading-7">{text}</p>}

@@ -32,10 +32,10 @@ export default function Home() {
       <HomeHero title={st.heroTitle} subtitle={st.heroSubtitle} stats={d?.stats as Row | undefined} loading={q.isLoading} />
 
       <section className="container-page -mt-8 relative z-10">
-        <div className="grid grid-cols-2 gap-3 rounded-2xl border bg-card p-3 shadow-[var(--shadow-md)] md:grid-cols-4">
+        <div className="frame-double grid grid-cols-2 gap-3 rounded-lg border bg-card p-3 shadow-[var(--shadow-md)] md:grid-cols-4">
           {QUICK.map(({ to, label, icon: Icon }) => (
             <Link key={to} to={to} className="flex items-center gap-3 rounded-xl p-3 transition hover:bg-secondary">
-              <span className="rounded-lg bg-secondary p-2 text-primary"><Icon className="h-5 w-5" /></span>
+              <span className="rounded-md bg-primary p-2 text-accent"><Icon className="h-5 w-5" /></span>
               <span className="text-sm font-semibold">{label}</span>
             </Link>
           ))}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Menu, X, FlaskConical } from 'lucide-react';
@@ -33,13 +33,13 @@ export function Brand({ light }: { light?: boolean }) {
 function Header() {
   const [open, setOpen] = useState(false);
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-t-[3px] border-t-accent bg-background/90 backdrop-blur-md">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:end-2 focus:top-2 focus:rounded focus:bg-card focus:p-2">پرش به محتوا</a>
       <div className="container-page flex h-[72px] items-center justify-between gap-4">
         <Brand />
         <nav aria-label="ناوبری اصلی" className="hidden items-center gap-1 lg:flex">
           {NAV.map((n) => (
-            <NavLink key={n.to} to={n.to} className={({ isActive }) => cn('rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground', isActive && 'bg-secondary text-primary')}>{n.label}</NavLink>
+            <NavLink key={n.to} to={n.to} className={({ isActive }) => cn('relative rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition hover:text-foreground', isActive && 'text-primary after:absolute after:inset-x-3 after:-bottom-[15px] after:h-0.5 after:bg-accent')}>{n.label}</NavLink>
           ))}
         </nav>
         <div className="flex items-center gap-2">
@@ -74,6 +74,11 @@ function DemoBanner() {
 }
 
 export default function PublicLayout() {
+  // Academic theme applies to the public site only (on <html> so dialogs/popovers inherit it)
+  useEffect(() => {
+    document.documentElement.classList.add('theme-academic');
+    return () => document.documentElement.classList.remove('theme-academic');
+  }, []);
   return (
     <div className="flex min-h-screen flex-col">
       <DemoBanner />
