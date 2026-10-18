@@ -21,11 +21,11 @@ function confirmPage(token: string, redirect: string) {
 <style>body{font-family:Vazirmatn,Tahoma,sans-serif;background:#f4f1e8;color:#14271f;display:grid;place-items:center;min-height:100vh;margin:0}main{background:#fff;padding:32px;border-radius:16px;max-width:380px;text-align:center;box-shadow:0 10px 30px #0001}button{background:#1a4d3e;color:#fff;border:0;padding:12px 28px;border-radius:10px;font:inherit;font-size:16px;cursor:pointer}button:focus-visible{outline:3px solid #c9a227;outline-offset:2px}</style></head>
 <body><main><h1 style="font-size:20px">ورود به پنل هم‌دانشگاهی</h1><p>برای تکمیل ورود، دکمه زیر را بزنید.</p>
 <form method="post" action="/api/auth/verify"><input type="hidden" name="token" value="${esc(token)}"><input type="hidden" name="redirect" value="${esc(redirect)}"><button type="submit">تأیید و ورود</button></form></main></body></html>`;
-  return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'referrer-policy': 'no-referrer' } });
+  return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'referrer-policy': 'same-origin' } });
 }
 
 function originOf(req: Request) {
-  return (process.env.SITE_URL || process.env.URL || new URL(req.url).origin).replace(/\/$/, '');
+  return (new URL(req.url).origin || process.env.SITE_URL || process.env.URL || '').replace(/\/$/, '');
 }
 
 // Reject cross-site state-changing requests (cookies are SameSite=Lax; this is defence in depth)
