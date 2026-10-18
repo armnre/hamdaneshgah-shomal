@@ -11,13 +11,8 @@
   directory = "netlify/functions"
   node_bundler = "esbuild"
 
-# API first: /api/* must never fall through to the SPA index.html below.
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api/:splat"
-  status = 200
-  force = true
-
+# /api/* is served by the api function itself (config.path in deploy/server/handler.ts);
+# function routes take precedence over the SPA fallback below.
 [[redirects]]
   from = "/*"
   to = "/index.html"
