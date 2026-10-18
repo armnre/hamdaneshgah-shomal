@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, FlaskConical } from 'lucide-react';
 import { SITE_NAME } from '../../lib/brand';
 import { LogoWordmark } from './Logo';
 import { getSiteSettings } from 'zitejs/api';
@@ -13,6 +13,7 @@ export const NAV = [
   { to: '/associations', label: 'انجمن‌های علمی' },
   { to: '/faculties', label: 'دانشکده‌ها' },
   { to: '/structure', label: 'ساختار انجمن‌ها' },
+  { to: '/elections', label: 'انتخابات' },
   { to: '/news', label: 'اخبار و اطلاعیه‌ها' },
   { to: '/events', label: 'رویدادها' },
 ];
@@ -59,9 +60,23 @@ function Header() {
   );
 }
 
+function DemoBanner() {
+  const { data } = useSettings();
+  if (!data?.hasDemo) return null;
+  return (
+    <div role="note" className="border-b border-accent/40 bg-accent/15 text-sm">
+      <div className="container-page flex items-center gap-2 py-2 font-medium">
+        <FlaskConical className="h-4 w-4 shrink-0 text-accent-foreground" aria-hidden />
+        <span><strong>داده‌ی نمایشی:</strong> بخشی از محتوای این پیش‌نمایش ساختگی است و با برچسب «نمایشی» مشخص شده؛ هیچ نتیجه‌ی نمایشی رسمی نیست.</span>
+      </div>
+    </div>
+  );
+}
+
 export default function PublicLayout() {
   return (
     <div className="flex min-h-screen flex-col">
+      <DemoBanner />
       <Header />
       <main id="main" className="flex-1"><Outlet /></main>
       <Footer />

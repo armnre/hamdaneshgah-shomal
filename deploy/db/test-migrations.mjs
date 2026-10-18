@@ -169,3 +169,4 @@ await db.exec(`INSERT INTO "EligibleVoters"(id,"studentNumber",election,"nationa
 const late = await castTx({ sessionHash: '6c'.repeat(32), electionId: 'e4', code: 'ZZZZZ-11111', ballotUuid: '00000000-0000-4000-8000-000000000099', candidateIds: 'k0', votedOn: today });
 console.log(late === 'invalid_session' ? 'pass: vote after close_election rejected' : (process.exitCode = 1, `FAIL: late vote ${late}`));
 console.log(process.exitCode ? 'MIGRATION TESTS FAILED' : 'ALL MIGRATION TESTS PASSED');
+try { await db.exec(`UPDATE "Elections" SET "isDemo" = true WHERE id = 'e4'`); console.log('FAIL: demo row accepted on Neon'); process.exitCode = 1; } catch { console.log('pass (rejected): demo data on Neon (0007)'); }

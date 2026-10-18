@@ -198,3 +198,6 @@ export function secureShuffle<T>(items: readonly T[]): T[] {
   }
   return a;
 }
+
+/** Stages in which official results are public (results are never shown before publication). */
+export const RESULT_STAGES = ['Results Published', 'Archived'] as const;

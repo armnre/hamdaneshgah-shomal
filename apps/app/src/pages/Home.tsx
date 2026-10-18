@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Users, Building2, Newspaper, CalendarDays, Vote, BookOpen, Megaphone } from 'lucide-react';
 import HomeHero from '../components/site/HomeHero';
-import { getPublicHome } from 'zitejs/api';
+import { getPublicHome, listPublicElections } from 'zitejs/api';
+import { HomeElections } from '../components/site/ElectionCards';
 import { Button } from '@project/components/ui/button';
 import { Skeleton } from '@project/components/ui/skeleton';
 import { AssociationCard, EventCard, NewsCard } from '../components/site/cards';
@@ -104,15 +105,9 @@ function HomeSections({ d, loading, st }: { d?: Row; loading: boolean; st: Recor
       </section>
 
 
-      <section className="container-page mt-20 grid gap-6 md:grid-cols-2">
-        <div className="rounded-3xl border bg-card p-8">
-          <Vote className="h-8 w-8 text-accent" />
-          <h2 className="mt-4 text-xl font-extrabold">انتخابات انجمن‌های علمی</h2>
-          <p className="mt-3 leading-8 text-muted-foreground">{st.electionNote}</p>
-          <span className="mt-5 inline-flex rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
-            {st.electionStatus === 'none' || !st.electionStatus ? 'در دست توسعه — فاز دوم' : st.electionStatus}
-          </span>
-        </div>
+      <ElectionsBlock />
+
+      <section className="container-page mt-20 grid gap-6">
         <div className="rounded-3xl bg-primary p-8 text-primary-foreground">
           <Megaphone className="h-8 w-8 text-accent" />
           <h2 className="mt-4 text-xl font-extrabold">مأموریت ما</h2>
@@ -121,5 +116,18 @@ function HomeSections({ d, loading, st }: { d?: Row; loading: boolean; st: Recor
         </div>
       </section>
     </>
+  );
+}
+
+function ElectionsBlock() {
+  const q = useQuery({ queryKey: ['publicElections'], queryFn: () => listPublicElections({}) });
+  const list = q.data?.elections ?? [];
+  return (
+    <section className="container-page mt-20" aria-labelledby="home-elections">
+      <SectionHeading eyebrow="انتخابات" title="انتخابات انجمن‌های علمی" action={<Button asChild variant="ghost"><Link to="/elections">همه انتخابات<ArrowLeft className="me-1 h-4 w-4" /></Link></Button>} />
+      {q.isLoading ? <Skeleton className="h-72 rounded-3xl" /> : list.length === 0 ? (
+        <EmptyState title="هنوز انتخاباتی اعلام نشده است" text="زمان‌بندی ثبت‌نام نامزدها و رأی‌گیری پس از تصویب در اینجا منتشر می‌شود." />
+      ) : <HomeElections list={list} />}
+    </section>
   );
 }

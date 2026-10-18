@@ -5,6 +5,7 @@ import { Users, Newspaper, FileEdit, CalendarDays, Inbox, BookOpen } from 'lucid
 import { adminDashboard } from 'zitejs/api';
 import { Skeleton } from '@project/components/ui/skeleton';
 import { useAccess } from './AdminApp';
+import DemoDataCard from './DemoDataCard';
 import { ErrorState } from '../components/site/ui';
 import { errMsg, faDate, faNum, ROLE_LABEL } from '../lib/format';
 
@@ -49,6 +50,7 @@ export default function Dashboard() {
           </div>
         </section>
         <section className="grid gap-6">
+          {access.role === 'Super Admin' && <DemoDataCard />}
           {access.role !== 'Association Manager' && (
             <div className="rounded-2xl border bg-card p-5">
               <h2 className="font-bold">پیام‌های جدید</h2>
