@@ -13,7 +13,7 @@ const fail = (code: string, message: string) => json({ error: { code, userFacing
 
 const clientIp = (req: Request) => req.headers.get('x-nf-client-connection-ip') ?? req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
 // Public (unauthenticated) endpoints that write data get a per-IP limit
-const PUBLIC_WRITE: Record<string, number> = { submitContact: 10 };
+const PUBLIC_WRITE: Record<string, number> = { submitContact: 10, verifyVoter: 60, castVote: 60 };
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 function confirmPage(token: string, redirect: string) {
@@ -47,7 +47,7 @@ async function runEndpoint(req: Request, name: string) {
   // Never pass unvalidated input to an endpoint
   if (parsed && !parsed.success) return fail('BAD_REQUEST', 'اطلاعات ارسالی معتبر نیست.');
   try {
-    const data = await ep.execute({ input: parsed ? parsed.data : raw, context: { user: user ?? undefined } });
+    const data = await ep.execute({ input: parsed ? parsed.data : raw, context: { user: user ?? undefined, ip: clientIp(req) } });
     return json({ data: data ?? null });
   } catch (e) {
     if (e instanceof ZiteError) {

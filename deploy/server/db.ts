@@ -1,6 +1,8 @@
 // Drop-in replacement for `zitejs/db` on Netlify: the same table-client + sql() API,
 // backed by Neon Postgres. The app's endpoint files run against it unchanged.
 import { neon } from '@neondatabase/serverless';
+// @ts-expect-error plain ESM module shared with the PGlite test
+import { castVoteStatements } from './voteSql.mjs';
 
 type Kind = 'text' | 'bool' | 'num' | 'ts' | 'link' | 'auto';
 type Row = Record<string, unknown>;
@@ -21,6 +23,13 @@ const SCHEMA: Record<string, Record<string, Kind>> = {
   AssociationMajors: { label: 'text', associationYear: 'link', major: 'link', needsUniversityApproval: 'bool' },
   Positions: { name: 'text', scope: 'text', rank: 'num' },
   LeadershipTerms: { label: 'text', personName: 'text', personEmail: 'text', academicYear: 'link', associationYear: 'link', position: 'link', status: 'text', startDate: 'ts', endDate: 'ts', publishName: 'bool', notes: 'text' },
+  Elections: { title: 'text', associationYear: 'link', status: 'text', candidacyStart: 'ts', candidacyEnd: 'ts', votingStart: 'ts', votingEnd: 'ts', seats: 'num', maxChoicesPerVoter: 'num', description: 'text' },
+  Candidates: { fullName: 'text', election: 'link', studentNumber: 'text', status: 'text', statement: 'text', photoUrl: 'text', reviewNote: 'text' },
+  EligibleVoters: { studentNumber: 'text', election: 'link', major: 'link', fullName: 'text', majorName: 'text', nationalIdHash: 'text', nationalIdLast4: 'text' },
+  VoterParticipation: { label: 'text', election: 'link', voter: 'link', votedOn: 'ts' },
+  Ballots: { receipt: 'text', election: 'link', candidateIds: 'text' },
+  VoterSessions: { tokenHash: 'text', election: 'link', voter: 'link', expiresAt: 'ts' },
+  VoterAttempts: { bucket: 'text', windowStart: 'ts', failures: 'num' },
   ContactMessages: { subject: 'text', senderName: 'text', senderEmail: 'text', message: 'text', status: 'text', receivedAt: 'auto' },
 };
 
@@ -157,6 +166,25 @@ export const zite = {
   associationMajors: tableClient('AssociationMajors'),
   positions: tableClient('Positions'),
   leadershipTerms: tableClient('LeadershipTerms'),
+  elections: tableClient('Elections'),
+  candidates: tableClient('Candidates'),
+  eligibleVoters: tableClient('EligibleVoters'),
+  voterParticipation: tableClient('VoterParticipation'),
+  ballots: tableClient('Ballots'),
+  voterSessions: tableClient('VoterSessions'),
+  voterAttempts: tableClient('VoterAttempts'),
+  /** Participation + ballot + session close in ONE Postgres transaction (see server/voteSql.mjs). */
+  async castBallotAtomic(p: { sessionHash: string; electionId: string; code: string; ballotUuid: string; candidateIds: string; votedOn: string }) {
+    const sql = db();
+    const stmts = (castVoteStatements(p) as [string, unknown[]][]).map(([text, params]) => sql.query(text, params));
+    try {
+      const results = (await sql.transaction(stmts)) as unknown as Row[][];
+      return results[3]?.[0]?.ok ? 'ok' as const : 'invalid_session' as const;
+    } catch (e) {
+      if ((e as { code?: string }).code === '23505') return 'already_voted' as const;
+      throw e;
+    }
+  },
   async sql(p: { query: string; params?: unknown[] }) {
     if (!/^\s*(select|with)\b/i.test(p.query)) throw new Error('zite.sql is read-only');
     return { rows: await query(p.query, p.params ?? []) };

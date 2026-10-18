@@ -61,3 +61,56 @@ test('national id checksum + persian digits', () => {
   assert.equal(normalizeNationalId('1111111111'), null);
   assert.equal(normalizeStudentNumber('۴۰۱۱۲۳۴۵'), '40112345');
 });
+
+// ───────── Phase 3: voting security ─────────
+import { readPepper, nationalIdHmac, timingSafeEqual, maskStudentNumber, resolveMajor, normalizeMajorName, participationCode, tehranDate, attemptWindowStart } from '../src/lib/policy.ts';
+
+const PEPPER = 'test-only-pepper-0123456789abcdef-NOT-REAL';
+
+test('pepper: missing or short → null (fail closed); both names accepted', () => {
+  assert.equal(readPepper({}), null);
+  assert.equal(readPepper({ ZITE_VOTER_PEPPER: 'short' }), null);
+  assert.equal(readPepper({ ZITE_VOTER_PEPPER: PEPPER }), PEPPER);
+  assert.equal(readPepper({ VOTER_PEPPER: PEPPER }), PEPPER);
+});
+
+test('national ID HMAC: keyed, per-election, 64 hex, raw ID not contained', async () => {
+  const a = await nationalIdHmac(PEPPER, 'e1', '0013542419');
+  assert.match(a, /^[0-9a-f]{64}$/);
+  assert.ok(!a.includes('0013542419'));
+  assert.notEqual(a, await nationalIdHmac(PEPPER, 'e2', '0013542419'));
+  assert.notEqual(a, await nationalIdHmac(PEPPER + 'x', 'e1', '0013542419'));
+  assert.equal(a, await nationalIdHmac(PEPPER, 'e1', '0013542419'));
+});
+
+test('timingSafeEqual', () => {
+  assert.ok(timingSafeEqual('abc', 'abc'));
+  assert.ok(!timingSafeEqual('abc', 'abd'));
+  assert.ok(!timingSafeEqual('abc', 'abcd'));
+});
+
+test('student number masking keeps only 2+2 digits', () => {
+  assert.equal(maskStudentNumber('40012345'), '40****45');
+  assert.equal(maskStudentNumber('123'), '****');
+});
+
+test('major → association: physical education and sport sciences both resolve to the sport-sciences major', () => {
+  const mapped = [{ id: 'sport', name: 'علوم ورزشی' }];
+  assert.equal(resolveMajor('علوم ورزشی', mapped), 'sport');
+  assert.equal(resolveMajor('تربیت بدنی', mapped), 'sport');
+  assert.equal(resolveMajor('تربيت  بدني', mapped), 'sport'); // Arabic ye + double space
+  assert.equal(resolveMajor('مهندسی کامپیوتر', mapped), null); // not mapped to this association → rejected
+  assert.equal(resolveMajor('', mapped), null);
+  assert.equal(normalizeMajorName('روان\u200cشناسی'), 'روان شناسی');
+});
+
+test('participation code format and randomness', () => {
+  const a = participationCode(), b = participationCode();
+  assert.match(a, /^[0-9A-Z]{5}-[0-9A-Z]{5}$/);
+  assert.notEqual(a, b);
+});
+
+test('Tehran date (no time) and attempt window', () => {
+  assert.equal(tehranDate(new Date('2026-10-17T21:00:00Z')), '2026-10-18'); // 00:30 Tehran
+  assert.equal(attemptWindowStart(new Date('2026-10-18T10:07:00Z')).toISOString(), '2026-10-18T10:00:00.000Z');
+});

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Vote, CheckCircle2, Loader2, Trophy, CalendarClock } from 'lucide-react';
-import { listPublicElections, castVote, ListPublicElectionsOutputType } from 'zitejs/api';
+import { listPublicElections, castVote, verifyVoter, ListPublicElectionsOutputType } from 'zitejs/api';
 import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';
 import { Label } from '@project/components/ui/label';
@@ -119,8 +119,18 @@ export function VotePage() {
 function Ballot({ e }: { e: Election }) {
   const [sn, setSn] = useState('');
   const [nid, setNid] = useState('');
+  const [session, setSession] = useState<{ token: string; expiresAt: string } | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
-  const vote = useMutation({ mutationFn: () => castVote({ electionId: e.id, studentNumber: sn, nationalId: nid, candidateIds: picked }) });
+  const verify = useMutation({
+    mutationFn: () => verifyVoter({ electionId: e.id, studentNumber: sn, nationalId: nid }),
+    // Identifiers are dropped from memory as soon as the session is open
+    onSuccess: (r) => { setSession({ token: r.sessionToken, expiresAt: r.expiresAt }); setSn(''); setNid(''); },
+  });
+  const vote = useMutation({
+    mutationFn: () => castVote({ sessionToken: session!.token, candidateIds: picked }),
+    onSuccess: () => setSession(null),
+    onError: () => { if (session && new Date(session.expiresAt) < new Date()) setSession(null); },
+  });
   const toggle = (id: string) => setPicked((p) => p.includes(id) ? p.filter((x) => x !== id) : p.length < e.maxChoicesPerVoter ? [...p, id] : p);
 
   if (vote.isSuccess) return (
@@ -128,22 +138,39 @@ function Ballot({ e }: { e: Election }) {
       <div className="max-w-md rounded-3xl border bg-card p-8 text-center">
         <CheckCircle2 className="mx-auto h-10 w-10 text-primary" />
         <h1 className="mt-4 text-xl font-extrabold">رأی شما ثبت شد</h1>
-        <p className="mt-3 text-sm leading-7 text-muted-foreground">رأی بدون نام ذخیره شده است. کد رسید شما:</p>
-        <p dir="ltr" className="mt-2 font-mono text-2xl font-bold tracking-widest">{vote.data.receipt}</p>
+        <p className="mt-3 text-sm leading-7 text-muted-foreground">برگه‌ی رأی بدون هیچ شناسه‌ای از شما ذخیره شده است. این کد فقط «شرکت شما در رأی‌گیری» را تأیید می‌کند و هیچ اطلاعاتی درباره‌ی انتخاب‌هایتان ندارد:</p>
+        <p dir="ltr" className="mt-2 font-mono text-2xl font-bold tracking-widest">{vote.data.confirmationCode}</p>
       </div>
+    </div>
+  );
+  const header = (
+    <div>
+      <h1 className="text-2xl font-extrabold">{e.title}</h1>
+      <p className="mt-2 text-sm text-muted-foreground">رأی‌گیری تا {faDate(e.votingEnd, true)} · هر نفر فقط یک‌بار</p>
+    </div>
+  );
+  if (!session) return (
+    <div className="container-page py-12">
+      <form className="mx-auto max-w-xl space-y-6 rounded-3xl border bg-card p-6 sm:p-8" onSubmit={(ev) => { ev.preventDefault(); verify.mutate(); }}>
+        {header}
+        <p className="text-sm font-semibold">مرحله‌ی ۱ از ۲ — احراز هویت</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-2"><Label htmlFor="sn">شماره دانشجویی</Label><Input id="sn" dir="ltr" inputMode="numeric" autoComplete="off" value={sn} onChange={(x) => setSn(x.target.value)} required /></div>
+          <div className="grid gap-2"><Label htmlFor="nid">کد ملی</Label><Input id="nid" dir="ltr" inputMode="numeric" autoComplete="off" value={nid} onChange={(x) => setNid(x.target.value)} required /></div>
+        </div>
+        {verify.isError && <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{errMsg(verify.error)}</p>}
+        <Button type="submit" size="lg" className="w-full" disabled={!sn || !nid || verify.isPending}>
+          {verify.isPending && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}ادامه
+        </Button>
+        <p className="text-xs leading-6 text-muted-foreground">پس از احراز هویت، ۲۰ دقیقه برای ثبت رأی فرصت دارید.</p>
+      </form>
     </div>
   );
   return (
     <div className="container-page py-12">
       <form className="mx-auto max-w-xl space-y-6 rounded-3xl border bg-card p-6 sm:p-8" onSubmit={(ev) => { ev.preventDefault(); vote.mutate(); }}>
-        <div>
-          <h1 className="text-2xl font-extrabold">{e.title}</h1>
-          <p className="mt-2 text-sm text-muted-foreground">رأی‌گیری تا {faDate(e.votingEnd, true)} · هر نفر فقط یک‌بار</p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="grid gap-2"><Label htmlFor="sn">شماره دانشجویی</Label><Input id="sn" dir="ltr" inputMode="numeric" autoComplete="off" value={sn} onChange={(x) => setSn(x.target.value)} required /></div>
-          <div className="grid gap-2"><Label htmlFor="nid">کد ملی</Label><Input id="nid" dir="ltr" inputMode="numeric" autoComplete="off" value={nid} onChange={(x) => setNid(x.target.value)} required /></div>
-        </div>
+        {header}
+        <p className="text-sm font-semibold">مرحله‌ی ۲ از ۲ — انتخاب نامزد · نشست تا {faDate(session.expiresAt, true)} معتبر است</p>
         <fieldset className="space-y-2">
           <legend className="mb-2 text-sm font-semibold">نامزدها را انتخاب کنید ({faNum(picked.length)} از حداکثر {faNum(e.maxChoicesPerVoter)})</legend>
           {e.candidates.map((c) => (
@@ -153,11 +180,11 @@ function Ballot({ e }: { e: Election }) {
             </label>
           ))}
         </fieldset>
-        {vote.isError && <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{errMsg(vote.error)}</p>}
-        <Button type="submit" size="lg" className="w-full" disabled={!sn || !nid || !picked.length || vote.isPending}>
+        {vote.isError && <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{errMsg(vote.error)}</p>}
+        <Button type="submit" size="lg" className="w-full" disabled={!picked.length || vote.isPending}>
           {vote.isPending && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}ثبت نهایی رأی
         </Button>
-        <p className="text-xs leading-6 text-muted-foreground">پس از ثبت، رأی قابل تغییر نیست. برگه‌ی رأی بدون هیچ شناسه‌ای از شما ذخیره می‌شود؛ فقط «رأی داده است» برای شما ثبت می‌شود.</p>
+        <p className="text-xs leading-6 text-muted-foreground">پس از ثبت، رأی قابل تغییر نیست. برگه‌ی رأی بدون هیچ شناسه‌ای از شما ذخیره می‌شود؛ فقط «رأی داده است» (بدون ساعت) برای شما ثبت می‌شود.</p>
       </form>
     </div>
   );

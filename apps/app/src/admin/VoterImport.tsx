@@ -80,7 +80,7 @@ function Report({ r }: { r: ImportVotersOutputType & { dry: boolean } }) {
       <p className="flex items-center gap-2 font-semibold"><CheckCircle2 className="h-5 w-5 text-primary" />{r.dry ? `${faNum(r.valid)} ردیف معتبر و آماده‌ی ورود` : `${faNum(r.imported)} ردیف وارد شد`}</p>
       {r.errors.length > 0 && (
         <div>
-          <p className="flex items-center gap-2 text-sm font-semibold text-destructive"><AlertTriangle className="h-4 w-4" />{faNum(r.errors.length)} ردیف رد شد</p>
+          <p className="flex items-center gap-2 text-sm font-semibold text-destructive"><AlertTriangle className="h-4 w-4" />{faNum(r.errors.length)} ردیف رد شد{r.needsReview ? ` (${faNum(r.needsReview)} مورد نیازمند بررسی دستی رشته)` : ''}</p>
           <ul className="mt-2 max-h-64 space-y-1 overflow-y-auto text-sm">
             {r.errors.slice(0, 300).map((e) => <li key={e.row}>ردیف {faNum(e.row)}: {e.message}</li>)}
           </ul>

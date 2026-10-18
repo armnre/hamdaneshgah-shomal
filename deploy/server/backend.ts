@@ -20,7 +20,7 @@ export type EndpointConfig = {
   inputSchema?: z.ZodTypeAny;
   outputSchema?: z.ZodTypeAny;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  execute: (args: { input: any; context: { user: any } }) => Promise<unknown>;
+  execute: (args: { input: any; context: { user: any; ip?: string } }) => Promise<unknown>;
 };
 
 export function createEndpoint<T extends EndpointConfig>(config: T): T {

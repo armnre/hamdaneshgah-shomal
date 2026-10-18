@@ -38,7 +38,7 @@ export async function audit(
   details = '',
 ) {
   await zite.auditLogs.create({
-    record: { action, entity, entityId, details: details.slice(0, 2000), actor: user.id, actorEmail: user.email },
+    record: { action, entity, entityId, details: details.slice(0, 2000), actor: user.id || null, actorEmail: user.email || 'voter (anonymous)' },
   });
 }
 

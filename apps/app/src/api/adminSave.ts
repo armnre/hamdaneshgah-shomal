@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { requireAccess, audit, slugify, first } from '../lib/server';
-import { isSafeUrl, normalizeNationalId, normalizeStudentNumber } from '../lib/policy';
-import { hashNationalId } from '../lib/voterHash';
+import { resolveMajor, isSafeUrl, normalizeNationalId, normalizeStudentNumber } from '../lib/policy';
+import { hashNationalId, mappedMajors } from '../lib/voterHash';
 
 const s = (max: number) => z.string().trim().max(max).optional().nullable();
 const httpUrl = (uploads = false) => z.string().trim().max(1000).refine((v) => isSafeUrl(v, uploads), 'فقط نشانی‌های http و https مجاز است.');
@@ -115,7 +115,11 @@ const STRUCT = {
     const dup = await zite.sql({ query: `SELECT v.id FROM "EligibleVoters" v JOIN "ElectionsEligibleVoters" l ON l."eligibleVotersId" = v.id WHERE l."electionsId" = $1 AND v."studentNumber" = $2`, params: [d.election, sn] });
     if (dup.rows.some((r) => r.id !== id)) bad('این شماره دانشجویی در این انتخابات قبلاً ثبت شده است.');
     const el = await zite.elections.findOne({ id: String(d.election) });
-    if (['Voting Open', 'Closed', 'Results Published'].includes(String(el?.status))) bad('پس از شروع رأی‌گیری، فهرست واجدین قابل تغییر نیست.');
+    if (!['Draft', 'Candidacy Open', 'Candidate Review'].includes(String(el?.status))) bad('پس از شروع رأی‌گیری، فهرست واجدین قابل تغییر نیست.');
+    // Major → association rule: the voter's major must be mapped to this election's association
+    const majorId = resolveMajor(String(d.majorName ?? ''), await mappedMajors(String(d.election)));
+    if (!majorId) bad('رشته‌ی این دانشجو به انجمن این انتخابات نگاشت نشده است.');
+    d.major = [majorId];
     if (d.nationalId) {
       const nid = normalizeNationalId(String(d.nationalId));
       if (!nid) bad('کد ملی نامعتبر است.');

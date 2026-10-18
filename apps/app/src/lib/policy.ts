@@ -66,3 +66,91 @@ export function normalizeStudentNumber(raw: string): string | null {
 export function bootstrapWinner(rows: { id: string; createdAt?: string }[]) {
   return [...rows].sort((a, b) => String(a.createdAt ?? '').localeCompare(String(b.createdAt ?? '')) || a.id.localeCompare(b.id))[0]?.id ?? null;
 }
+
+// ───────── Voting security (pure, unit-testable) ─────────
+
+/** Minimum pepper length (characters). Shorter or missing → voting and import are refused (fail closed). */
+export const MIN_PEPPER_LENGTH = 32;
+/** Voter session lifetime: at most 20 minutes, closed immediately after the ballot is cast. */
+export const VOTER_SESSION_MINUTES = 20;
+/** Temporary lock: failures per 15-minute window before the bucket is locked. */
+export const ATTEMPT_WINDOW_MINUTES = 15;
+export const MAX_FAILURES_PER_STUDENT = 5;
+export const MAX_FAILURES_PER_IP = 20;
+
+/** Reads the pepper. The same value is accepted under both names (Zite secret / Netlify env). */
+export function readPepper(env: Record<string, string | undefined>): string | null {
+  const p = env.ZITE_VOTER_PEPPER ?? env.VOTER_PEPPER;
+  return p && p.length >= MIN_PEPPER_LENGTH ? p : null;
+}
+
+const hex = (buf: ArrayBuffer) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+
+/** HMAC-SHA256 → lowercase hex. */
+export async function hmacHex(key: string, message: string) {
+  const enc = new TextEncoder();
+  const k = await crypto.subtle.importKey('raw', enc.encode(key), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return hex(await crypto.subtle.sign('HMAC', k, enc.encode(message)));
+}
+
+/** Per-election keyed hash of a (normalized) national ID. The raw ID is never stored. */
+export const nationalIdHmac = (pepper: string, electionId: string, nationalId: string) =>
+  hmacHex(pepper, `nid:v2:${electionId}:${nationalId}`);
+
+/** Constant-time string comparison (length is not secret: all hashes are 64 hex chars). */
+export function timingSafeEqual(a: string, b: string) {
+  let diff = a.length ^ b.length;
+  const n = Math.max(a.length, b.length);
+  for (let i = 0; i < n; i++) diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
+  return diff === 0;
+}
+
+/** Masked student number for audit logs: keeps first 2 and last 2 digits. */
+export function maskStudentNumber(sn: string) {
+  return sn.length <= 4 ? '****' : `${sn.slice(0, 2)}${'*'.repeat(sn.length - 4)}${sn.slice(-2)}`;
+}
+
+/** Random URL-safe token (default 32 bytes). */
+export function randomToken(bytes = 32) {
+  return btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(bytes)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+/** Short human-readable participation confirmation code (no relation to ballot content). */
+export function participationCode() {
+  const alphabet = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+  const r = crypto.getRandomValues(new Uint8Array(10));
+  const s = [...r].map((b) => alphabet[b % alphabet.length]).join('');
+  return `${s.slice(0, 5)}-${s.slice(5)}`;
+}
+
+/** Normalizes a Persian major name for matching (Arabic ي/ك, ZWNJ, spaces, diacritics). */
+export function normalizeMajorName(s: string) {
+  return s.replace(/[يى]/g, 'ی').replace(/ك/g, 'ک').replace(/[\u064B-\u065F\u0670]/g, '')
+    .replace(/[\u200c\u200f\u200e]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+/** Known synonyms → canonical major name in the system. Physical education and sport sciences are one association. */
+export const MAJOR_ALIASES: Record<string, string> = {
+  'تربیت بدنی': 'علوم ورزشی',
+  'تربیت بدنی و علوم ورزشی': 'علوم ورزشی',
+  'علوم ورزشی و تربیت بدنی': 'علوم ورزشی',
+};
+
+/** Resolves a raw major name to a mapped major id, or null (→ rejected / manual review). */
+export function resolveMajor(raw: string | undefined | null, mapped: { id: string; name: string }[]) {
+  if (!raw) return null;
+  const n = normalizeMajorName(raw);
+  const canonical = MAJOR_ALIASES[n] ?? n;
+  return mapped.find((m) => normalizeMajorName(m.name) === canonical)?.id ?? null;
+}
+
+/** Start of the fixed attempt window containing `now`. */
+export function attemptWindowStart(now: Date) {
+  const w = ATTEMPT_WINDOW_MINUTES * 60_000;
+  return new Date(Math.floor(now.getTime() / w) * w);
+}
+
+/** Calendar date in Asia/Tehran (YYYY-MM-DD) — participation keeps only the date, never the exact time. */
+export function tehranDate(now: Date) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tehran', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+}
