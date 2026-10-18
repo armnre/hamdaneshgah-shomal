@@ -129,7 +129,7 @@ function HomeSections({ d, loading, st }: { d?: Row; loading: boolean; st: Recor
           <Megaphone className="h-8 w-8 text-accent" />
           <h2 className="mt-4 text-xl font-extrabold">مأموریت ما</h2>
           <p className="mt-3 leading-8 text-primary-foreground/80">{st.mission}</p>
-          <Button asChild variant="outline" className="mt-5 border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"><Link to="/about">بیشتر بدانید</Link></Button>
+          <Button asChild variant="outline" className="mt-5 border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"><Link to="/associations">مشاهده انجمن‌ها</Link></Button>
         </div>
       </section>
     </>

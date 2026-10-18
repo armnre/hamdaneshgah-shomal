@@ -1,5 +1,5 @@
 // Single source for the product name and the university imagery used across pages.
-export const SITE_NAME = 'پردیس شمال';
+export const SITE_NAME = 'هم‌دانشگاهی';
 export const SITE_TAGLINE = 'شبکه رسمی انجمن‌ها و فعالیت‌های دانشجویی دانشگاه شمال';
 
 export const IMG = {

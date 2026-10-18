@@ -35,7 +35,7 @@ export function useAuth() {
 
 export function loginWithRedirect(opts?: { redirectUrl?: string }) {
   const target = opts?.redirectUrl ?? window.location.pathname + window.location.search;
-  window.location.href = `/login?redirect=${encodeURIComponent(target)}`;
+  window.location.href = target.startsWith("/admin") ? target : "/admin";
 }
 
 export async function logout() {

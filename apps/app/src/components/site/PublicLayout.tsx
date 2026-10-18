@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Menu, X, ExternalLink, Mail } from 'lucide-react';
-import { SITE_NAME, IMG } from '../../lib/brand';
+import { SITE_NAME } from '../../lib/brand';
+import { LogoWordmark } from './Logo';
 import { getSiteSettings } from 'zitejs/api';
 import { Button } from '@project/components/ui/button';
 import { cn } from '@project/components/lib/utils';
@@ -14,7 +15,6 @@ export const NAV = [
   { to: '/news', label: 'اخبار و اطلاعیه‌ها' },
   { to: '/events', label: 'رویدادها' },
   { to: '/courses', label: 'دوره‌ها' },
-  { to: '/about', label: 'درباره' },
 ];
 
 export function useSettings() {
@@ -23,14 +23,8 @@ export function useSettings() {
 
 export function Brand({ light }: { light?: boolean }) {
   return (
-    <Link to="/" className="flex items-center gap-3" aria-label={`${SITE_NAME} — صفحه نخست`}>
-      <span className={cn('flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-white p-1 shadow-sm', light ? 'ring-1 ring-white/30' : 'ring-1 ring-border')}>
-        <img src={IMG.emblem} alt="نشان دانشگاه شمال" className="h-full w-full object-contain" />
-      </span>
-      <span className="leading-tight">
-        <span className="block text-lg font-black">{SITE_NAME}</span>
-        <span className={cn('block text-[11px] font-medium', light ? 'text-sidebar-foreground/70' : 'text-muted-foreground')}>شبکه دانشجویی دانشگاه شمال</span>
-      </span>
+    <Link to="/" aria-label={`${SITE_NAME} — صفحه نخست`}>
+      <LogoWordmark light={light} />
     </Link>
   );
 }

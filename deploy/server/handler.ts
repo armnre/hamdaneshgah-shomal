@@ -94,7 +94,7 @@ export default async (req: Request) => {
     }
     if (req.method === 'GET' && path === 'auth/verify') {
       const uid = await verifyMagicLink(url.searchParams.get('token') ?? '');
-      if (!uid) return Response.redirect(`${originOf(req)}/login?error=expired`, 302);
+      if (!uid) return Response.redirect(`${originOf(req)}/admin?error=expired`, 302);
       return new Response(null, { status: 302, headers: { location: safeRedirect(url.searchParams.get('redirect')), 'set-cookie': await sessionCookie(uid) } });
     }
     if (req.method === 'POST' && path === 'auth/logout') return json({ ok: true }, 200, { 'set-cookie': clearCookie });

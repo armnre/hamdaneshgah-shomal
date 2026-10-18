@@ -11,7 +11,6 @@ import NewsList from './pages/NewsList';
 import NewsDetail from './pages/NewsDetail';
 import Events from './pages/Events';
 import EventDetail from './pages/EventDetail';
-import About from './pages/About';
 import Contact from './pages/Contact';
 import Legal, { NotFound } from './pages/Legal';
 import AdminApp from './admin/AdminApp';
@@ -40,7 +39,6 @@ export default function App() {
             <Route path="/events" element={<Events />} />
             <Route path="/events/:slug" element={<EventDetail />} />
             <Route path="/courses" element={<Events courses />} />
-            <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/privacy" element={<Legal kind="privacy" />} />
             <Route path="/terms" element={<Legal kind="terms" />} />

@@ -7,6 +7,7 @@ const r = (p: string) => path.resolve(path.dirname(fileURLToPath(import.meta.url
 
 export default defineConfig({
   plugins: [react()],
+  define: { 'import.meta.env.VITE_STANDALONE_AUTH': JSON.stringify('1') },
   publicDir: r('.build/public'),
   build: { outDir: 'dist', target: 'es2020', sourcemap: false },
   resolve: {

@@ -76,14 +76,14 @@ async function sendEmail(to: string, link: string) {
   const key = process.env.RESEND_API_KEY;
   if (!key) throw new Error('RESEND_API_KEY is not set');
   const html = `<div dir="rtl" style="font-family:Tahoma,sans-serif;max-width:480px;margin:auto;padding:24px;color:#14271f">
-    <h2 style="color:#1a4d3e">ورود به پنل مدیریت پردیس شمال</h2>
+    <h2 style="color:#1a4d3e">ورود به پنل مدیریت هم‌دانشگاهی</h2>
     <p>برای ورود روی دکمه زیر بزنید. این پیوند تا ${TOKEN_MINUTES} دقیقه و فقط یک بار معتبر است.</p>
     <p style="margin:28px 0"><a href="${link}" style="background:#1a4d3e;color:#fff;padding:12px 22px;border-radius:10px;text-decoration:none">ورود به پنل</a></p>
     <p style="font-size:12px;color:#667">اگر این درخواست را شما نداده‌اید، این ایمیل را نادیده بگیرید.</p></div>`;
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: process.env.MAIL_FROM ?? 'پردیس شمال <onboarding@resend.dev>', to, subject: 'پیوند ورود به پردیس شمال', html, text: `پیوند ورود: ${link}` }),
+    body: JSON.stringify({ from: process.env.MAIL_FROM ?? 'هم‌دانشگاهی <onboarding@resend.dev>', to, subject: 'پیوند ورود به هم‌دانشگاهی', html, text: `پیوند ورود: ${link}` }),
   });
   if (!res.ok) throw new Error(`Resend failed: ${res.status} ${await res.text()}`);
 }

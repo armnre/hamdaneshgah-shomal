@@ -1,8 +1,9 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { LayoutDashboard, Users, Building2, BookOpen, Newspaper, CalendarDays, Tags, Image, ShieldCheck, ScrollText, Settings, Inbox, Menu, LogOut, ExternalLink, Loader2, Lock } from 'lucide-react';
-import { useAuth, loginWithRedirect, logout } from 'zitejs/auth';
+import { useAuth, logout } from 'zitejs/auth';
+import AdminLogin from './AdminLogin';
 import { getMyAccess, claimSuperAdmin, adminOptions, GetMyAccessOutputType } from 'zitejs/api';
 import { Button } from '@project/components/ui/button';
 import { Sheet, SheetContent, SheetTitle } from '@project/components/ui/sheet';
@@ -10,6 +11,7 @@ import { cn } from '@project/components/lib/utils';
 import { toast } from 'sonner';
 import { errMsg, ROLE_LABEL } from '../lib/format';
 import { useTitle } from '../lib/useTitle';
+import { LogoMark } from '../components/site/Logo';
 
 type Access = GetMyAccessOutputType;
 const Ctx = createContext<Access | null>(null);
@@ -41,11 +43,11 @@ function Center({ children }: { children: React.ReactNode }) {
 export default function AdminApp() {
   useTitle('پنل مدیریت', undefined, true);
   const { user, isLoading } = useAuth();
-  useEffect(() => { if (!isLoading && !user) loginWithRedirect(); }, [isLoading, user]);
   const q = useQuery({ queryKey: ['myAccess'], queryFn: () => getMyAccess({}), enabled: !!user });
   const qc = useQueryClient();
   const claim = useMutation({ mutationFn: () => claimSuperAdmin({}), onSuccess: () => { toast.success('شما مدیر کل سامانه شدید.'); qc.invalidateQueries(); }, onError: (e) => toast.error(errMsg(e)) });
 
+  if (!isLoading && !user) return <AdminLogin />;
   if (isLoading || !user || q.isLoading) return <Center><Loader2 className="h-6 w-6 animate-spin text-primary" /></Center>;
   if (q.isError) return <Center><p>{errMsg(q.error)}</p></Center>;
   const access = q.data!;
@@ -88,7 +90,7 @@ function Shell({ email }: { email: string }) {
   const [open, setOpen] = useState(false);
   const loc = useLocation();
   const current = NAV.find((n) => n.to === loc.pathname) ?? NAV.find((n) => n.to !== '/admin' && loc.pathname.startsWith(n.to));
-  const brand = <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-5 font-black text-sidebar-accent-foreground"><img src="/shomal/emblem.webp" alt="" className="h-8 w-8 rounded-lg bg-white p-0.5" />پردیس شمال<span className="text-sidebar-primary text-sm">· پنل مدیریت</span></div>;
+  const brand = <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-5 font-black text-sidebar-accent-foreground"><LogoMark className="h-8 w-8" />هم‌دانشگاهی<span className="text-sidebar-primary text-sm">· پنل مدیریت</span></div>;
   return (
     <div className="min-h-screen bg-muted/40 lg:grid lg:grid-cols-[260px_1fr]">
       <aside className="sticky top-0 hidden h-screen overflow-y-auto bg-sidebar text-sidebar-foreground lg:block">{brand}<SideNav /></aside>

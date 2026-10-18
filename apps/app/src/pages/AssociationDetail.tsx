@@ -6,6 +6,7 @@ import { Skeleton } from '@project/components/ui/skeleton';
 import { Button } from '@project/components/ui/button';
 import { Cover, Crumbs, EmptyState, ErrorState, Md } from '../components/site/ui';
 import { EventCard, NewsCard } from '../components/site/cards';
+import JoinAssociation from '../components/site/JoinAssociation';
 import { errMsg } from '../lib/format';
 import { useTitle } from '../lib/useTitle';
 
@@ -47,6 +48,7 @@ export default function AssociationDetail() {
           {news.length === 0 ? <EmptyState title="خبری از این انجمن منتشر نشده" /> : <div className="grid gap-6 sm:grid-cols-2">{news.map((n) => <NewsCard key={String(n.id)} n={n} />)}</div>}
         </section>
         <aside>
+          <div className="mb-8"><JoinAssociation name={a.name} /></div>
           <h2 className="mb-4 text-xl font-extrabold">رویدادها</h2>
           {events.length === 0 ? <EmptyState title="رویدادی ثبت نشده" /> : <div className="grid gap-3">{events.map((e) => <EventCard key={String(e.id)} e={e} />)}</div>}
         </aside>
