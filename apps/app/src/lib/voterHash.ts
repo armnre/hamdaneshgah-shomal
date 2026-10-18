@@ -32,23 +32,31 @@ export async function attemptBuckets(studentNumber: string | null, ip: string | 
   return out;
 }
 
-export async function isLocked(buckets: Bucket[]) {
-  const ws = attemptWindowStart(new Date()).toISOString();
-  for (const b of buckets) {
-    const r = await zite.sql({ query: `SELECT COALESCE(SUM("failures"), 0)::int AS n FROM "VoterAttempts" WHERE "bucket" = $1 AND "windowStart" >= $2`, params: [b.key, ws] });
-    if (Number(r.rows[0]?.n ?? 0) >= b.max) return true;
-  }
-  return false;
+const countIn = async (key: string, ws: string) => {
+  const r = await zite.sql({ query: `SELECT COALESCE(SUM("failures"), 0)::int AS n FROM "VoterAttempts" WHERE "bucket" = $1 AND "windowStart" >= $2`, params: [key, ws] });
+  return Number(r.rows[0]?.n ?? 0);
+};
+
+/**
+ * Race-safe attempt lock (reserve-then-count). Every attempt first INSERTs its own row
+ * (append-only, never read-modify-write), then counts. Because each request's row is
+ * committed before it counts, N parallel requests see at least their own reservations,
+ * so at most `max` of them can pass in one window — the old check-then-increment let a
+ * burst slip through and lost concurrent increments.
+ * A successful verification releases its reservation; a failed one keeps it as the failure.
+ */
+export async function reserveAttempt(buckets: Bucket[]) {
+  const windowStart = attemptWindowStart(new Date()).toISOString();
+  const created = await zite.voterAttempts.bulkCreate({ records: buckets.map((b) => ({ bucket: b.key, windowStart, failures: 1 })) });
+  const ids = created.records.map((r) => r.id);
+  let locked = false;
+  for (const b of buckets) if ((await countIn(b.key, windowStart)) > b.max) locked = true;
+  return { ids, locked };
 }
 
-export async function recordFailure(buckets: Bucket[]) {
-  const windowStart = attemptWindowStart(new Date()).toISOString();
-  for (const b of buckets) {
-    const ex = await zite.sql({ query: `SELECT id, "failures" FROM "VoterAttempts" WHERE "bucket" = $1 AND "windowStart" = $2 LIMIT 1`, params: [b.key, windowStart] });
-    const row = ex.rows[0];
-    if (row) await zite.voterAttempts.update({ id: String(row.id), record: { failures: Number(row.failures ?? 0) + 1 } });
-    else await zite.voterAttempts.create({ record: { bucket: b.key, windowStart, failures: 1 } });
-  }
+/** Release a reservation (on success, or when the attempt was refused as locked and must not extend the lock). */
+export async function releaseAttempt(ids: string[]) {
+  for (const id of ids) await zite.voterAttempts.delete({ id });
 }
 
 /** Client IP when the runtime provides it (Netlify handler passes context.ip; Zite does not expose one). */

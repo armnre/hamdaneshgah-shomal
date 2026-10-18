@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
+import { syncAllDue } from '../lib/electionClock';
 
 const str = (v: unknown) => (v == null ? null : v instanceof Date ? v.toISOString() : String(v));
 const Cand = z.object({ id: z.string(), fullName: z.string(), statement: z.string().nullable(), photoUrl: z.string().nullable(), votes: z.number().nullable() });
@@ -17,6 +18,7 @@ export default createEndpoint({
     })),
   }),
   execute: async () => {
+    await syncAllDue();
     const els = await zite.sql({ query: `
       SELECT e.id, e.title, e.status, e."candidacyStart", e."candidacyEnd", e."votingStart", e."votingEnd", e.seats, e."maxChoicesPerVoter", e.description, ay.title AS association
       FROM "Elections" e

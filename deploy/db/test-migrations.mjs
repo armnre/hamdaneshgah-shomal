@@ -120,7 +120,12 @@ for (let i = 0; i < N; i++) {
 // BEFORE close (documented residual risk): the pending row shares xmin with its participation row
 const before = await count(`SELECT COUNT(*) n FROM "VoterParticipation" p JOIN "PendingBallots" b ON p.xmin = b.xmin WHERE p."electionId"='e4' AND b."electionId"='e4'`);
 console.log(before === N ? `info: before close xmin links ${before}/${N} pending ballots (residual risk while voting is open — documented)` : `info: before close xmin links ${before}`);
-await expectFail('close_election on a non-open election', `SELECT close_election('e3')`);
+{ const m3 = Number((await q(`SELECT close_election('e3') AS moved`)).rows[0].moved);
+  console.log(m3 === 0 ? 'pass: close_election on an already-closed election is a no-op' : (process.exitCode = 1, `FAIL: e3 moved ${m3}`)); }
+await db.exec(`INSERT INTO "Elections"(id,title,"associationYear",status,seats,"maxChoicesPerVoter") VALUES('e9','TEST draft','["ay1"]','Draft',1,1)`);
+await expectFail('close_election on a Draft election', `SELECT close_election('e9')`);
+{ const o = (await q(`SELECT open_election('e9') AS o`)).rows[0].o;
+  console.log(o === false ? 'pass: open_election refuses a non-Final-List election' : (process.exitCode = 1, 'FAIL: draft opened')); }
 const moved = Number((await q(`SELECT close_election('e4') AS moved`)).rows[0].moved);
 const pend = await count(`SELECT COUNT(*) n FROM "PendingBallots" WHERE "electionId"='e4'`);
 const st = (await q(`SELECT status FROM "Elections" WHERE id='e4'`)).rows[0].status;
@@ -146,7 +151,18 @@ const tl = await count(`SELECT COUNT(*) n FROM (SELECT "candidateIds" FROM "Ball
 console.log(tl === N ? 'pass: tally from Ballots is complete after seal' : (process.exitCode = 1, `FAIL: tally ${tl}`));
 await expectFail('ballot UPDATE (append-only)', `UPDATE "Ballots" SET "candidateIds"='x' WHERE "electionId"='e4'`);
 await expectFail('ballot DELETE (append-only)', `DELETE FROM "Ballots" WHERE "electionId"='e4'`);
-await expectFail('second close of same election', `SELECT close_election('e4')`);
+// 0006: close is idempotent — a second call moves nothing and creates no duplicate ballot
+const before2 = await count(`SELECT COUNT(*) n FROM "Ballots" WHERE "electionId"='e4'`);
+const again = Number((await q(`SELECT close_election('e4') AS moved`)).rows[0].moved);
+const after2 = await count(`SELECT COUNT(*) n FROM "Ballots" WHERE "electionId"='e4'`);
+console.log(again === 0 && after2 === before2 ? 'pass: second close_election is a no-op (idempotent, no duplicate ballots)' : (process.exitCode = 1, `FAIL: second close moved=${again} ballots ${before2}->${after2}`));
+const st2 = (await q(`UPDATE "Elections" SET status='Counting' WHERE id='e4' RETURNING status`)).rows[0]?.status;
+const again3 = Number((await q(`SELECT close_election('e4') AS moved`)).rows[0].moved);
+const st3 = (await q(`SELECT status FROM "Elections" WHERE id='e4'`)).rows[0].status;
+console.log(st2 === 'Counting' && again3 === 0 && st3 === 'Counting' ? 'pass: close after Counting does not rewind status' : (process.exitCode = 1, `FAIL: status ${st3}`));
+const src6 = (await import('fs')).readFileSync(new URL('./migrations/0006_clock_idempotent.sql', import.meta.url), 'utf8');
+console.log(/pg_advisory_xact_lock/.test(src6) ? 'pass: close/open serialized with pg_advisory_xact_lock' : (process.exitCode = 1, 'FAIL: no advisory lock'));
+await expectFail('close_election of unknown election', `SELECT close_election('nope')`);
 // vote after close is refused (session was deleted by close; a fresh one cannot vote either)
 await db.exec(`INSERT INTO "EligibleVoters"(id,"studentNumber",election,"nationalIdHash") VALUES('wz','29999999','["e4"]','${'ab'.repeat(32)}');
   INSERT INTO "VoterSessions"("tokenHash",election,voter,"expiresAt") VALUES('${'6c'.repeat(32)}','["e4"]','["wz"]', now() + interval '19 minutes')`);

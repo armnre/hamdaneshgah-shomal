@@ -19,3 +19,19 @@ await build({
   banner: { js: "import { createRequire } from 'module'; const require = createRequire(import.meta.url);" },
   logLevel: 'info',
 });
+
+// Scheduled clock function (opens/closes elections on time)
+await build({
+  entryPoints: [resolve(root, 'server/clock.ts')],
+  outfile: resolve(root, 'netlify/functions/clock.mjs'),
+  bundle: true,
+  platform: 'node',
+  target: 'node20',
+  format: 'esm',
+  alias: {
+    'zitejs/db': resolve(root, 'server/db.ts'),
+    'zitejs/backend': resolve(root, 'server/backend.ts'),
+  },
+  banner: { js: "import { createRequire } from 'module'; const require = createRequire(import.meta.url);" },
+  logLevel: 'info',
+});

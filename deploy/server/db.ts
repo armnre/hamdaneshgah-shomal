@@ -193,6 +193,10 @@ export const zite = {
     const rows = await query(text, params);
     return Number(rows[0]?.moved ?? 0);
   },
+  async openElectionAtomic(electionId: string) {
+    const rows = await query(`SELECT open_election($1) AS opened`, [electionId]);
+    return rows[0]?.opened === true;
+  },
   async sql(p: { query: string; params?: unknown[] }) {
     if (!/^\s*(select|with)\b/i.test(p.query)) throw new Error('zite.sql is read-only');
     return { rows: await query(p.query, p.params ?? []) };

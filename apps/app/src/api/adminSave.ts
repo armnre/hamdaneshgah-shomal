@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { requireAccess, audit, slugify, first } from '../lib/server';
-import { resolveMajor, canTransition, listsLocked, isSafeUrl, normalizeNationalId, normalizeStudentNumber } from '../lib/policy';
+import { resolveMajor, canTransition, listsLocked, isSafeUrl, normalizeNationalId, normalizeStudentNumber, candidateApprovable } from '../lib/policy';
 import { hashNationalId, mappedMajors } from '../lib/voterHash';
 
 const s = (max: number) => z.string().trim().max(max).optional().nullable();
@@ -102,6 +102,11 @@ const STRUCT = {
         if (!same) bad('پس از نهایی شدن فهرست، زمان‌بندی و قواعد انتخابات قابل تغییر نیست.');
       }
     }
+    if (d.status === 'Final List' && from !== 'Final List') {
+      // Candidate rule re-checked at freeze time: every approved candidate must be an eligible voter of this election
+      const bad1 = await zite.sql({ query: `SELECT c."fullName" FROM "Candidates" c JOIN "CandidatesElections" l ON l."candidatesId" = c.id WHERE l."electionsId" = $1 AND c.status = 'Approved' AND NOT EXISTS (SELECT 1 FROM "EligibleVoters" v JOIN "ElectionsEligibleVoters" ev ON ev."eligibleVotersId" = v.id WHERE ev."electionsId" = $1 AND v."studentNumber" = c."studentNumber") LIMIT 3`, params: [id] });
+      if (bad1.rows.length) bad(`این نامزدهای تأییدشده در فهرست واجدین نیستند: ${bad1.rows.map((r) => r.fullName).join('، ')}`);
+    }
     if (d.status === 'Voting Open' && from !== 'Voting Open') {
       const c = await zite.sql({ query: `SELECT (SELECT COUNT(*) FROM "Candidates" c JOIN "CandidatesElections" l ON l."candidatesId" = c.id WHERE l."electionsId" = $1 AND c.status = 'Approved')::int AS cands, (SELECT COUNT(*) FROM "ElectionsEligibleVoters" WHERE "electionsId" = $1)::int AS voters`, params: [id] });
       if (!Number(c.rows[0]?.cands)) bad('برای شروع رأی‌گیری دست‌کم یک نامزد تأییدشده لازم است.');
@@ -124,7 +129,7 @@ const STRUCT = {
     const dup = await zite.sql({ query: `SELECT c.id FROM "Candidates" c JOIN "CandidatesElections" l ON l."candidatesId" = c.id WHERE l."electionsId" = $1 AND c."studentNumber" = $2`, params: [d.election, sn] });
     if (dup.rows.some((r) => r.id !== id)) bad('این دانشجو قبلاً در این انتخابات نامزد شده است.');
     const voters = await zite.sql({ query: `SELECT COUNT(*)::int AS n, COUNT(*) FILTER (WHERE v."studentNumber" = $2)::int AS me FROM "EligibleVoters" v JOIN "ElectionsEligibleVoters" l ON l."eligibleVotersId" = v.id WHERE l."electionsId" = $1`, params: [d.election, sn] });
-    if (d.status === 'Approved' && Number(voters.rows[0]?.n) > 0 && !Number(voters.rows[0]?.me)) bad('این دانشجو در فهرست واجدین همین انتخابات نیست و تأیید نمی‌شود.');
+    if (d.status === 'Approved' && !candidateApprovable(Number(voters.rows[0]?.n), Number(voters.rows[0]?.me) > 0)) bad('نامزد فقط وقتی تأیید می‌شود که در فهرست واجدین همین انتخابات باشد؛ ابتدا فهرست واجدین را وارد کنید.');
     d.election = [d.election];
   },
   voters: async (d: Record<string, unknown>, id?: string) => {

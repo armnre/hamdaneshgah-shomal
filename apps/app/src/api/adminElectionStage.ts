@@ -22,7 +22,7 @@ export default createEndpoint({
     if (input.to === 'Closed') {
       // Ends the voting window, closes sessions and seals PendingBallots → Ballots (shuffled)
       const moved = await closeAndSeal(e);
-      await audit(context.user, 'seal', 'elections', e.id, `${moved} ballots sealed`);
+      await audit(context.user, 'seal', 'elections', e.id, `${Math.max(0, moved)} ballots sealed`);
     } else {
       await zite.elections.update({ id: e.id, record: { status: input.to } });
     }

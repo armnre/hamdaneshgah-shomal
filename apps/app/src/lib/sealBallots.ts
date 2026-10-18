@@ -12,7 +12,15 @@ type AtomicClose = (electionId: string) => Promise<number>;
  */
 export async function closeAndSeal(e: { id: string; votingEnd?: unknown }): Promise<number> {
   const atomic = (zite as unknown as { closeElectionAtomic?: AtomicClose }).closeElectionAtomic;
+  // Neon: locked + idempotent in SQL (0006) — a repeat call returns 0 and moves nothing
   if (atomic) return atomic(e.id);
+
+  // Zite (no transactions/locks): only an election still 'Voting Open' is sealed, so a repeat
+  // call never rewinds a later stage. Two truly simultaneous calls are not serialized here;
+  // each batch's pending rows are deleted right after copying, which limits but does not
+  // eliminate a duplicate-copy window — see docs/security.md. Real elections run on Neon.
+  const cur = await zite.elections.findOne({ id: e.id });
+  if (!cur || cur.status !== 'Voting Open') return -1;
 
   const now = new Date().toISOString();
   await zite.elections.update({ id: e.id, record: { status: 'Closed', votingEnd: e.votingEnd && String(e.votingEnd) < now ? String(e.votingEnd) : now } });

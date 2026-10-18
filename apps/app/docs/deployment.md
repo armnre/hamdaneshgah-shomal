@@ -52,3 +52,10 @@
 1. پیش از `votingStart`: دسترسی اعضای تیم به کنسول Neon و SQL Editor پروژه‌ی تولید برداشته یا تعلیق شود؛ فقط نقش اپ بماند.
 2. در بازه‌ی رأی‌گیری: هیچ اتصال SQL انسانی، شاخه‌ی Neon یا بکاپ دستی ساخته نشود.
 3. پس از بستن: `VACUUM FULL` طبق `docs/backup-and-recovery.md`، حذف شاخه‌های موقت، سپس بازگرداندن دسترسی‌ها.
+
+## تابع زمان‌بندی‌شده (Netlify)
+
+`npm run build` دو تابع می‌سازد: `api.mjs` و `clock.mjs` (`config.schedule = '* * * * *'`). Scheduled Functions در همه‌ی پلن‌های Netlify در دسترس است؛ پس از استقرار در Netlify → Functions باید «clock» با برچسب Scheduled دیده شود. اجرای واقعی روی Netlify هنوز آزموده نشده است.
+
+آزمون همروندی روی Neon (فقط روی شاخه‌ی دورریختنی، هرگز تولید):
+`cd deploy && TEST_DATABASE_URL=postgres://... node db/test-concurrency.mjs` — ۲۰ رأی همزمان و ۱۰ بستن همزمان؛ قبول = یک برگه، یک مشارکت، یک بستن مؤثر.

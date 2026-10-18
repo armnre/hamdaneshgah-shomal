@@ -170,6 +170,18 @@ export function canTransition(from: string, to: string) {
   return j === i - 1 && j >= 0 && i <= ELECTION_FLOW.indexOf('Final List');
 }
 
+/** Where the schedule says an election should be now, or null if its stored status is already right. */
+export function clockTarget(status: string, votingStart: unknown, votingEnd: unknown, now: Date): 'Voting Open' | 'Closed' | null {
+  if (!votingStart || !votingEnd) return null;
+  const s = new Date(String(votingStart)), e = new Date(String(votingEnd));
+  if (status === 'Final List' && s <= now && now < e) return 'Voting Open';
+  if (status === 'Voting Open' && now > e) return 'Closed';
+  return null;
+}
+
+/** Candidate rule: approved only when listed among the election's eligible voters (and the list is not empty). */
+export const candidateApprovable = (eligibleCount: number, isListed: boolean) => eligibleCount > 0 && isListed;
+
 /** Results (even counts) are visible to admins only after voting has closed — never live during voting. */
 export const tallyAllowed = (status: string) => ['Closed', 'Counting', 'Results Confirmed', 'Results Published', 'Archived'].includes(status);
 /** Voter list and candidate list are frozen from the final list onwards. */

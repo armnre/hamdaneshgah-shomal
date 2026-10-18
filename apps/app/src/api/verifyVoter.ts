@@ -3,7 +3,8 @@ import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { audit } from '../lib/server';
 import { normalizeNationalId, normalizeStudentNumber, maskStudentNumber, timingSafeEqual, randomToken, hmacHex, VOTER_SESSION_MINUTES } from '../lib/policy';
-import { requirePepper, hashNationalId, attemptBuckets, isLocked, recordFailure, contextIp, votingOpen, mappedMajors } from '../lib/voterHash';
+import { requirePepper, hashNationalId, attemptBuckets, reserveAttempt, releaseAttempt, contextIp, votingOpen, mappedMajors } from '../lib/voterHash';
+import { syncElectionClock } from '../lib/electionClock';
 
 // One generic message for every identity failure, so a caller cannot tell which identifier was wrong.
 const GENERIC = 'اطلاعات واردشده با فهرست واجدین این انتخابات مطابقت ندارد.';
@@ -17,19 +18,23 @@ export default createEndpoint({
   outputSchema: z.object({ sessionToken: z.string(), expiresAt: z.string() }),
   execute: async ({ input, context }) => {
     const pepper = requirePepper();
-    const e = await zite.elections.findOne({ id: input.electionId });
+    let e = await zite.elections.findOne({ id: input.electionId });
+    const st = await syncElectionClock(e);
+    if (e && st && st !== e.status) e = await zite.elections.findOne({ id: input.electionId });
     if (!votingOpen(e)) fail('رأی‌گیری این انتخابات اکنون باز نیست.', 'BAD_REQUEST');
 
     const sn = normalizeStudentNumber(input.studentNumber);
     const nid = normalizeNationalId(input.nationalId);
     const buckets = await attemptBuckets(sn, contextIp(context));
     const masked = sn ? maskStudentNumber(sn) : 'invalid';
-    if (await isLocked(buckets)) {
+    const { ids: reservation, locked } = await reserveAttempt(buckets);
+    if (locked) {
+      await releaseAttempt(reservation);
       await audit(anon, 'vote_verify_locked', 'elections', input.electionId, `sn=${masked}`);
       fail(LOCKED, 'RATE_LIMITED');
     }
     const reject = async (reason: string): Promise<never> => {
-      await recordFailure(buckets);
+      // the reservation row stays as this attempt's recorded failure
       await audit(anon, 'vote_verify_failed', 'elections', input.electionId, `sn=${masked} reason=${reason}`);
       return fail(GENERIC) as never;
     };
@@ -55,6 +60,8 @@ export default createEndpoint({
       query: `SELECT 1 FROM "EligibleVotersVoterParticipation" vp JOIN "ElectionsVoterParticipation" ep ON ep."voterParticipationId" = vp."voterParticipationId" WHERE vp."eligibleVotersId" = $1 AND ep."electionsId" = $2 LIMIT 1`,
       params: [row.id, input.electionId],
     });
+    // Identity proven — this attempt is not a failure
+    await releaseAttempt(reservation);
     if (voted.rows.length) {
       await audit(anon, 'vote_verify_already_voted', 'elections', input.electionId, `sn=${masked}`);
       fail('با این مشخصات قبلاً رأی ثبت شده است.', 'CONFLICT');

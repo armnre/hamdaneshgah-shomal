@@ -4,3 +4,7 @@ dist
 .tsbuildinfo
 __zite__*
 .npmrc
+deploy/.build
+deploy/netlify/functions
+deploy/server/.generated
+deploy/dist

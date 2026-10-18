@@ -55,6 +55,21 @@ const parts = await one(`SELECT COUNT(*) n FROM "VoterParticipation" WHERE "elec
 const ballots = await one(`SELECT COUNT(*) n FROM "PendingBallots" WHERE election ? $1`);
 const sessions = await one(`SELECT COUNT(*) n FROM "VoterSessions" WHERE "electionId" = $1`);
 console.log({ requests: N, outcomes: tally, participation: parts, ballots, openSessions: sessions });
+
+// 0006: 10 simultaneous close_election calls on separate connections → exactly one seals.
+const M = 10;
+const closes = await Promise.all(Array.from({ length: M }, async () => {
+  const c = await pool.connect();
+  try { return Number((await c.query(`SELECT close_election($1) AS moved`, [id('e')])).rows[0].moved); }
+  catch (e) { return `error:${e.code ?? e.message}`; }
+  finally { c.release(); }
+}));
+const movedSum = closes.filter((x) => typeof x === 'number').reduce((a, b) => a + b, 0);
+const sealed = await one(`SELECT COUNT(*) n FROM "Ballots" WHERE "electionId" = $1`);
+const pendingLeft = await one(`SELECT COUNT(*) n FROM "PendingBallots" WHERE "electionId" = $1`);
+const status = (await pool.query(`SELECT status FROM "Elections" WHERE id = $1`, [id('e')])).rows[0].status;
+console.log({ closeCalls: M, closes, movedSum, sealed, pendingLeft, status });
 await pool.end();
-if (parts === 1 && ballots === 1 && sessions === 0 && tally.ok === 1) console.log('CONCURRENCY TEST PASSED');
+const closeOk = movedSum === 1 && sealed === 1 && pendingLeft === 0 && status === 'Closed' && closes.every((x) => typeof x === 'number');
+if (parts === 1 && ballots === 1 && sessions === 0 && tally.ok === 1 && closeOk) console.log('CONCURRENCY TEST PASSED');
 else { console.error('CONCURRENCY TEST FAILED'); process.exit(1); }
