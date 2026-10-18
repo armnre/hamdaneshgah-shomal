@@ -2,7 +2,8 @@ import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { requireAccess, audit, slugify, first } from '../lib/server';
-import { isSafeUrl } from '../lib/policy';
+import { isSafeUrl, normalizeNationalId, normalizeStudentNumber } from '../lib/policy';
+import { hashNationalId } from '../lib/voterHash';
 
 const s = (max: number) => z.string().trim().max(max).optional().nullable();
 const httpUrl = (uploads = false) => z.string().trim().max(1000).refine((v) => isSafeUrl(v, uploads), 'فقط نشانی‌های http و https مجاز است.');
@@ -27,6 +28,9 @@ const SCHEMAS = {
   associationMajors: z.object({ associationYear: z.string().min(1), major: z.string().min(1), needsUniversityApproval: z.boolean().default(false) }),
   positions: z.object({ name: z.string().trim().min(2).max(100), scope: z.enum(['Council', 'Association']), rank: z.number().int().optional().nullable() }),
   terms: z.object({ position: z.string().min(1), academicYear: z.string().min(1), associationYear: id, personName: s(150), personEmail: z.string().email().optional().nullable().or(z.literal('')), status: z.enum(['Undetermined', 'Active', 'Ended', 'Resigned']), startDate: z.string().optional().nullable(), endDate: z.string().optional().nullable(), publishName: z.boolean().default(false), notes: s(5000) }),
+  elections: z.object({ title: z.string().trim().min(3).max(200), associationYear: z.string().min(1), status: z.enum(['Draft', 'Candidacy Open', 'Candidate Review', 'Voting Open', 'Closed', 'Results Published']), candidacyStart: z.string().optional().nullable(), candidacyEnd: z.string().optional().nullable(), votingStart: z.string().optional().nullable(), votingEnd: z.string().optional().nullable(), seats: z.number().int().min(1).max(50), maxChoicesPerVoter: z.number().int().min(1).max(50), description: s(10000) }),
+  candidates: z.object({ fullName: z.string().trim().min(3).max(150), election: z.string().min(1), studentNumber: z.string().min(1), status: z.enum(['Pending', 'Approved', 'Rejected', 'Withdrawn']), statement: s(5000), photoUrl: imgUrl, reviewNote: s(2000) }),
+  voters: z.object({ studentNumber: z.string().min(1), election: z.string().min(1), fullName: s(150), majorName: s(150), nationalId: z.string().optional().nullable() }),
 };
 type Entity = keyof typeof SCHEMAS;
 
@@ -34,6 +38,7 @@ const TABLES = {
   associations: zite.associations, faculties: zite.faculties, majors: zite.majors, news: zite.news, events: zite.events,
   categories: zite.categories, media: zite.mediaAssets, members: zite.adminMembers, settings: zite.siteSettings, messages: zite.contactMessages,
   years: zite.academicYears, associationYears: zite.associationYears, associationMajors: zite.associationMajors, positions: zite.positions, terms: zite.leadershipTerms,
+  elections: zite.elections, candidates: zite.candidates, voters: zite.eligibleVoters,
 };
 
 async function activeSuperAdminCount(): Promise<number> {
@@ -83,6 +88,42 @@ const STRUCT = {
     const where = d.associationYear ? await nameOf(`SELECT "title" AS n FROM "AssociationYears" WHERE id = $1`, d.associationYear) : await nameOf(`SELECT "title" AS n FROM "AcademicYears" WHERE id = $1`, d.academicYear);
     d.label = `${pos} — ${where}`;
     d.position = [d.position]; d.academicYear = [d.academicYear]; d.associationYear = d.associationYear ? [d.associationYear] : [];
+  },
+  elections: async (d: Record<string, unknown>) => {
+    const lt = (a: unknown, b: unknown) => a && b && String(b) < String(a);
+    if (lt(d.candidacyStart, d.candidacyEnd)) bad('پایان ثبت‌نام باید بعد از شروع آن باشد.');
+    if (lt(d.votingStart, d.votingEnd)) bad('پایان رأی‌گیری باید بعد از شروع آن باشد.');
+    if (lt(d.candidacyEnd, d.votingStart)) bad('رأی‌گیری باید بعد از پایان ثبت‌نام نامزدها شروع شود.');
+    if (Number(d.maxChoicesPerVoter) > Number(d.seats)) bad('حداکثر انتخاب هر رأی‌دهنده نمی‌تواند از تعداد کرسی‌ها بیشتر باشد.');
+    if (['Voting Open', 'Closed', 'Results Published'].includes(String(d.status)) && (!d.votingStart || !d.votingEnd)) bad('برای این وضعیت، زمان شروع و پایان رأی‌گیری الزامی است.');
+    d.associationYear = [d.associationYear];
+  },
+  candidates: async (d: Record<string, unknown>, id?: string) => {
+    const sn = normalizeStudentNumber(String(d.studentNumber));
+    if (!sn) bad('شماره دانشجویی نامعتبر است.');
+    d.studentNumber = sn;
+    const dup = await zite.sql({ query: `SELECT c.id FROM "Candidates" c JOIN "CandidatesElections" l ON l."candidatesId" = c.id WHERE l."electionsId" = $1 AND c."studentNumber" = $2`, params: [d.election, sn] });
+    if (dup.rows.some((r) => r.id !== id)) bad('این دانشجو قبلاً در این انتخابات نامزد شده است.');
+    const voters = await zite.sql({ query: `SELECT COUNT(*)::int AS n, COUNT(*) FILTER (WHERE v."studentNumber" = $2)::int AS me FROM "EligibleVoters" v JOIN "ElectionsEligibleVoters" l ON l."eligibleVotersId" = v.id WHERE l."electionsId" = $1`, params: [d.election, sn] });
+    if (d.status === 'Approved' && Number(voters.rows[0]?.n) > 0 && !Number(voters.rows[0]?.me)) bad('این دانشجو در فهرست واجدین همین انتخابات نیست و تأیید نمی‌شود.');
+    d.election = [d.election];
+  },
+  voters: async (d: Record<string, unknown>, id?: string) => {
+    const sn = normalizeStudentNumber(String(d.studentNumber));
+    if (!sn) bad('شماره دانشجویی نامعتبر است.');
+    d.studentNumber = sn;
+    const dup = await zite.sql({ query: `SELECT v.id FROM "EligibleVoters" v JOIN "ElectionsEligibleVoters" l ON l."eligibleVotersId" = v.id WHERE l."electionsId" = $1 AND v."studentNumber" = $2`, params: [d.election, sn] });
+    if (dup.rows.some((r) => r.id !== id)) bad('این شماره دانشجویی در این انتخابات قبلاً ثبت شده است.');
+    const el = await zite.elections.findOne({ id: String(d.election) });
+    if (['Voting Open', 'Closed', 'Results Published'].includes(String(el?.status))) bad('پس از شروع رأی‌گیری، فهرست واجدین قابل تغییر نیست.');
+    if (d.nationalId) {
+      const nid = normalizeNationalId(String(d.nationalId));
+      if (!nid) bad('کد ملی نامعتبر است.');
+      d.nationalIdHash = await hashNationalId(String(d.election), nid!);
+      d.nationalIdLast4 = nid!.slice(-4);
+    } else if (!id) bad('کد ملی الزامی است.');
+    delete d.nationalId;
+    d.election = [d.election];
   },
 };
 

@@ -53,3 +53,11 @@ test('concurrent bootstrap claims agree on a single winner', () => {
   assert.equal(bootstrapWinner([...rows].reverse()), 'a');
   assert.equal(bootstrapWinner([]), null);
 });
+
+import { normalizeNationalId, normalizeStudentNumber } from '../src/lib/policy.ts';
+test('national id checksum + persian digits', () => {
+  assert.equal(normalizeNationalId('۰۰۱۲۳۴۵۶۷۸'), null);
+  assert.equal(normalizeNationalId('0499370899'), '0499370899');
+  assert.equal(normalizeNationalId('1111111111'), null);
+  assert.equal(normalizeStudentNumber('۴۰۱۱۲۳۴۵'), '40112345');
+});

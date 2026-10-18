@@ -3,9 +3,10 @@ import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { requireAccess, first } from '../lib/server';
 
-const ENTITY = z.enum(['associations', 'faculties', 'majors', 'news', 'events', 'categories', 'media', 'members', 'settings', 'messages', 'audit', 'years', 'associationYears', 'associationMajors', 'positions', 'terms']);
+const ENTITY = z.enum(['associations', 'faculties', 'majors', 'news', 'events', 'categories', 'media', 'members', 'settings', 'messages', 'audit', 'years', 'associationYears', 'associationMajors', 'positions', 'terms', 'elections', 'candidates', 'voters']);
 
 const tableOf = (e: z.infer<typeof ENTITY>) => ({
+  elections: zite.elections, candidates: zite.candidates, voters: zite.eligibleVoters,
   associations: zite.associations, faculties: zite.faculties, majors: zite.majors, news: zite.news,
   events: zite.events, categories: zite.categories, media: zite.mediaAssets, members: zite.adminMembers,
   settings: zite.siteSettings, messages: zite.contactMessages, audit: zite.auditLogs,
@@ -23,7 +24,8 @@ export default createEndpoint({
     const { records } = await table.findAll({ limit: 2000 });
     let rows = records.map((r) => {
       const out: Record<string, unknown> = {};
-      for (const [k, v] of Object.entries(r)) out[k] = Array.isArray(v) && ['faculty', 'major', 'category', 'association', 'member', 'actor', 'academicYear', 'associationYear', 'position'].includes(k) ? first(v as string[]) : v;
+      for (const [k, v] of Object.entries(r)) out[k] = Array.isArray(v) && ['faculty', 'major', 'category', 'association', 'member', 'actor', 'academicYear', 'associationYear', 'position', 'election'].includes(k) ? first(v as string[]) : v;
+      delete out.nationalIdHash;
       return out;
     });
     if (access.role === 'Association Manager') {

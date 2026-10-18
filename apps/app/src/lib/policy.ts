@@ -2,7 +2,7 @@
 export type Role = 'Super Admin' | 'Content Editor' | 'Association Manager';
 
 export const ROLE_ENTITIES: Record<Role, string[]> = {
-  'Super Admin': ['associations', 'faculties', 'majors', 'news', 'events', 'categories', 'media', 'members', 'settings', 'messages', 'audit', 'years', 'associationYears', 'associationMajors', 'positions', 'terms'],
+  'Super Admin': ['associations', 'faculties', 'majors', 'news', 'events', 'categories', 'media', 'members', 'settings', 'messages', 'audit', 'years', 'associationYears', 'associationMajors', 'positions', 'terms', 'elections', 'candidates', 'voters'],
   'Content Editor': ['news', 'events', 'categories', 'media', 'messages'],
   'Association Manager': ['associations', 'news', 'events', 'media'],
 };
@@ -40,6 +40,26 @@ export function isSafeUrl(value: string, allowUploadPath = false) {
   } catch {
     return false;
   }
+}
+
+/** Converts Persian/Arabic digits to ASCII and strips everything else. */
+export const toAsciiDigits = (s: string) =>
+  s.replace(/[۰-۹]/g, (d) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(/\D/g, '');
+
+/** Iranian national code (کد ملی) checksum. Returns the normalized 10-digit code or null. */
+export function normalizeNationalId(raw: string): string | null {
+  let c = toAsciiDigits(raw);
+  if (c.length >= 8 && c.length < 10) c = c.padStart(10, '0');
+  if (!/^\d{10}$/.test(c) || /^(\d)\1{9}$/.test(c)) return null;
+  const sum = [...c.slice(0, 9)].reduce((s, d, i) => s + Number(d) * (10 - i), 0) % 11;
+  const check = Number(c[9]);
+  return (sum < 2 ? check === sum : check === 11 - sum) ? c : null;
+}
+
+/** Student numbers: digits only, 5–16 long. */
+export function normalizeStudentNumber(raw: string): string | null {
+  const c = toAsciiDigits(raw);
+  return /^\d{5,16}$/.test(c) ? c : null;
 }
 
 /** Race-safe bootstrap: when concurrent claims each inserted a Super Admin row, only the earliest-created one survives. */

@@ -1,14 +1,14 @@
 import { KIND_LABEL, ROLE_LABEL, STATUS_LABEL } from '../lib/format';
 
 export type FieldType = 'text' | 'textarea' | 'markdown' | 'url' | 'image' | 'email' | 'number' | 'checkbox' | 'datetime' | 'select';
-export type OptionSource = 'faculties' | 'majors' | 'categories' | 'associations' | 'years' | 'associationYears' | 'positions';
+export type OptionSource = 'faculties' | 'majors' | 'categories' | 'associations' | 'years' | 'associationYears' | 'positions' | 'elections';
 export type Field = {
   name: string; label: string; type: FieldType; required?: boolean; hint?: string;
   options?: { value: string; label: string }[]; source?: OptionSource; wide?: boolean; dir?: 'ltr';
 };
 export type Column = { key: string; label: string; kind?: 'date' | 'status' | 'bool' | 'lookup' | 'label'; source?: OptionSource; map?: Record<string, string> };
 export type Resource = {
-  entity: 'associations' | 'faculties' | 'majors' | 'news' | 'events' | 'categories' | 'media' | 'members' | 'years' | 'associationYears' | 'associationMajors' | 'positions' | 'terms';
+  entity: 'associations' | 'faculties' | 'majors' | 'news' | 'events' | 'categories' | 'media' | 'members' | 'years' | 'associationYears' | 'associationMajors' | 'positions' | 'terms' | 'elections' | 'candidates' | 'voters';
   title: string; singular: string; fields: Field[]; columns: Column[]; search: string[]; defaults?: Record<string, unknown>;
 };
 
@@ -18,8 +18,50 @@ const statusOpts = opts({ Draft: STATUS_LABEL.Draft, Published: STATUS_LABEL.Pub
 const YEAR_STATUS = { Upcoming: 'آینده', Current: 'جاری', Archived: 'بایگانی' };
 const TERM_STATUS = { Undetermined: 'تعیین‌نشده', Active: 'فعال', Ended: 'پایان‌یافته', Resigned: 'مستعفی' };
 const SCOPE = { Council: 'شورای دبیران', Association: 'انجمن' };
+export const ELECTION_STATUS = { Draft: 'پیش‌نویس', 'Candidacy Open': 'ثبت‌نام نامزدها', 'Candidate Review': 'بررسی نامزدها', 'Voting Open': 'رأی‌گیری', Closed: 'پایان‌یافته', 'Results Published': 'نتایج اعلام‌شده' };
+const CANDIDATE_STATUS = { Pending: 'در انتظار بررسی', Approved: 'تأییدشده', Rejected: 'ردشده', Withdrawn: 'انصراف' };
 
 export const RESOURCES: Record<string, Resource> = {
+  elections: {
+    entity: 'elections', title: 'انتخابات', singular: 'انتخابات', search: ['title'], defaults: { status: 'Draft', seats: 5, maxChoicesPerVoter: 3 },
+    columns: [{ key: 'title', label: 'عنوان' }, { key: 'associationYear', label: 'انجمنِ سال', kind: 'lookup', source: 'associationYears' }, { key: 'status', label: 'وضعیت', kind: 'label', map: ELECTION_STATUS }, { key: 'votingStart', label: 'شروع رأی‌گیری', kind: 'date' }, { key: 'seats', label: 'کرسی' }],
+    fields: [
+      { name: 'title', label: 'عنوان', type: 'text', required: true, wide: true },
+      { name: 'associationYear', label: 'انجمنِ سال', type: 'select', source: 'associationYears', required: true },
+      { name: 'status', label: 'مرحله', type: 'select', options: opts(ELECTION_STATUS), required: true },
+      { name: 'candidacyStart', label: 'شروع ثبت‌نام نامزدها', type: 'datetime' },
+      { name: 'candidacyEnd', label: 'پایان ثبت‌نام نامزدها', type: 'datetime' },
+      { name: 'votingStart', label: 'شروع رأی‌گیری', type: 'datetime' },
+      { name: 'votingEnd', label: 'پایان رأی‌گیری', type: 'datetime' },
+      { name: 'seats', label: 'تعداد کرسی‌ها', type: 'number', required: true },
+      { name: 'maxChoicesPerVoter', label: 'حداکثر انتخاب هر رأی‌دهنده', type: 'number', required: true },
+      { name: 'description', label: 'توضیحات و قوانین', type: 'textarea', wide: true },
+    ],
+  },
+  candidates: {
+    entity: 'candidates', title: 'نامزدها', singular: 'نامزد', search: ['fullName', 'studentNumber'], defaults: { status: 'Pending' },
+    columns: [{ key: 'fullName', label: 'نام' }, { key: 'studentNumber', label: 'شماره دانشجویی' }, { key: 'election', label: 'انتخابات', kind: 'lookup', source: 'elections' }, { key: 'status', label: 'وضعیت', kind: 'label', map: CANDIDATE_STATUS }],
+    fields: [
+      { name: 'election', label: 'انتخابات', type: 'select', source: 'elections', required: true, wide: true },
+      { name: 'fullName', label: 'نام و نام خانوادگی', type: 'text', required: true },
+      { name: 'studentNumber', label: 'شماره دانشجویی', type: 'text', required: true, dir: 'ltr' },
+      { name: 'status', label: 'وضعیت بررسی', type: 'select', options: opts(CANDIDATE_STATUS), required: true },
+      { name: 'photoUrl', label: 'عکس', type: 'image' },
+      { name: 'statement', label: 'برنامه/بیانیه نامزد', type: 'textarea', wide: true },
+      { name: 'reviewNote', label: 'یادداشت بررسی (داخلی)', type: 'textarea', wide: true },
+    ],
+  },
+  voters: {
+    entity: 'voters', title: 'واجدین رأی', singular: 'رأی‌دهنده', search: ['studentNumber', 'fullName', 'majorName'],
+    columns: [{ key: 'studentNumber', label: 'شماره دانشجویی' }, { key: 'fullName', label: 'نام' }, { key: 'majorName', label: 'رشته' }, { key: 'election', label: 'انتخابات', kind: 'lookup', source: 'elections' }, { key: 'nationalIdLast4', label: '۴ رقم آخر کد ملی' }],
+    fields: [
+      { name: 'election', label: 'انتخابات', type: 'select', source: 'elections', required: true, wide: true },
+      { name: 'studentNumber', label: 'شماره دانشجویی', type: 'text', required: true, dir: 'ltr' },
+      { name: 'nationalId', label: 'کد ملی', type: 'text', dir: 'ltr', hint: 'فقط به‌صورت رمزنگاری‌شده ذخیره می‌شود؛ در ویرایش، خالی بماند تا تغییر نکند' },
+      { name: 'fullName', label: 'نام', type: 'text' },
+      { name: 'majorName', label: 'رشته', type: 'text' },
+    ],
+  },
   years: {
     entity: 'years', title: 'سال‌های تحصیلی', singular: 'سال تحصیلی', search: ['title'], defaults: { status: 'Upcoming' },
     columns: [{ key: 'title', label: 'عنوان' }, { key: 'status', label: 'وضعیت', kind: 'label', map: YEAR_STATUS }, { key: 'sortOrder', label: 'ترتیب' }],
