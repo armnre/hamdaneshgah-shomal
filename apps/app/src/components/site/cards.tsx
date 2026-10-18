@@ -49,7 +49,7 @@ export function AssociationCard({ a }: { a: Row }) {
     <Link to={`/associations/${s(a.slug)}`} className="group flex flex-col overflow-hidden rounded-2xl border bg-card transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]">
       <div className="relative aspect-[16/7]">
         <Cover src={a.coverUrl} alt={s(a.name)} label="انجمن" />
-        <div className="absolute -bottom-6 right-5 h-14 w-14 overflow-hidden rounded-xl border-4 border-card bg-card">
+        <div className="absolute -bottom-6 end-5 h-14 w-14 overflow-hidden rounded-xl border-4 border-card bg-card">
           <Cover src={a.logoUrl} alt={`لوگوی ${s(a.name)}`} label={s(a.name).replace('انجمن علمی', '')} className="text-lg" />
         </div>
       </div>

@@ -61,7 +61,7 @@ export default function AdminApp() {
             {access.canBootstrap ? 'هنوز هیچ مدیری تعریف نشده است. با تأیید، حساب شما به‌عنوان «مدیر کل» ثبت می‌شود و این گزینه برای همیشه بسته خواهد شد.' : `حساب ${user.email} نقشی در پنل مدیریت ندارد. برای دریافت دسترسی با مدیر کل تماس بگیرید.`}
           </p>
           <div className="mt-6 flex justify-center gap-2">
-            {access.canBootstrap && <Button onClick={() => claim.mutate()} disabled={claim.isPending}>{claim.isPending && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}ثبت من به‌عنوان مدیر کل</Button>}
+            {access.canBootstrap && <Button onClick={() => claim.mutate()} disabled={claim.isPending}>{claim.isPending && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}ثبت من به‌عنوان مدیر کل</Button>}
             <Button variant="outline" asChild><Link to="/">بازگشت به سایت</Link></Button>
           </div>
         </div>
@@ -101,7 +101,7 @@ function Shell({ email }: { email: string }) {
         <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background/90 px-4 backdrop-blur sm:px-6">
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(true)} aria-label="منو"><Menu /></Button>
           <nav aria-label="مسیر" className="text-sm text-muted-foreground"><Link to="/admin">پنل</Link>{current && current.to !== '/admin' && <> / <span className="text-foreground">{current.label}</span></>}</nav>
-          <div className="mr-auto flex items-center gap-2">
+          <div className="me-auto flex items-center gap-2">
             <div className="hidden text-left text-xs sm:block"><p dir="ltr">{email}</p><p className="text-muted-foreground">{ROLE_LABEL[access.role ?? '']}</p></div>
             <Button variant="ghost" size="icon" asChild aria-label="مشاهده سایت"><Link to="/" target="_blank"><ExternalLink className="h-4 w-4" /></Link></Button>
             <Button variant="ghost" size="icon" onClick={() => logout()} aria-label="خروج"><LogOut className="h-4 w-4" /></Button>

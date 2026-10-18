@@ -17,7 +17,7 @@ const QUICK = [
   { to: '/associations', label: 'انجمن‌های علمی', icon: Users },
   { to: '/news', label: 'اخبار و اطلاعیه‌ها', icon: Newspaper },
   { to: '/events', label: 'رویدادها و همایش‌ها', icon: CalendarDays },
-  { to: '/courses', label: 'دوره‌های آموزشی', icon: BookOpen },
+  { to: '/events', label: 'دوره‌های آموزشی', icon: BookOpen },
 ];
 
 export default function Home() {
@@ -58,7 +58,7 @@ function HomeSections({ d, loading, st }: { d?: Row; loading: boolean; st: Recor
   return (
     <>
       <section className="container-page mt-20">
-        <SectionHeading eyebrow="تازه‌ها" title="اخبار و اطلاعیه‌ها" action={<Button asChild variant="ghost"><Link to="/news">همه اخبار<ArrowLeft className="mr-1 h-4 w-4" /></Link></Button>} />
+        <SectionHeading eyebrow="تازه‌ها" title="اخبار و اطلاعیه‌ها" action={<Button asChild variant="ghost"><Link to="/news">همه اخبار<ArrowLeft className="me-1 h-4 w-4" /></Link></Button>} />
         {loading ? <div className="grid gap-6 md:grid-cols-3">{sk(3, 'h-72 rounded-2xl')}</div> : news.length === 0 ? (
           <EmptyState title="هنوز خبری منتشر نشده است" text="اخبار و اطلاعیه‌ها پس از انتشار توسط مدیران در اینجا نمایش داده می‌شوند." />
         ) : (
@@ -76,7 +76,7 @@ function HomeSections({ d, loading, st }: { d?: Row; loading: boolean; st: Recor
 
       <section className="mt-20 bg-secondary/60 py-16">
         <div className="container-page">
-          <SectionHeading eyebrow="انجمن‌های علمی" title="جامعه‌های دانشجویی فعال" action={<Button asChild variant="ghost"><Link to="/associations">همه انجمن‌ها<ArrowLeft className="mr-1 h-4 w-4" /></Link></Button>} />
+          <SectionHeading eyebrow="انجمن‌های علمی" title="جامعه‌های دانشجویی فعال" action={<Button asChild variant="ghost"><Link to="/associations">همه انجمن‌ها<ArrowLeft className="me-1 h-4 w-4" /></Link></Button>} />
           {loading ? <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{sk(3, 'h-72 rounded-2xl')}</div> : assoc.length === 0 ? (
             <EmptyState title="انجمنی ثبت نشده است" text="پس از ثبت انجمن‌های علمی توسط مدیر سامانه، فهرست آن‌ها اینجا قرار می‌گیرد." />
           ) : <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{assoc.map((a) => <AssociationCard key={String(a.id)} a={a} />)}</div>}
@@ -96,7 +96,7 @@ function HomeSections({ d, loading, st }: { d?: Row; loading: boolean; st: Recor
           </div>
         </div>
         <div>
-          <SectionHeading eyebrow="پیش رو" title="رویدادها و دوره‌ها" action={<Button asChild variant="ghost"><Link to="/events">تقویم کامل<ArrowLeft className="mr-1 h-4 w-4" /></Link></Button>} />
+          <SectionHeading eyebrow="پیش رو" title="رویدادها و دوره‌ها" action={<Button asChild variant="ghost"><Link to="/events">تقویم کامل<ArrowLeft className="me-1 h-4 w-4" /></Link></Button>} />
           {loading ? <div className="grid gap-3">{sk(3, 'h-24 rounded-2xl')}</div> : events.length === 0 ? (
             <EmptyState title="رویداد پیش رویی ثبت نشده" />
           ) : <div className="grid gap-3">{events.slice(0, 4).map((e) => <EventCard key={String(e.id)} e={e} />)}</div>}

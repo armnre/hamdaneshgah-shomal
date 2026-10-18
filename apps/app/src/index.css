@@ -116,6 +116,6 @@
     @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
   }
   .prose-fa {
-    @apply leading-8 text-foreground/90 [&_h2]:mt-8 [&_h2]:text-xl [&_h2]:font-bold [&_h3]:mt-6 [&_h3]:font-bold [&_p]:my-4 [&_ul]:list-disc [&_ul]:pr-6 [&_ol]:list-decimal [&_ol]:pr-6 [&_a]:text-primary [&_a]:underline [&_blockquote]:border-r-4 [&_blockquote]:border-accent [&_blockquote]:pr-4 [&_blockquote]:text-muted-foreground;
+    @apply leading-8 text-foreground/90 [&_h2]:mt-8 [&_h2]:text-xl [&_h2]:font-bold [&_h3]:mt-6 [&_h3]:font-bold [&_p]:my-4 [&_ul]:list-disc [&_ul]:ps-6 [&_ol]:list-decimal [&_ol]:ps-6 [&_a]:text-primary [&_a]:underline [&_blockquote]:border-s-4 [&_blockquote]:border-accent [&_blockquote]:ps-4 [&_blockquote]:text-muted-foreground;
   }
 }

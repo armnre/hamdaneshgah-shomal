@@ -40,7 +40,7 @@ export function SettingsPage() {
           const on = (value: string) => setVals((p) => ({ ...p, [k]: { ...p[k], value } }));
           return <div key={k} className="grid gap-2"><Label htmlFor={k}>{meta.label}</Label>{meta.long ? <Textarea id={k} rows={2} value={vals[k].value} onChange={(e) => on(e.target.value)} /> : <Input id={k} value={vals[k].value} onChange={(e) => on(e.target.value)} />}</div>;
         })}
-        <Button className="justify-self-start" onClick={() => save.mutate()} disabled={save.isPending}>{save.isPending && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}ذخیره تنظیمات</Button>
+        <Button className="justify-self-start" onClick={() => save.mutate()} disabled={save.isPending}>{save.isPending && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}ذخیره تنظیمات</Button>
       </div>
     </div>
   );
@@ -58,7 +58,7 @@ export function AuditPage() {
           <div key={String(r.id)} className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border bg-card px-4 py-3 text-sm">
             <Badge variant="secondary">{String(r.action)}</Badge><span className="font-semibold">{String(r.entity)}</span>
             <span className="truncate text-xs text-muted-foreground">{String(r.details ?? '')}</span>
-            <span dir="ltr" className="mr-auto text-xs text-muted-foreground">{String(r.actorEmail ?? '')}</span>
+            <span dir="ltr" className="me-auto text-xs text-muted-foreground">{String(r.actorEmail ?? '')}</span>
             <span className="text-xs text-muted-foreground">{faDate(r.loggedAt, true)}</span>
           </div>
         ))}

@@ -22,7 +22,7 @@ export default function EventDetail() {
 
   return (
     <div className="container-page py-8">
-      <Crumbs items={[{ to: '/', label: 'خانه' }, { to: isCourse ? '/courses' : '/events', label: isCourse ? 'دوره‌ها' : 'رویدادها' }, { label: String(e.title) }]} />
+      <Crumbs items={[{ to: '/', label: 'خانه' }, { to: '/events', label: isCourse ? 'دوره‌ها' : 'رویدادها' }, { label: String(e.title) }]} />
       <div className="grid gap-10 lg:grid-cols-[1fr_340px]">
         <article className="min-w-0">
           <div className="aspect-[16/8] overflow-hidden rounded-3xl"><Cover src={e.coverUrl} alt={String(e.title)} label={KIND_LABEL[String(e.kind)]} /></div>
@@ -39,7 +39,7 @@ export default function EventDetail() {
             {Boolean(e.associationSlug) && <li className="flex gap-3"><Users className="h-5 w-5 text-primary" /><div><p className="text-muted-foreground">برگزارکننده</p><Link to={`/associations/${e.associationSlug}`} className="font-semibold text-primary">{String(e.associationName)}</Link></div></li>}
           </ul>
           {past ? <p className="mt-6 rounded-xl bg-muted p-3 text-center text-sm text-muted-foreground">این برنامه برگزار شده است.</p> :
-            Boolean(e.registrationUrl) && <Button asChild className="mt-6 w-full"><a href={String(e.registrationUrl)} target="_blank" rel="noreferrer">ثبت‌نام<ExternalLink className="mr-2 h-4 w-4" /></a></Button>}
+            Boolean(e.registrationUrl) && <Button asChild className="mt-6 w-full"><a href={String(e.registrationUrl)} target="_blank" rel="noreferrer">ثبت‌نام<ExternalLink className="me-2 h-4 w-4" /></a></Button>}
         </aside>
       </div>
     </div>

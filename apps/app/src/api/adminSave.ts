@@ -30,6 +30,11 @@ const TABLES = {
   categories: zite.categories, media: zite.mediaAssets, members: zite.adminMembers, settings: zite.siteSettings, messages: zite.contactMessages,
 };
 
+async function activeSuperAdminCount(): Promise<number> {
+  const r = await zite.sql({ query: `SELECT COUNT(*)::int AS n FROM "AdminMembers" WHERE "role" = 'Super Admin' AND "active" = true` });
+  return Number(r.rows[0]?.n ?? 0);
+}
+
 export default createEndpoint({
   description: 'Creates or updates a record in an admin section with validation and audit logging',
   authenticated: true,
@@ -88,6 +93,11 @@ export default createEndpoint({
       if (data.role !== 'Association Manager') data.association = null;
     }
 
+    if (input.entity === 'members' && input.id) {
+      const prev = await zite.adminMembers.findOne({ id: input.id });
+      const losesSuper = prev?.role === 'Super Admin' && prev?.active && (data.role !== 'Super Admin' || !data.active);
+      if (losesSuper && (await activeSuperAdminCount()) <= 1) throw new ZiteError({ code: 'BAD_REQUEST', message: 'last super admin', userFacingMessage: 'آخرین مدیر کل فعال را نمی‌توان غیرفعال یا تنزل داد.' });
+    }
     const res = input.id ? await table.update({ id: input.id, record: data }) : await table.create({ record: data });
     const summary = Object.keys(data).filter((k) => !['body', 'about'].includes(k)).join(', ');
     await audit(context.user, input.id ? 'update' : 'create', input.entity, res.id, `fields: ${summary}`);

@@ -35,8 +35,8 @@ export default function AssociationDetail() {
             {a.facultyName && <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground"><Building2 className="h-4 w-4" />{a.facultyName}{a.majorName && ` · ${a.majorName}`}</p>}
           </div>
           <div className="flex gap-2">
-            {a.contactEmail && <Button asChild variant="outline" size="sm"><a href={`mailto:${a.contactEmail}`}><Mail className="ml-1.5 h-4 w-4" />ایمیل</a></Button>}
-            {a.telegramUrl && <Button asChild size="sm"><a href={a.telegramUrl} target="_blank" rel="noreferrer"><Send className="ml-1.5 h-4 w-4" />تلگرام</a></Button>}
+            {a.contactEmail && <Button asChild variant="outline" size="sm"><a href={`mailto:${a.contactEmail}`}><Mail className="ms-1.5 h-4 w-4" />ایمیل</a></Button>}
+            {a.telegramUrl && <Button asChild size="sm"><a href={a.telegramUrl} target="_blank" rel="noreferrer"><Send className="ms-1.5 h-4 w-4" />تلگرام</a></Button>}
           </div>
         </div>
       </div>

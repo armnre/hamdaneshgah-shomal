@@ -57,7 +57,7 @@ export default function JoinAssociation({ name }: { name: string }) {
         <Textarea id="j-motivation" rows={3} value={f.motivation} onChange={(e) => setF({ ...f, motivation: e.target.value })} />
         {touched && errs.motivation && <p className="text-xs text-destructive">{errs.motivation}</p>}
       </div>
-      <Button type="submit" disabled={m.isPending || (touched && !parsed.success)}>{m.isPending && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}ارسال درخواست</Button>
+      <Button type="submit" disabled={m.isPending || (touched && !parsed.success)}>{m.isPending && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}ارسال درخواست</Button>
     </form>
   );
 }

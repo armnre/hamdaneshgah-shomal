@@ -34,8 +34,8 @@ export default function NewsList() {
             ))}
           </div>
           <div className="relative md:w-72">
-            <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} placeholder="جست‌وجو در اخبار…" aria-label="جست‌وجو" className="pr-10" />
+            <Search className="absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} placeholder="جست‌وجو در اخبار…" aria-label="جست‌وجو" className="pe-10" />
           </div>
         </div>
         {query.isError ? <ErrorState onRetry={() => query.refetch()} /> : query.isLoading ? (

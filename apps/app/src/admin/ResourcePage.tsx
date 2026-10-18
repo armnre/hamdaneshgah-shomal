@@ -80,14 +80,14 @@ function ResourceInner({ entity }: { entity: string }) {
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div><h1 className="text-2xl font-extrabold">{res.title}</h1><p className="text-sm text-muted-foreground">{faNum(rows.length)} مورد</p></div>
-        {canCreate && <Button onClick={() => openEdit(null)}><Plus className="ml-1.5 h-4 w-4" />{res.singular} جدید</Button>}
+        {canCreate && <Button onClick={() => openEdit(null)}><Plus className="ms-1.5 h-4 w-4" />{res.singular} جدید</Button>}
       </div>
       <div className="relative mb-4 max-w-sm">
-        <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="جست‌وجو…" className="bg-card pr-10" aria-label="جست‌وجو" />
+        <Search className="absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="جست‌وجو…" className="bg-card pe-10" aria-label="جست‌وجو" />
       </div>
       {q.isError ? <ErrorState text={errMsg(q.error)} onRetry={() => q.refetch()} /> : q.isLoading ? <Skeleton className="h-80 rounded-2xl" /> : rows.length === 0 ? (
-        <EmptyState title={search ? 'نتیجه‌ای یافت نشد' : `هنوز ${res.singular}ی ثبت نشده`} action={canCreate && !search ? <Button onClick={() => openEdit(null)}><Plus className="ml-1.5 h-4 w-4" />افزودن</Button> : undefined} />
+        <EmptyState title={search ? 'نتیجه‌ای یافت نشد' : `هنوز ${res.singular}ی ثبت نشده`} action={canCreate && !search ? <Button onClick={() => openEdit(null)}><Plus className="ms-1.5 h-4 w-4" />افزودن</Button> : undefined} />
       ) : (
         <>
           <div className="hidden overflow-hidden rounded-2xl border bg-card md:block">
@@ -116,8 +116,8 @@ function ResourceInner({ entity }: { entity: string }) {
               <p className="font-bold">{cell(res.columns[0], r)}</p>
               <dl className="mt-2 grid grid-cols-2 gap-2 text-xs">{res.columns.slice(1).map((c) => <div key={c.key}><dt className="text-muted-foreground">{c.label}</dt><dd className="mt-0.5">{cell(c, r)}</dd></div>)}</dl>
               <div className="mt-3 flex gap-2">
-                <Button size="sm" variant="outline" onClick={() => openEdit(r)}><Pencil className="ml-1 h-3.5 w-3.5" />ویرایش</Button>
-                {canDelete && <Button size="sm" variant="outline" onClick={() => setToDelete(r)}><Trash2 className="ml-1 h-3.5 w-3.5 text-destructive" />حذف</Button>}
+                <Button size="sm" variant="outline" onClick={() => openEdit(r)}><Pencil className="ms-1 h-3.5 w-3.5" />ویرایش</Button>
+                {canDelete && <Button size="sm" variant="outline" onClick={() => setToDelete(r)}><Trash2 className="ms-1 h-3.5 w-3.5 text-destructive" />حذف</Button>}
               </div>
             </div>
           ))}</div>

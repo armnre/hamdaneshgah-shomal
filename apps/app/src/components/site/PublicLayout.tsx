@@ -14,7 +14,6 @@ export const NAV = [
   { to: '/faculties', label: 'دانشکده‌ها' },
   { to: '/news', label: 'اخبار و اطلاعیه‌ها' },
   { to: '/events', label: 'رویدادها' },
-  { to: '/courses', label: 'دوره‌ها' },
 ];
 
 export function useSettings() {
@@ -33,7 +32,7 @@ function Header() {
   const [open, setOpen] = useState(false);
   return (
     <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur-md">
-      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:right-2 focus:top-2 focus:rounded focus:bg-card focus:p-2">پرش به محتوا</a>
+      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:end-2 focus:top-2 focus:rounded focus:bg-card focus:p-2">پرش به محتوا</a>
       <div className="container-page flex h-[72px] items-center justify-between gap-4">
         <Brand />
         <nav aria-label="ناوبری اصلی" className="hidden items-center gap-1 lg:flex">

@@ -9,6 +9,11 @@ const TABLES = {
   categories: zite.categories, media: zite.mediaAssets, members: zite.adminMembers, messages: zite.contactMessages,
 };
 
+async function activeSuperAdminCount(): Promise<number> {
+  const r = await zite.sql({ query: `SELECT COUNT(*)::int AS n FROM "AdminMembers" WHERE "role" = 'Super Admin' AND "active" = true` });
+  return Number(r.rows[0]?.n ?? 0);
+}
+
 export default createEndpoint({
   description: 'Deletes a record from an admin section (role-checked, audited)',
   authenticated: true,
@@ -35,6 +40,9 @@ export default createEndpoint({
     if (input.entity === 'faculties') {
       const deps = await zite.majors.findAll({ filters: { faculty: input.id }, limit: 1 });
       if (deps.records.length) throw new ZiteError({ code: 'BAD_REQUEST', message: 'deps', userFacingMessage: 'ابتدا رشته‌های این دانشکده را حذف یا منتقل کنید.' });
+    }
+    if (input.entity === 'members' && existing.role === 'Super Admin' && existing.active && (await activeSuperAdminCount()) <= 1) {
+      throw new ZiteError({ code: 'BAD_REQUEST', message: 'last super admin', userFacingMessage: 'آخرین مدیر کل فعال را نمی‌توان حذف کرد.' });
     }
     await table.delete({ id: input.id });
     await audit(context.user, 'delete', input.entity, input.id, String(existing.title ?? existing.name ?? existing.label ?? ''));

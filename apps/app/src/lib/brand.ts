@@ -8,9 +8,9 @@ export type Photo = { src: string; alt: string };
 // AI-generated, fictional people (no real persons, no faculty, no text/logos)
 export const AI_PHOTOS: Photo[] = [
   { src: '/shomal/ai-campus.webp', alt: 'دانشجویان در فضای سبز یک پردیس دانشگاهی در شمال ایران (تصویر تولیدشده با هوش مصنوعی)' },
-  { src: '/shomal/ai-lab.webp', alt: 'دو دانشجو در حال کار با مدار الکترونیکی در آزمایشگاه (تصویر تولیدشده با هوش مصنوعی)' },
+  { src: '/shomal/ai-lab.webp', alt: 'دانشجویان مهندسی با روپوش آزمایشگاه در حال کار روی مدار الکترونیکی (تصویر تولیدشده با هوش مصنوعی)' },
   { src: '/shomal/ai-library.webp', alt: 'دانشجویان در حال مطالعه در کتابخانه دانشگاه (تصویر تولیدشده با هوش مصنوعی)' },
-  { src: '/shomal/ai-volleyball.webp', alt: 'دانشجویان در حال بازی والیبال در زمین روباز پردیس (تصویر تولیدشده با هوش مصنوعی)' },
+  { src: '/shomal/ai-volleyball.webp', alt: 'دانشجویان دختر در حال بازی والیبال در سالن ورزشی دانشگاه (تصویر تولیدشده با هوش مصنوعی)' },
   { src: '/shomal/ai-workshop.webp', alt: 'کارگاه آموزشی یک انجمن علمی دانشجویی (تصویر تولیدشده با هوش مصنوعی)' },
   { src: '/shomal/ai-group.webp', alt: 'عکس گروهی دانشجویان در فضای سبز پردیس (تصویر تولیدشده با هوش مصنوعی)' },
 ];

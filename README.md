@@ -4,12 +4,12 @@
 
 ## دیپلوی روی Netlify + Neon
 
-پوشه `deploy/` نسخه مستقل و قابل‌دیپلوی پروژه است. همان کد صفحات و اندپوینت‌های `apps/hamdaneshgah-shomal` را استفاده می‌کند. تنها چیزی که عوض می‌شود لایه‌ی زیرساخت است:
+پوشه `deploy/` نسخه مستقل و قابل‌دیپلوی پروژه است. همان کد صفحات و اندپوینت‌های `apps/app` را استفاده می‌کند. تنها چیزی که عوض می‌شود لایه‌ی زیرساخت است:
 
 | بخش | پیاده‌سازی روی Netlify |
 |---|---|
 | فرانت‌اند | Vite → `deploy/dist` |
-| API | یک Netlify Function (`/api/*`) که همه اندپوینت‌های `apps/hamdaneshgah-shomal/src/api` را اجرا می‌کند |
+| API | یک Netlify Function (`/api/*`) که همه اندپوینت‌های `apps/app/src/api` را اجرا می‌کند |
 | دیتابیس | Neon Postgres — مایگریشن‌های شماره‌دار در `deploy/db/migrations/` (هر کدام فقط یک بار اجرا و در جدول `schemaMigrations` ثبت می‌شود)، سپس seed |
 | ورود | ورود بدون رمز با پیوند ایمیلی (Magic Link) و کوکی امضاشده HttpOnly؛ ارسال ایمیل از طریق Resend |
 | فایل‌ها | Netlify Blobs (`/api/upload` و `/api/file/:key`) |
@@ -36,10 +36,10 @@ npx netlify dev     # فرانت + فانکشن‌ها با متغیرهای م�
 ```
 
 ## ساختار
-- `apps/hamdaneshgah-shomal/src/pages` — صفحات عمومی
-- `apps/hamdaneshgah-shomal/src/admin` — پنل مدیریت (فقط از مسیر `/admin`)
-- `apps/hamdaneshgah-shomal/src/api` — اندپوینت‌های سرور
-- `apps/hamdaneshgah-shomal/src/lib/policy.ts` — قواعد مجوز (تست‌شده در `apps/hamdaneshgah-shomal/tests`)
+- `apps/app/src/pages` — صفحات عمومی
+- `apps/app/src/admin` — پنل مدیریت (فقط از مسیر `/admin`)
+- `apps/app/src/api` — اندپوینت‌های سرور
+- `apps/app/src/lib/policy.ts` — قواعد مجوز (تست‌شده در `apps/app/tests`)
 - `deploy/server` — لایه‌ی سازگاری Neon/Netlify (`db.ts`، `auth.ts`، `handler.ts`)
 - `packages/components` — کامپوننت‌های مشترک (shadcn/ui)
 
@@ -54,4 +54,4 @@ npx netlify dev     # فرانت + فانکشن‌ها با متغیرهای م�
 - ساخت مدیر کل فقط وقتی ممکن است که هنوز هیچ مدیری وجود نداشته باشد و ایمیل در allowlist باشد. اگر دو نفر هم‌زمان درخواست بدهند، فقط یکی باقی می‌ماند و ردیف دیگری حذف می‌شود.
 
 ## تصاویر
-عکس‌های صفحات (`ai-*.webp`) با هوش مصنوعی ساخته شده‌اند و افراد واقعی را نشان نمی‌دهند. نشان دانشگاه و چند تصویر قدیمی‌تر از shomal.ac.ir برداشته شده و مجوز استفاده از آن‌ها هنوز تأیید نشده است. فهرست کامل: `apps/hamdaneshgah-shomal/docs/asset-inventory.md`.
+عکس‌های صفحات (`ai-*.webp`) با هوش مصنوعی ساخته شده‌اند و افراد واقعی را نشان نمی‌دهند. نشان دانشگاه و چند تصویر قدیمی‌تر از shomal.ac.ir برداشته شده و مجوز استفاده از آن‌ها هنوز تأیید نشده است. فهرست کامل: `apps/app/docs/asset-inventory.md`.

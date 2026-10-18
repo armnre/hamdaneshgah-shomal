@@ -112,7 +112,7 @@ export default function FormSheet({ res, open, initial, onClose, onSave, saving 
           </div>
         </form>
         <SheetFooter className="gap-2 border-t p-4 sm:justify-start">
-          <Button type="submit" form="resform" disabled={saving}>{saving && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}ذخیره</Button>
+          <Button type="submit" form="resform" disabled={saving}>{saving && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}ذخیره</Button>
           <Button type="button" variant="outline" onClick={onClose}>انصراف</Button>
         </SheetFooter>
       </SheetContent>

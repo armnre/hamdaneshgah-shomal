@@ -14,7 +14,7 @@ export function Cover({ src, alt, label, className }: { src?: unknown; alt: stri
     <div className={cn('relative h-full w-full overflow-hidden bg-primary', className)} role="img" aria-label={alt}>
       <img src={fallbackPhoto(alt)} alt="" loading="lazy" className="h-full w-full object-cover opacity-60 mix-blend-luminosity" />
       <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-transparent" />
-      {label && <span className="absolute bottom-3 right-3 rounded-full bg-background/90 px-2.5 py-0.5 text-[11px] font-bold text-primary">{label.trim().slice(0, 18)}</span>}
+      {label && <span className="absolute bottom-3 end-3 rounded-full bg-background/90 px-2.5 py-0.5 text-[11px] font-bold text-primary">{label.trim().slice(0, 18)}</span>}
     </div>
   );
 }
