@@ -38,7 +38,7 @@ export function StageTimeline({ status, compact }: { status: string; compact?: b
   );
 }
 
-function useNow(ms = 1000) {
+export function useNow(ms = 1000) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), ms); return () => clearInterval(t); }, [ms]);
   return now;

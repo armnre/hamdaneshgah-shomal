@@ -5,6 +5,7 @@ import { useCallback } from 'react';
 import { Vote, CheckCircle2, Loader2, Trophy, ShieldCheck, Copy, Search, ScrollText, Building2 } from 'lucide-react';
 import { useMemo } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@project/components/ui/select';
+import { CandidateAvatar } from '../components/site/CandidateAvatar';
 import { ElectionCard, DemoBadge, STAGE, type Election } from '../components/site/ElectionCards';
 import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@project/components/ui/alert-dialog';
@@ -114,8 +115,8 @@ export function ElectionDetail() {
       <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Fact k="کرسی‌ها" v={faNum(e.seats)} />
         <Fact k="حداکثر انتخاب هر رأی‌دهنده" v={faNum(e.maxChoicesPerVoter)} />
-        <Fact k="ثبت‌نام نامزدها" v={e.candidacyStart ? `${faDate(e.candidacyStart, true)} تا ${faDate(e.candidacyEnd, true)}` : 'اعلام نشده'} />
-        <Fact k="رأی‌گیری (به وقت تهران)" v={e.votingStart ? `${faDate(e.votingStart, true)} تا ${faDate(e.votingEnd, true)}` : 'اعلام نشده'} />
+        <Fact k="انجمن" v={e.association ?? '—'} />
+        <Fact k="رأی‌گیری هم‌زمان همه‌ی رشته‌ها (وقت تهران)" v={e.votingStart ? `${faDate(e.votingStart, true)} تا ${faDate(e.votingEnd, true)}` : 'اعلام نشده'} />
       </dl>
       {e.description && <p className="max-w-3xl whitespace-pre-line leading-8">{e.description}</p>}
       {published && (
@@ -132,15 +133,15 @@ export function ElectionDetail() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {e.candidates.map((c, i) => (
               <article key={c.id} className={`rounded-2xl border bg-card p-5 ${published && i < e.seats ? 'border-primary/50 bg-primary/[0.03]' : ''}`}>
-                <div className="flex items-center gap-3">
-                  {c.photoUrl ? <img src={c.photoUrl} alt={c.fullName} loading="lazy" className="h-16 w-16 rounded-full object-cover" /> : <div className="grid h-16 w-16 place-items-center rounded-full bg-primary/10 text-lg font-bold text-primary">{c.fullName[0]}</div>}
-                  <div>
-                    <h3 className="font-bold">{c.fullName}</h3>
-                    {published && <p className="flex items-center gap-1 text-sm text-primary">{i < e.seats && <Trophy className="h-4 w-4" aria-label="برگزیده" />}{faNum(c.votes ?? 0)} رأی</p>}
+                <div className="flex items-center gap-4">
+                  <CandidateAvatar name={c.fullName} photoUrl={c.photoUrl} className="h-16 w-16 text-2xl sm:h-20 sm:w-20" />
+                  <div className="min-w-0">
+                    <h3 className="text-base font-extrabold leading-7">{c.fullName}</h3>
+                    <p className="text-xs text-muted-foreground">نامزد دبیری {e.association ?? 'انجمن'}</p>
+                    {published && <p className="mt-1 flex items-center gap-1 text-sm font-bold text-primary">{i < e.seats && <Trophy className="h-4 w-4" aria-label="برگزیده" />}{faNum(c.votes ?? 0)} رأی</p>}
                   </div>
                 </div>
                 {published && <VoteBar votes={c.votes ?? 0} max={e.candidates[0]?.votes ?? 0} />}
-                {c.statement && <details className="mt-3 text-sm leading-7 text-muted-foreground"><summary className="cursor-pointer font-semibold text-foreground">معرفی و برنامه</summary><p className="mt-2 whitespace-pre-line">{c.statement}</p></details>}
               </article>
             ))}
           </div>
@@ -276,7 +277,7 @@ function Ballot({ e }: { e: Election }) {
           {e.candidates.map((c) => (
             <label key={c.id} className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-3 transition ${picked.includes(c.id) ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'hover:border-primary/40'}`}>
               <Checkbox checked={picked.includes(c.id)} onCheckedChange={() => toggle(c.id)} disabled={!picked.includes(c.id) && picked.length >= e.maxChoicesPerVoter} />
-              {c.photoUrl ? <img src={c.photoUrl} alt="" className="h-11 w-11 rounded-full object-cover" /> : <span className="grid h-11 w-11 place-items-center rounded-full bg-primary/10 font-bold text-primary">{c.fullName[0]}</span>}
+              <CandidateAvatar name={c.fullName} photoUrl={c.photoUrl} className="h-12 w-12 text-lg" />
               <span className="font-semibold">{c.fullName}</span>
             </label>
           ))}

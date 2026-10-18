@@ -10,7 +10,6 @@ export default createEndpoint({
   outputSchema: z.object({
     years: z.array(z.object({
       id: z.string(), title: z.string(), status: z.string(),
-      council: z.array(z.object({ position: z.string(), holder: z.string().nullable(), status: z.string() })),
       associations: z.array(z.object({
         id: z.string(), name: z.string(), slug: z.string().nullable(), faculty: z.string().nullable(),
         needsApproval: z.boolean(), majors: z.array(z.string()),
@@ -53,12 +52,12 @@ export default createEndpoint({
     return {
       years: years.rows.map((y) => ({
         id: String(y.id), title: String(y.title), status: String(y.status ?? ''),
-        council: terms.rows.filter((t) => t.yearId === y.id && !t.ayId).map(leader),
         associations: ays.rows.filter((a) => a.yearId === y.id).map((a) => ({
           id: String(a.id), name: String(a.name), slug: a.slug ? String(a.slug) : null,
           faculty: a.faculty ? String(a.faculty) : null, needsApproval: !!a.needsApproval,
           majors: majors.rows.filter((m) => m.ayId === a.id).map((m) => String(m.name)),
-          leaders: terms.rows.filter((t) => t.ayId === a.id).map(leader),
+          // Only the association secretary is shown (council / secretary-of-secretaries removed)
+          leaders: terms.rows.filter((t) => t.ayId === a.id).slice(0, 1).map(leader),
         })),
       })),
     };

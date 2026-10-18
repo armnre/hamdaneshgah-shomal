@@ -5,13 +5,13 @@ import { useQuery } from '@tanstack/react-query';
 import { getStructure, GetStructureOutputType } from 'zitejs/api';
 import { Skeleton } from '@project/components/ui/skeleton';
 import { Badge } from '@project/components/ui/badge';
-import { Crown, UserRound, AlertTriangle } from 'lucide-react';
+import { UserRound, AlertTriangle } from 'lucide-react';
 import { cn } from '@project/components/lib/utils';
 import { EmptyState, ErrorState, PageHero } from '../components/site/ui';
 import { useTitle } from '../lib/useTitle';
 
 type Year = GetStructureOutputType['years'][0];
-type Leader = Year['council'][0];
+type Leader = Year['associations'][0]['leaders'][0];
 
 const STATUS: Record<string, string> = { Undetermined: 'تعیین‌نشده', Active: 'فعال', Ended: 'پایان‌یافته', Resigned: 'مستعفی' };
 
@@ -19,7 +19,7 @@ function Holder({ l }: { l: Leader }) {
   return (
     <div className="flex items-center gap-2 text-sm">
       <UserRound className="h-4 w-4 shrink-0 text-primary" aria-hidden />
-      <span className="text-muted-foreground">{l.position}:</span>
+      <span className="text-muted-foreground">دبیر انجمن:</span>
       <span className="font-medium">{l.holder ?? STATUS[l.status] ?? 'تعیین‌نشده'}</span>
     </div>
   );
@@ -33,13 +33,6 @@ function YearChart({ year }: { year: Year }) {
   }
   return (
     <div className="space-y-10">
-      <div className="mx-auto max-w-md rounded-3xl border-2 border-accent bg-card p-6 text-center shadow-sm">
-        <Crown className="mx-auto mb-2 h-7 w-7 text-accent" aria-hidden />
-        <h2 className="text-lg font-bold">شورای دبیران انجمن‌های علمی</h2>
-        <div className="mt-3 flex flex-col items-center gap-1">
-          {year.council.length ? year.council.map((l, i) => <Holder key={i} l={l} />) : <span className="text-sm text-muted-foreground">تعیین‌نشده</span>}
-        </div>
-      </div>
       {[...byFaculty.entries()].map(([faculty, list]) => (
         <section key={faculty} aria-labelledby={`f-${faculty}`}>
           <h3 id={`f-${faculty}`} className="mb-4 border-s-4 border-primary ps-3 text-lg font-bold">{faculty}</h3>
@@ -56,7 +49,7 @@ function YearChart({ year }: { year: Year }) {
                   {a.majors.map((m) => <MajorChip key={m} name={m} className="text-xs" />)}
                 </div>
                 <div className="mt-auto space-y-1 border-t pt-3">
-                  {a.leaders.length ? a.leaders.map((l, i) => <Holder key={i} l={l} />) : <span className="text-sm text-muted-foreground">سمت‌ها تعیین‌نشده</span>}
+                  {a.leaders[0] ? <Holder l={a.leaders[0]} /> : <span className="text-sm text-muted-foreground">دبیر انجمن: تعیین‌نشده</span>}
                 </div>
               </article>
             ))}
@@ -78,7 +71,7 @@ export default function Structure() {
   const year = years.find((y) => y.id === sel);
   return (
     <>
-      <PageHero title="ساختار انجمن‌ها" subtitle="نمودار سازمانی انجمن‌های علمی در هر سال تحصیلی؛ هر رشته در انتخابات انجمن مربوط به خود رأی می‌دهد." />
+      <PageHero title="ساختار انجمن‌ها" subtitle="دبیر هر انجمن علمی در هر سال تحصیلی؛ هر رشته در انتخابات انجمن مربوط به خود رأی می‌دهد." />
       <div className="container mx-auto px-4 py-10">
         {q.isError ? <ErrorState onRetry={() => q.refetch()} /> : q.isLoading ? <Skeleton className="h-96 rounded-3xl" /> : !years.length ? <EmptyState title="ساختاری ثبت نشده است" /> : (
           <>

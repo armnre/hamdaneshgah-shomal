@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Users, Building2, Newspaper, CalendarDays, Vote, BookOpen, Megaphone } from 'lucide-react';
 import HomeHero from '../components/site/HomeHero';
 import { getPublicHome, listPublicElections } from 'zitejs/api';
-import { HomeElections } from '../components/site/ElectionCards';
+import { HomeElections } from '../components/site/HomeElections';
 import { Button } from '@project/components/ui/button';
 import { Skeleton } from '@project/components/ui/skeleton';
 import { AssociationCard, EventCard, NewsCard } from '../components/site/cards';
@@ -124,8 +124,7 @@ function ElectionsBlock() {
   const list = q.data?.elections ?? [];
   return (
     <section className="container-page mt-20" aria-labelledby="home-elections">
-      <SectionHeading eyebrow="انتخابات" title="انتخابات انجمن‌های علمی" action={<Button asChild variant="ghost"><Link to="/elections">همه انتخابات<ArrowLeft className="me-1 h-4 w-4" /></Link></Button>} />
-      {q.isLoading ? <Skeleton className="h-72 rounded-3xl" /> : list.length === 0 ? (
+      {q.isLoading ? <Skeleton className="h-[28rem] rounded-[2rem]" /> : list.length === 0 ? (
         <EmptyState title="هنوز انتخاباتی اعلام نشده است" text="زمان‌بندی ثبت‌نام نامزدها و رأی‌گیری پس از تصویب در اینجا منتشر می‌شود." />
       ) : <HomeElections list={list} />}
     </section>
