@@ -33,17 +33,17 @@ export function Brand({ light }: { light?: boolean }) {
 function Header() {
   const [open, setOpen] = useState(false);
   return (
-    <header className="sticky top-0 z-40 border-b border-t-[3px] border-t-accent bg-background/90 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-t-[3px] border-t-accent bg-background/80 backdrop-blur-xl">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:end-2 focus:top-2 focus:rounded focus:bg-card focus:p-2">پرش به محتوا</a>
       <div className="container-page flex h-[72px] items-center justify-between gap-4">
         <Brand />
         <nav aria-label="ناوبری اصلی" className="hidden items-center gap-1 lg:flex">
           {NAV.map((n) => (
-            <NavLink key={n.to} to={n.to} className={({ isActive }) => cn('relative rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition hover:text-foreground', isActive && 'text-primary after:absolute after:inset-x-3 after:-bottom-[15px] after:h-0.5 after:bg-accent')}>{n.label}</NavLink>
+            <NavLink key={n.to} to={n.to} className={({ isActive }) => cn('relative rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground', isActive && 'bg-secondary text-secondary-foreground font-bold')}>{n.label}</NavLink>
           ))}
         </nav>
         <div className="flex items-center gap-2">
-          <Button asChild size="sm" variant="outline" className="hidden sm:inline-flex"><Link to="/contact">تماس با ما</Link></Button>
+          <Button asChild size="sm" className="hidden rounded-full px-5 sm:inline-flex"><Link to="/contact">تماس با ما</Link></Button>
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(!open)} aria-label="منو" aria-expanded={open}>{open ? <X /> : <Menu />}</Button>
         </div>
       </div>
