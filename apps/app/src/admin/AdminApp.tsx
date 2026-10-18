@@ -88,7 +88,7 @@ function Shell({ email }: { email: string }) {
   const [open, setOpen] = useState(false);
   const loc = useLocation();
   const current = NAV.find((n) => n.to === loc.pathname) ?? NAV.find((n) => n.to !== '/admin' && loc.pathname.startsWith(n.to));
-  const brand = <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-5 font-black text-sidebar-accent-foreground">هم‌دانشگاه<span className="text-sidebar-primary">· پنل</span></div>;
+  const brand = <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-5 font-black text-sidebar-accent-foreground"><img src="/shomal/emblem.webp" alt="" className="h-8 w-8 rounded-lg bg-white p-0.5" />پردیس شمال<span className="text-sidebar-primary text-sm">· پنل مدیریت</span></div>;
   return (
     <div className="min-h-screen bg-muted/40 lg:grid lg:grid-cols-[260px_1fr]">
       <aside className="sticky top-0 hidden h-screen overflow-y-auto bg-sidebar text-sidebar-foreground lg:block">{brand}<SideNav /></aside>

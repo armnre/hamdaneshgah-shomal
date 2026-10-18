@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Menu, X, LogIn, LayoutDashboard } from 'lucide-react';
-import { useAuth, loginWithRedirect } from 'zitejs/auth';
+import { Menu, X, ExternalLink, Mail } from 'lucide-react';
+import { SITE_NAME, IMG } from '../../lib/brand';
 import { getSiteSettings } from 'zitejs/api';
 import { Button } from '@project/components/ui/button';
 import { cn } from '@project/components/lib/utils';
@@ -22,24 +22,41 @@ export function useSettings() {
 }
 
 export function Brand({ light }: { light?: boolean }) {
-  const { data } = useSettings();
   return (
-    <Link to="/" className="flex items-center gap-2.5">
-      <span className={cn('flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-white p-0.5', light ? 'ring-1 ring-white/30' : 'ring-1 ring-border')}>
-        <img src="/shomal/emblem.webp" alt="نشان دانشگاه شمال" className="h-full w-full object-contain" />
+    <Link to="/" className="flex items-center gap-3" aria-label={`${SITE_NAME} — صفحه نخست`}>
+      <span className={cn('flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-white p-1 shadow-sm', light ? 'ring-1 ring-white/30' : 'ring-1 ring-border')}>
+        <img src={IMG.emblem} alt="نشان دانشگاه شمال" className="h-full w-full object-contain" />
       </span>
-      <span className="font-black leading-tight">{data?.settings.productName ?? 'هم‌دانشگاه شمال'}</span>
+      <span className="leading-tight">
+        <span className="block text-lg font-black">{SITE_NAME}</span>
+        <span className={cn('block text-[11px] font-medium', light ? 'text-sidebar-foreground/70' : 'text-muted-foreground')}>شبکه دانشجویی دانشگاه شمال</span>
+      </span>
     </Link>
+  );
+}
+
+function TopBar() {
+  const { data } = useSettings();
+  const st = data?.settings ?? {};
+  return (
+    <div className="hidden bg-primary text-primary-foreground/85 md:block">
+      <div className="container-page flex h-9 items-center justify-between text-xs">
+        <span>دانشگاه غیردولتی ـ غیرانتفاعی شمال · آمل</span>
+        <span className="flex items-center gap-5">
+          {st.contactEmail && <a href={`mailto:${st.contactEmail}`} className="flex items-center gap-1.5 hover:text-accent" dir="ltr"><Mail className="h-3.5 w-3.5" />{st.contactEmail}</a>}
+          <a href={st.universityUrl || 'https://shomal.ac.ir'} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 hover:text-accent"><ExternalLink className="h-3.5 w-3.5" />وب‌سایت رسمی دانشگاه</a>
+        </span>
+      </div>
+    </div>
   );
 }
 
 function Header() {
   const [open, setOpen] = useState(false);
-  const { user } = useAuth();
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur-md">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:right-2 focus:top-2 focus:rounded focus:bg-card focus:p-2">پرش به محتوا</a>
-      <div className="container-page flex h-16 items-center justify-between gap-4">
+      <div className="container-page flex h-[72px] items-center justify-between gap-4">
         <Brand />
         <nav aria-label="ناوبری اصلی" className="hidden items-center gap-1 lg:flex">
           {NAV.map((n) => (
@@ -47,11 +64,7 @@ function Header() {
           ))}
         </nav>
         <div className="flex items-center gap-2">
-          {user ? (
-            <Button asChild size="sm"><Link to="/admin"><LayoutDashboard className="ml-1.5 h-4 w-4" />پنل</Link></Button>
-          ) : (
-            <Button size="sm" variant="outline" onClick={() => loginWithRedirect({ redirectUrl: '/admin' })}><LogIn className="ml-1.5 h-4 w-4" />ورود</Button>
-          )}
+          <Button asChild size="sm" variant="outline" className="hidden sm:inline-flex"><Link to="/contact">تماس با ما</Link></Button>
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(!open)} aria-label="منو" aria-expanded={open}>{open ? <X /> : <Menu />}</Button>
         </div>
       </div>
@@ -71,6 +84,7 @@ function Header() {
 export default function PublicLayout() {
   return (
     <div className="flex min-h-screen flex-col">
+      <TopBar />
       <Header />
       <main id="main" className="flex-1"><Outlet /></main>
       <Footer />

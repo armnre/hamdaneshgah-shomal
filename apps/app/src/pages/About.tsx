@@ -16,7 +16,7 @@ export default function About() {
   const { data } = useSettings();
   return (
     <>
-      <PageHero title="درباره هم‌دانشگاه شمال" subtitle={data?.settings.tagline} />
+      <PageHero title="درباره پردیس شمال" image="/shomal/banner-1.webp" subtitle={data?.settings.tagline} />
       <div className="container-page max-w-4xl py-12">
         <p className="text-lg leading-9">{data?.settings.mission}</p>
         <h2 className="mt-12 text-2xl font-extrabold">نقشه راه</h2>

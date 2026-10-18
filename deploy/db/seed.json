@@ -1,0 +1,235 @@
+{
+ "Faculties": [
+  {
+   "id": "33e27e53-e842-4b22-9490-b2fedc67e3ef",
+   "name": "دانشکده فنی و مهندسی",
+   "slug": "engineering",
+   "sortOrder": 1,
+   "active": true,
+   "verified": false,
+   "description": ""
+  },
+  {
+   "id": "d51471a8-b6b1-4db7-9a57-1ef6a8e6e364",
+   "name": "دانشکده علوم انسانی",
+   "slug": "humanities",
+   "sortOrder": 2,
+   "active": true,
+   "verified": false,
+   "description": ""
+  },
+  {
+   "id": "e6a9058a-e141-4dd2-9249-46abe9478fe1",
+   "name": "دانشکده علوم ورزشی",
+   "slug": "sport-sciences",
+   "sortOrder": 3,
+   "active": true,
+   "verified": false,
+   "description": ""
+  }
+ ],
+ "Majors": [
+  {
+   "id": "13d52f23-6dfb-4d4a-8e7f-d5a8e1954bc0",
+   "name": "مهندسی کامپیوتر",
+   "faculty": [
+    "33e27e53-e842-4b22-9490-b2fedc67e3ef"
+   ],
+   "active": true,
+   "verified": false,
+   "description": ""
+  },
+  {
+   "id": "d7b7e810-248c-46fa-845a-8a55393534c9",
+   "name": "مهندسی شیمی",
+   "faculty": [
+    "33e27e53-e842-4b22-9490-b2fedc67e3ef"
+   ],
+   "active": true,
+   "verified": false,
+   "description": ""
+  },
+  {
+   "id": "a66c8f5f-5a7b-4457-872d-f02320a992e3",
+   "name": "مهندسی عمران",
+   "faculty": [
+    "33e27e53-e842-4b22-9490-b2fedc67e3ef"
+   ],
+   "active": true,
+   "verified": false,
+   "description": ""
+  },
+  {
+   "id": "670472ae-1211-47db-9864-7a058ce34a48",
+   "name": "مهندسی برق",
+   "faculty": [
+    "33e27e53-e842-4b22-9490-b2fedc67e3ef"
+   ],
+   "active": true,
+   "verified": false,
+   "description": ""
+  },
+  {
+   "id": "deb32a91-043c-4b75-8532-04a664345d08",
+   "name": "مهندسی پزشکی",
+   "faculty": [
+    "33e27e53-e842-4b22-9490-b2fedc67e3ef"
+   ],
+   "active": true,
+   "verified": false,
+   "description": ""
+  },
+  {
+   "id": "539e5f7a-e495-4ae5-b209-8885d68eacf3",
+   "name": "مهندسی صنایع",
+   "faculty": [
+    "33e27e53-e842-4b22-9490-b2fedc67e3ef"
+   ],
+   "active": true,
+   "verified": false,
+   "description": ""
+  },
+  {
+   "id": "361ce873-5cbb-495b-9f4f-b544cb2b7f40",
+   "name": "مهندسی معماری",
+   "faculty": [
+    "33e27e53-e842-4b22-9490-b2fedc67e3ef"
+   ],
+   "active": true,
+   "verified": false,
+   "description": ""
+  },
+  {
+   "id": "45516e99-e8fa-451a-8554-ee2b7a5ab3a3",
+   "name": "مهندسی مکانیک",
+   "faculty": [
+    "33e27e53-e842-4b22-9490-b2fedc67e3ef"
+   ],
+   "active": true,
+   "verified": false,
+   "description": ""
+  },
+  {
+   "id": "c69bbbe4-dec5-4807-b33f-607ec4d2a718",
+   "name": "حقوق",
+   "faculty": [
+    "d51471a8-b6b1-4db7-9a57-1ef6a8e6e364"
+   ],
+   "active": true,
+   "verified": false,
+   "description": ""
+  },
+  {
+   "id": "b3d1f1ca-1633-4c4a-ac21-64b7f8871fb0",
+   "name": "مدیریت",
+   "faculty": [
+    "d51471a8-b6b1-4db7-9a57-1ef6a8e6e364"
+   ],
+   "active": true,
+   "verified": false,
+   "description": ""
+  },
+  {
+   "id": "0e540295-8338-4eea-9056-a8c1722e067a",
+   "name": "حسابداری",
+   "faculty": [
+    "d51471a8-b6b1-4db7-9a57-1ef6a8e6e364"
+   ],
+   "active": true,
+   "verified": false,
+   "description": ""
+  },
+  {
+   "id": "aeb19849-73fe-4f26-a3f7-2d785aa0c0a1",
+   "name": "روان‌شناسی",
+   "faculty": [
+    "d51471a8-b6b1-4db7-9a57-1ef6a8e6e364"
+   ],
+   "active": true,
+   "verified": false,
+   "description": ""
+  },
+  {
+   "id": "56839074-bc66-4118-942c-6cc44f39bc8d",
+   "name": "علوم ورزشی",
+   "faculty": [
+    "e6a9058a-e141-4dd2-9249-46abe9478fe1"
+   ],
+   "active": true,
+   "verified": false,
+   "description": ""
+  }
+ ],
+ "Categories": [
+  {
+   "id": "452a23e6-e289-4fa2-a101-6911ce7fe734",
+   "name": "اطلاعیه رسمی",
+   "slug": "announcements"
+  },
+  {
+   "id": "1316ce26-ce62-453f-b9a6-a8034da6a9bd",
+   "name": "اخبار انجمن‌ها",
+   "slug": "associations"
+  },
+  {
+   "id": "b99c3cb3-174a-42a9-abfb-11d4854de61f",
+   "name": "آموزشی",
+   "slug": "education"
+  },
+  {
+   "id": "06f7f4cd-c6cf-4f45-a373-cf1bf8358baf",
+   "name": "فرهنگی",
+   "slug": "culture"
+  }
+ ],
+ "SiteSettings": [
+  {
+   "key": "productName",
+   "value": "پردیس شمال"
+  },
+  {
+   "key": "tagline",
+   "value": "شبکه رسمی انجمن‌های علمی، رویدادها و فعالیت‌های دانشجویی دانشگاه شمال آمل"
+  },
+  {
+   "key": "heroTitle",
+   "value": "همه فعالیت‌های دانشجویی دانشگاه شمال، در یک جا"
+  },
+  {
+   "key": "heroSubtitle",
+   "value": "انجمن‌های علمی، رویدادها، دوره‌ها و اطلاعیه‌ها را دنبال کنید و در زندگی دانشگاهی سهم داشته باشید."
+  },
+  {
+   "key": "mission",
+   "value": "پردیس شمال زیرساختی دیجیتال برای شفافیت، مشارکت و هم‌افزایی فعالیت‌های دانشجویی دانشگاه شمال است."
+  },
+  {
+   "key": "electionStatus",
+   "value": "none"
+  },
+  {
+   "key": "electionNote",
+   "value": "سامانه انتخابات انجمن‌های علمی در فاز دوم توسعه راه‌اندازی می‌شود."
+  },
+  {
+   "key": "contactAddress",
+   "value": "مازندران، آمل، کیلومتر ۵ جاده هراز، دو راهی امامزاده عبدالله — کدپستی ۴۶۱۶۱۸۴۵۹۶"
+  },
+  {
+   "key": "contactPhone",
+   "value": ""
+  },
+  {
+   "key": "contactEmail",
+   "value": "info@shomal.ac.ir"
+  },
+  {
+   "key": "universityUrl",
+   "value": "https://shomal.ac.ir"
+  },
+  {
+   "key": "telegramUrl",
+   "value": "https://t.me/shomal_university_official"
+  }
+ ]
+}

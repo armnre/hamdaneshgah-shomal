@@ -6,12 +6,15 @@ import { AlertTriangle, ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
 import { Button } from '@project/components/ui/button';
 import { cn } from '@project/components/lib/utils';
 import { faNum } from '../../lib/format';
+import { IMG, fallbackPhoto } from '../../lib/brand';
 
 export function Cover({ src, alt, label, className }: { src?: unknown; alt: string; label?: string; className?: string }) {
   if (src) return <img src={String(src)} alt={alt} loading="lazy" className={cn('h-full w-full object-cover', className)} />;
   return (
-    <div className={cn('pattern-forest flex h-full w-full items-center justify-center', className)} role="img" aria-label={alt}>
-      <span className="text-3xl font-black text-primary-foreground/80">{(label ?? alt).trim().slice(0, 2)}</span>
+    <div className={cn('relative h-full w-full overflow-hidden bg-primary', className)} role="img" aria-label={alt}>
+      <img src={fallbackPhoto(alt)} alt="" loading="lazy" className="h-full w-full object-cover opacity-60 mix-blend-luminosity" />
+      <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-transparent" />
+      {label && <span className="absolute bottom-3 right-3 rounded-full bg-background/90 px-2.5 py-0.5 text-[11px] font-bold text-primary">{label.trim().slice(0, 18)}</span>}
     </div>
   );
 }
@@ -28,12 +31,15 @@ export function SectionHeading({ eyebrow, title, action }: { eyebrow?: string; t
   );
 }
 
-export function PageHero({ title, subtitle, children }: { title: string; subtitle?: string; children?: ReactNode }) {
+export function PageHero({ title, subtitle, children, image = IMG.campusAlt }: { title: string; subtitle?: string; children?: ReactNode; image?: string }) {
   return (
-    <section className="pattern-forest text-primary-foreground">
+    <section className="relative isolate overflow-hidden bg-primary text-primary-foreground">
+      <img src={image} alt="" className="absolute inset-0 -z-20 h-full w-full object-cover" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-l from-primary via-primary/90 to-primary/60" />
       <div className="container-page py-14 sm:py-20">
-        <h1 className="text-3xl font-black sm:text-4xl">{title}</h1>
-        {subtitle && <p className="mt-3 max-w-2xl text-primary-foreground/80 leading-8">{subtitle}</p>}
+        <div className="mb-4 flex items-center gap-2 text-xs font-semibold text-accent"><span className="h-px w-8 bg-accent" />دانشگاه شمال</div>
+        <h1 className="text-3xl font-black sm:text-[2.6rem] sm:leading-tight">{title}</h1>
+        {subtitle && <p className="mt-4 max-w-2xl leading-8 text-primary-foreground/80">{subtitle}</p>}
         {children}
       </div>
     </section>

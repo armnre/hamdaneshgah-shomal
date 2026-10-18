@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Users, Building2, BookOpen, CalendarDays, MapPin } from 'lucide-react';
+import { ArrowLeft, Users, Building2, BookOpen, CalendarDays, MapPin, ShieldCheck } from 'lucide-react';
 import { Button } from '@project/components/ui/button';
 import { Skeleton } from '@project/components/ui/skeleton';
 import { faNum } from '../../lib/format';
+import { IMG } from '../../lib/brand';
 
 type Props = { title?: string; subtitle?: string; stats?: Record<string, unknown>; loading: boolean };
 
@@ -20,22 +21,22 @@ export default function HomeHero({ title, subtitle, stats, loading }: Props) {
   return (
     <section className="relative isolate overflow-hidden bg-primary text-primary-foreground">
       <motion.img
-        src="/shomal/campus.webp" alt="پردیس دانشگاه شمال در آمل" fetchPriority="high"
+        src={IMG.campus} alt="فضای سبز پردیس دانشگاه شمال" fetchPriority="high"
         initial={{ scale: 1.08 }} animate={{ scale: 1 }} transition={{ duration: 1.6, ease: 'easeOut' }}
         className="absolute inset-0 -z-20 h-full w-full object-cover"
       />
-      <div className="absolute inset-0 -z-10 bg-gradient-to-l from-primary via-primary/85 to-primary/40" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-l from-primary via-primary/90 to-primary/55" />
       <div className="absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-t from-primary to-transparent" />
 
-      <div className="container-page grid gap-12 pb-24 pt-14 sm:pt-20 lg:grid-cols-[1.25fr_1fr] lg:items-center lg:pb-32">
+      <div className="container-page grid gap-12 pb-24 pt-14 sm:pt-20 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:pb-32">
         <div>
           <motion.div {...fade()} className="mb-6 inline-flex items-center gap-3 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 py-1.5 pe-4 ps-1.5 backdrop-blur">
-            <img src="/shomal/emblem.webp" alt="نشان دانشگاه شمال" className="h-8 w-8 rounded-full bg-white object-contain p-0.5" />
-            <span className="text-xs font-semibold sm:text-sm">دانشگاه غیردولتی و غیرانتفاعی شمال</span>
+            <img src={IMG.emblem} alt="نشان دانشگاه شمال" className="h-8 w-8 rounded-full bg-white object-contain p-0.5" />
+            <span className="text-xs font-semibold sm:text-sm">دانشگاه شمال · آمل</span>
           </motion.div>
           <motion.div {...fade(0.08)}>
             {loading ? <Skeleton className="h-28 w-full bg-primary-foreground/10" /> : (
-              <h1 className="text-balance text-4xl font-black leading-[1.35] sm:text-5xl lg:text-6xl">
+              <h1 className="text-balance text-4xl font-black leading-[1.35] sm:text-5xl lg:text-[3.4rem]">
                 {title || 'خانه‌ی مشترک دانشجویان دانشگاه شمال'}
               </h1>
             )}
@@ -51,16 +52,19 @@ export default function HomeHero({ title, subtitle, stats, loading }: Props) {
               <Link to="/events">رویدادهای پیش رو</Link>
             </Button>
           </motion.div>
-          <motion.p {...fade(0.3)} className="mt-8 flex items-center gap-2 text-xs text-primary-foreground/60">
-            <MapPin className="h-3.5 w-3.5" /> آمل، مازندران
-          </motion.p>
+          <motion.div {...fade(0.3)} className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-primary-foreground/65">
+            <span className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" /> آمل، مازندران</span>
+            <span className="flex items-center gap-2"><ShieldCheck className="h-3.5 w-3.5" /> محتوای تأییدشده توسط انجمن‌ها</span>
+          </motion.div>
         </div>
 
         <motion.div {...fade(0.2)} className="relative hidden lg:block">
-          <div className="overflow-hidden rounded-3xl border border-primary-foreground/20 shadow-2xl">
-            <img src="/shomal/faculty-engineering.webp" alt="دانشکده فنی و مهندسی دانشگاه شمال" loading="lazy" className="aspect-[16/10] w-full object-cover" />
+          <div className="grid grid-cols-5 grid-rows-2 gap-3">
+            <Photo src={IMG.campusAlt} alt="نمای پردیس دانشگاه شمال" className="col-span-5 aspect-[16/7]" />
+            <Photo src={IMG.life[0]} alt="مراسم دانشجویی در دانشگاه شمال" className="col-span-3 aspect-[4/3]" />
+            <Photo src={IMG.life[2]} alt="فعالیت دانشجویان دانشگاه شمال" className="col-span-2 aspect-[4/3]" />
           </div>
-          <div className="absolute -bottom-8 start-6 end-6 grid grid-cols-4 gap-2 rounded-2xl border border-primary-foreground/15 bg-primary/80 p-3 backdrop-blur-md">
+          <div className="absolute -bottom-10 start-6 end-6 grid grid-cols-4 gap-2 rounded-2xl border border-primary-foreground/15 bg-primary/85 p-3 shadow-2xl backdrop-blur-md">
             {STATS.map(({ k, l, i: Icon }) => <Stat key={k} label={l} value={stats?.[k]} Icon={Icon} />)}
           </div>
         </motion.div>
@@ -74,6 +78,14 @@ export default function HomeHero({ title, subtitle, stats, loading }: Props) {
         </div>
       </div>
     </section>
+  );
+}
+
+function Photo({ src, alt, className }: { src: string; alt: string; className: string }) {
+  return (
+    <div className={`overflow-hidden rounded-2xl border border-primary-foreground/20 shadow-xl ${className}`}>
+      <img src={src} alt={alt} loading="lazy" className="h-full w-full object-cover transition duration-700 hover:scale-105" />
+    </div>
   );
 }
 
