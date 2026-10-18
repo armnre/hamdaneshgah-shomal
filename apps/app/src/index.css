@@ -170,3 +170,14 @@
   .frame-double { position: relative; }
   .frame-double::after { content: ''; position: absolute; inset: 5px; border: 1px solid hsl(var(--accent) / 0.35); border-radius: inherit; pointer-events: none; }
 }
+
+/* Youthful layer — public site */
+@layer components {
+  .theme-academic .container-page h2 { position: relative; }
+  .theme-academic ::-webkit-scrollbar { width: 10px; height: 10px; }
+  .theme-academic ::-webkit-scrollbar-thumb { background: hsl(var(--primary) / .25); border-radius: 999px; border: 2px solid hsl(var(--background)); }
+  .theme-academic input, .theme-academic textarea, .theme-academic [role="combobox"] { border-radius: calc(var(--radius) - 4px); }
+  .theme-academic :focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 2px; }
+  .theme-academic { -webkit-tap-highlight-color: transparent; }
+  .glow-mint { background: radial-gradient(60% 60% at 50% 0%, hsl(var(--secondary)) 0%, transparent 70%); }
+}

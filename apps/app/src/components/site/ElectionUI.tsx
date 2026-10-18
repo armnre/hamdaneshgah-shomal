@@ -28,7 +28,7 @@ export function StageTimeline({ status, compact }: { status: string; compact?: b
                 !done && !now && 'border-border bg-muted text-muted-foreground')}>
                 {done ? <Check className="h-3.5 w-3.5" /> : faNum(i + 1)}
               </span>
-              {!compact && <span className={cn('truncate text-[11px]', now ? 'font-bold text-primary' : 'text-muted-foreground')}>{s.label}</span>}
+              {!compact && <span className={cn('whitespace-nowrap text-[11px]', now ? 'font-bold text-primary' : 'hidden text-muted-foreground sm:block')}>{s.label}</span>}
             </div>
             {i < STEPS.length - 1 && <span className={cn('h-0.5 flex-1 rounded-full', i < cur ? 'bg-primary' : 'bg-border', !compact && '-mt-5')} />}
           </li>
@@ -55,7 +55,7 @@ export function Countdown({ to, label }: { to: string; label: string }) {
       <span className="text-sm text-muted-foreground">{label}</span>
       <div className="flex gap-1.5">
         {parts.map(([v, u]) => (
-          <span key={u} className="min-w-[3.25rem] rounded-xl border bg-background px-2 py-1.5 text-center">
+          <span key={u} className="min-w-[3rem] rounded-2xl border bg-background px-2 py-1.5 text-center shadow-[var(--shadow-sm)] sm:min-w-[3.5rem]">
             <span className="block text-lg font-black tabular-nums leading-none">{faNum(v)}</span>
             <span className="text-[10px] text-muted-foreground">{u}</span>
           </span>

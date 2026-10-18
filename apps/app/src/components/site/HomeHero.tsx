@@ -21,7 +21,7 @@ export default function HomeHero({ title, subtitle, stats, loading }: Props) {
   return (
     <section className="relative isolate overflow-hidden bg-primary text-primary-foreground">
       <motion.img
-        src="/shomal/campus-aerial-1.jpg" alt="نمای هوایی پردیس دانشگاه شمال در دامنه جنگل، آمل" fetchPriority="high"
+        src="/shomal/campus-aerial-4.jpg" alt="نمای کامل پردیس دانشگاه شمال میان جنگل و کوه، آمل" fetchPriority="high"
         initial={{ scale: 1.08 }} animate={{ scale: 1 }} transition={{ duration: 1.6, ease: 'easeOut' }}
         className="absolute inset-0 -z-20 h-full w-full object-cover"
       />
@@ -62,8 +62,8 @@ export default function HomeHero({ title, subtitle, stats, loading }: Props) {
 
         <motion.div {...fade(0.2)} className="relative hidden lg:block">
           <div className="grid grid-cols-5 grid-rows-2 gap-3">
-            <Photo src="/shomal/campus-aerial-3.jpg" alt="نمای هوایی ساختمان‌های پردیس دانشگاه شمال" className="col-span-5 aspect-[16/7]" />
-            <Photo src={IMG.life[0]} alt={altFor(IMG.life[0])} className="col-span-3 aspect-[4/3]" />
+            <Photo src="/shomal/campus-grounds-5.jpg" alt="محوطه و ساختمان‌های پردیس دانشگاه شمال" className="col-span-5 aspect-[16/7]" />
+            <Photo src="/shomal/campus-grounds-1.jpg" alt="فضای پردیس دانشگاه شمال از نمای نزدیک" className="col-span-3 aspect-[4/3]" />
             <Photo src="/shomal/campus-grounds-3.jpg" alt="فضای سبز پردیس دانشگاه شمال" className="col-span-2 aspect-[4/3]" />
           </div>
           <div className="absolute -bottom-10 start-6 end-6 grid grid-cols-4 gap-2 rounded-2xl border border-primary-foreground/15 bg-primary/85 p-3 shadow-2xl backdrop-blur-md">
