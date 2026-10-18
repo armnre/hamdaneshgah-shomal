@@ -38,9 +38,9 @@ export function SectionHeading({ eyebrow, title, action }: { eyebrow?: string; t
 export function PageHero({ title, subtitle, children, image = IMG.campusAlt }: { title: string; subtitle?: string; children?: ReactNode; image?: string }) {
   return (
     <section className="relative isolate overflow-hidden bg-primary text-primary-foreground">
-      <img src={image} alt="" className="absolute inset-0 -z-30 h-full w-full object-cover opacity-35 mix-blend-luminosity" />
+      <img src={image} alt="" className="absolute inset-0 -z-30 h-full w-full object-cover opacity-45" />
       <div className="absolute inset-0 -z-20 bg-gradient-to-l from-primary via-primary/85 to-primary/40" />
-      <div aria-hidden className="girih-gold absolute inset-y-0 end-0 -z-10 w-1/2 opacity-70 [mask-image:linear-gradient(to_right,black,transparent)]" />
+      <div aria-hidden className="girih-gold absolute inset-y-0 end-0 -z-10 w-1/2 opacity-30 [mask-image:linear-gradient(to_right,black,transparent)]" />
       <div aria-hidden className="pointer-events-none absolute inset-3 -z-10 border border-accent/25 sm:inset-5" />
       <div className="container-page relative py-16 sm:py-24">
         <div className="mb-5 flex items-center gap-3 text-xs font-bold tracking-wide text-accent"><Shamseh className="h-4 w-4" />دانشگاه شمال<span className="h-px w-16 bg-accent/60" /></div>

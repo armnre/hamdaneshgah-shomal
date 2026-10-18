@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@500;600;700&display=swap');
 @import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
 
@@ -149,11 +148,11 @@
     --sidebar-accent: 210 35% 16%;
     --sidebar-accent-foreground: 40 40% 97%;
     --sidebar-border: 38 30% 30%;
-    --font-serif: 'Noto Naskh Arabic', 'Vazirmatn', serif;
+    --font-serif: 'Vazirmatn', system-ui, sans-serif;
     --shadow-sm: 0 1px 2px 0 hsl(210 35% 12% / 0.06);
     --shadow-md: 0 10px 28px -12px hsl(210 35% 12% / 0.22);
   }
-  .theme-academic h1, .theme-academic h2 { font-family: var(--font-serif); letter-spacing: 0; }
+  .theme-academic h1, .theme-academic h2 { font-family: var(--font-sans); letter-spacing: -0.01em; }
   .theme-academic ::selection { background: hsl(var(--accent) / 0.35); }
 }
 

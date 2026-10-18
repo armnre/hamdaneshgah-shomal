@@ -21,13 +21,13 @@ export default function HomeHero({ title, subtitle, stats, loading }: Props) {
   return (
     <section className="relative isolate overflow-hidden bg-primary text-primary-foreground">
       <motion.img
-        src="/shomal/hero-iwan.jpg" alt="تالار مطالعه با طاق کاشی‌کاری ایرانی (تصویر تولیدشده با هوش مصنوعی)" fetchPriority="high"
-        initial={{ scaleX: -1.08, scaleY: 1.08 }} animate={{ scaleX: -1, scaleY: 1 }} transition={{ duration: 1.6, ease: 'easeOut' }}
+        src="/shomal/campus-aerial-1.jpg" alt="نمای هوایی پردیس دانشگاه شمال در دامنه جنگل، آمل" fetchPriority="high"
+        initial={{ scale: 1.08 }} animate={{ scale: 1 }} transition={{ duration: 1.6, ease: 'easeOut' }}
         className="absolute inset-0 -z-20 h-full w-full object-cover"
       />
-      <div className="absolute inset-0 -z-10 bg-gradient-to-l from-primary via-primary/75 to-primary/10" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-l from-primary via-primary/80 to-primary/40" />
       <div className="absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-t from-primary to-transparent" />
-      <div aria-hidden className="girih-gold absolute inset-y-0 start-0 -z-10 w-2/5 opacity-50 [mask-image:linear-gradient(to_left,black,transparent)]" />
+      <div aria-hidden className="girih-gold absolute inset-y-0 start-0 -z-10 w-2/5 opacity-25 [mask-image:linear-gradient(to_left,black,transparent)]" />
       <div aria-hidden className="pointer-events-none absolute inset-3 -z-10 border border-accent/30 sm:inset-5" />
 
       <div className="container-page grid gap-12 pb-24 pt-14 sm:pt-20 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:pb-32">
@@ -62,9 +62,9 @@ export default function HomeHero({ title, subtitle, stats, loading }: Props) {
 
         <motion.div {...fade(0.2)} className="relative hidden lg:block">
           <div className="grid grid-cols-5 grid-rows-2 gap-3">
-            <Photo src="/shomal/forest-campus.jpg" alt="پردیس دانشگاهی در میان جنگل‌های مه‌آلود هیرکانی (تصویر تولیدشده با هوش مصنوعی)" className="col-span-5 aspect-[16/7]" />
+            <Photo src="/shomal/campus-aerial-3.jpg" alt="نمای هوایی ساختمان‌های پردیس دانشگاه شمال" className="col-span-5 aspect-[16/7]" />
             <Photo src={IMG.life[0]} alt={altFor(IMG.life[0])} className="col-span-3 aspect-[4/3]" />
-            <Photo src="/shomal/girih-tile.jpg" alt="کاشی‌کاری گره‌چینی ایرانی (تصویر تولیدشده با هوش مصنوعی)" className="col-span-2 aspect-[4/3]" />
+            <Photo src="/shomal/campus-grounds-3.jpg" alt="فضای سبز پردیس دانشگاه شمال" className="col-span-2 aspect-[4/3]" />
           </div>
           <div className="absolute -bottom-10 start-6 end-6 grid grid-cols-4 gap-2 rounded-2xl border border-primary-foreground/15 bg-primary/85 p-3 shadow-2xl backdrop-blur-md">
             {STATS.map(({ k, l, i: Icon }) => <Stat key={k} label={l} value={stats?.[k]} Icon={Icon} />)}

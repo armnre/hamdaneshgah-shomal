@@ -17,15 +17,15 @@ export const AI_PHOTOS: Photo[] = [
 
 export const IMG = {
   emblem: '/shomal/emblem.webp', // university emblem — licence not yet confirmed
-  campus: AI_PHOTOS[0].src,
-  campusAlt: AI_PHOTOS[5].src,
-  life: [AI_PHOTOS[1].src, AI_PHOTOS[2].src, AI_PHOTOS[4].src],
+  campus: '/shomal/campus-aerial-1.jpg',
+  campusAlt: '/shomal/campus-aerial-2.jpg',
+  life: ['/shomal/campus-grounds-1.jpg', '/shomal/campus-grounds-2.jpg', '/shomal/campus-grounds-3.jpg'],
   engineering: AI_PHOTOS[1].src,
   humanities: AI_PHOTOS[2].src,
   sport: AI_PHOTOS[3].src,
 };
 
-export const altFor = (src: string) => AI_PHOTOS.find((p) => p.src === src)?.alt ?? '';
+export const altFor = (src: string) => AI_PHOTOS.find((p) => p.src === src)?.alt ?? (src.includes('/campus-') ? 'نمایی از پردیس دانشگاه شمال در آمل' : '');
 
 // Deterministic fallback photo for records without a cover image
 export function fallbackPhoto(seed: string) {

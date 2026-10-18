@@ -8,7 +8,7 @@ export default function Footer() {
   const st = data?.settings ?? {};
   return (
     <footer className="relative mt-24 overflow-hidden bg-sidebar text-sidebar-foreground">
-      <div aria-hidden className="girih-gold pointer-events-none absolute inset-0 opacity-40" />
+      <div aria-hidden className="girih-gold pointer-events-none absolute inset-0 opacity-20" />
       <OrnamentRule className="container-page relative pt-10" />
       <div className="container-page relative grid gap-10 py-14 md:grid-cols-4">
         <div className="md:col-span-2">

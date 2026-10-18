@@ -23,7 +23,7 @@ export default function Associations() {
 
   return (
     <>
-      <PageHero image="/shomal/ai-workshop.webp" title="انجمن‌های علمی" subtitle="با انجمن‌های علمی دانشجویی آشنا شوید، فعالیت‌هایشان را دنبال کنید و در رویدادها مشارکت داشته باشید.">
+      <PageHero image="/shomal/campus-aerial-4.jpg" title="انجمن‌های علمی" subtitle="با انجمن‌های علمی دانشجویی آشنا شوید، فعالیت‌هایشان را دنبال کنید و در رویدادها مشارکت داشته باشید.">
         <div className="relative mt-8 max-w-lg">
           <Search className="absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="جست‌وجوی نام انجمن…" aria-label="جست‌وجو" className="h-12 bg-card pe-10 text-foreground" />

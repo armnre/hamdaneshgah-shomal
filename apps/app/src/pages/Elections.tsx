@@ -42,7 +42,7 @@ export function ElectionsList() {
   const reset = () => { setStatus(ALL); setAssoc(ALL); setYear(ALL); setText(''); };
   return (
     <>
-      <PageHero image="/shomal/ai-workshop.webp" title="انتخابات انجمن‌های علمی" subtitle="زمان‌بندی، نامزدها و نتایج انتخابات انجمن‌ها" />
+      <PageHero image="/shomal/campus-grounds-4.jpg" title="انتخابات انجمن‌های علمی" subtitle="زمان‌بندی، نامزدها و نتایج انتخابات انجمن‌ها" />
       <div className="container-page py-10">
         <Crumbs items={[{ to: '/', label: 'خانه' }, { label: 'انتخابات' }]} />
         {list.length > 0 && (

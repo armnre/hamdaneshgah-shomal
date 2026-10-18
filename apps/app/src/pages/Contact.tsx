@@ -35,7 +35,7 @@ export default function Contact() {
   );
   return (
     <>
-      <PageHero image="/shomal/ai-campus.webp" title="تماس با ما" subtitle="پیشنهادها، گزارش خطا یا درخواست همکاری خود را با تیم پلتفرم در میان بگذارید." />
+      <PageHero image="/shomal/campus-view-4.jpg" title="تماس با ما" subtitle="پیشنهادها، گزارش خطا یا درخواست همکاری خود را با تیم پلتفرم در میان بگذارید." />
       <div className="container-page grid gap-10 py-12 lg:grid-cols-[1fr_1.4fr]">
         <div className="grid h-fit gap-4">
           {st.contactEmail && <div className="flex gap-3 rounded-2xl border bg-card p-5"><Mail className="h-5 w-5 text-primary" /><div><p className="font-bold">ایمیل سامانه</p><a dir="ltr" href={`mailto:${st.contactEmail}`} className="mt-1 block text-sm text-muted-foreground">{st.contactEmail}</a></div></div>}
