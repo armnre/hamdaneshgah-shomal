@@ -154,3 +154,23 @@ export function attemptWindowStart(now: Date) {
 export function tehranDate(now: Date) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tehran', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
 }
+
+// ───────── Election lifecycle ─────────
+export const ELECTION_FLOW = ['Draft', 'Candidacy Open', 'Candidate Review', 'Final List', 'Voting Open', 'Closed', 'Counting', 'Results Confirmed', 'Results Published', 'Archived'] as const;
+export type ElectionStatus = (typeof ELECTION_FLOW)[number] | 'Cancelled';
+
+/** Allowed moves: one step forward; Cancelled from any stage before counting. No way back once voting has opened. */
+export function canTransition(from: string, to: string) {
+  if (from === to) return true;
+  if (to === 'Cancelled') return ELECTION_FLOW.indexOf(from as never) >= 0 && ELECTION_FLOW.indexOf(from as never) <= ELECTION_FLOW.indexOf('Closed');
+  const i = ELECTION_FLOW.indexOf(from as never), j = ELECTION_FLOW.indexOf(to as never);
+  if (i < 0 || j < 0) return false;
+  if (j === i + 1) return true;
+  // before voting, an admin may step back one stage to fix the candidate list
+  return j === i - 1 && j >= 0 && i <= ELECTION_FLOW.indexOf('Final List');
+}
+
+/** Results (even counts) are visible to admins only after voting has closed — never live during voting. */
+export const tallyAllowed = (status: string) => ['Closed', 'Counting', 'Results Confirmed', 'Results Published', 'Archived'].includes(status);
+/** Voter list and candidate list are frozen from the final list onwards. */
+export const listsLocked = (status: string) => !['Draft', 'Candidacy Open', 'Candidate Review'].includes(status);

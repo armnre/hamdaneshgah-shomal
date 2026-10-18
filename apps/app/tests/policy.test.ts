@@ -114,3 +114,17 @@ test('Tehran date (no time) and attempt window', () => {
   assert.equal(tehranDate(new Date('2026-10-17T21:00:00Z')), '2026-10-18'); // 00:30 Tehran
   assert.equal(attemptWindowStart(new Date('2026-10-18T10:07:00Z')).toISOString(), '2026-10-18T10:00:00.000Z');
 });
+
+import { canTransition, tallyAllowed, listsLocked } from '../src/lib/policy.ts';
+test('election lifecycle transitions', () => {
+  assert.ok(canTransition('Draft', 'Candidacy Open'));
+  assert.ok(!canTransition('Draft', 'Voting Open'));
+  assert.ok(canTransition('Final List', 'Voting Open'));
+  assert.ok(!canTransition('Voting Open', 'Final List')); // no way back after voting opens
+  assert.ok(!canTransition('Closed', 'Voting Open'));
+  assert.ok(canTransition('Results Confirmed', 'Results Published'));
+  assert.ok(canTransition('Voting Open', 'Cancelled'));
+  assert.ok(!canTransition('Results Published', 'Cancelled'));
+  assert.ok(!tallyAllowed('Voting Open') && tallyAllowed('Closed'));
+  assert.ok(listsLocked('Final List') && !listsLocked('Candidate Review'));
+});

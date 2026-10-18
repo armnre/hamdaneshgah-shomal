@@ -18,7 +18,7 @@ const statusOpts = opts({ Draft: STATUS_LABEL.Draft, Published: STATUS_LABEL.Pub
 const YEAR_STATUS = { Upcoming: 'آینده', Current: 'جاری', Archived: 'بایگانی' };
 const TERM_STATUS = { Undetermined: 'تعیین‌نشده', Active: 'فعال', Ended: 'پایان‌یافته', Resigned: 'مستعفی' };
 const SCOPE = { Council: 'شورای دبیران', Association: 'انجمن' };
-export const ELECTION_STATUS = { Draft: 'پیش‌نویس', 'Candidacy Open': 'ثبت‌نام نامزدها', 'Candidate Review': 'بررسی نامزدها', 'Voting Open': 'رأی‌گیری', Closed: 'پایان‌یافته', 'Results Published': 'نتایج اعلام‌شده' };
+export const ELECTION_STATUS = { Draft: 'پیش‌نویس', 'Candidacy Open': 'ثبت‌نام نامزدها', 'Candidate Review': 'بررسی نامزدها', 'Final List': 'فهرست نهایی', 'Voting Open': 'رأی‌گیری', Closed: 'پایان رأی‌گیری', Counting: 'شمارش', 'Results Confirmed': 'نتایج تأییدشده', 'Results Published': 'نتایج اعلام‌شده', Archived: 'بایگانی', Cancelled: 'لغوشده' };
 const CANDIDATE_STATUS = { Pending: 'در انتظار بررسی', Approved: 'تأییدشده', Rejected: 'ردشده', Withdrawn: 'انصراف' };
 
 export const RESOURCES: Record<string, Resource> = {

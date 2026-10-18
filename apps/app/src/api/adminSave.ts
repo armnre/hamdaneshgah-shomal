@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { requireAccess, audit, slugify, first } from '../lib/server';
-import { resolveMajor, isSafeUrl, normalizeNationalId, normalizeStudentNumber } from '../lib/policy';
+import { resolveMajor, canTransition, listsLocked, isSafeUrl, normalizeNationalId, normalizeStudentNumber } from '../lib/policy';
 import { hashNationalId, mappedMajors } from '../lib/voterHash';
 
 const s = (max: number) => z.string().trim().max(max).optional().nullable();
@@ -28,7 +28,7 @@ const SCHEMAS = {
   associationMajors: z.object({ associationYear: z.string().min(1), major: z.string().min(1), needsUniversityApproval: z.boolean().default(false) }),
   positions: z.object({ name: z.string().trim().min(2).max(100), scope: z.enum(['Council', 'Association']), rank: z.number().int().optional().nullable() }),
   terms: z.object({ position: z.string().min(1), academicYear: z.string().min(1), associationYear: id, personName: s(150), personEmail: z.string().email().optional().nullable().or(z.literal('')), status: z.enum(['Undetermined', 'Active', 'Ended', 'Resigned']), startDate: z.string().optional().nullable(), endDate: z.string().optional().nullable(), publishName: z.boolean().default(false), notes: s(5000) }),
-  elections: z.object({ title: z.string().trim().min(3).max(200), associationYear: z.string().min(1), status: z.enum(['Draft', 'Candidacy Open', 'Candidate Review', 'Voting Open', 'Closed', 'Results Published']), candidacyStart: z.string().optional().nullable(), candidacyEnd: z.string().optional().nullable(), votingStart: z.string().optional().nullable(), votingEnd: z.string().optional().nullable(), seats: z.number().int().min(1).max(50), maxChoicesPerVoter: z.number().int().min(1).max(50), description: s(10000) }),
+  elections: z.object({ title: z.string().trim().min(3).max(200), associationYear: z.string().min(1), status: z.enum(['Draft', 'Candidacy Open', 'Candidate Review', 'Final List', 'Voting Open', 'Closed', 'Counting', 'Results Confirmed', 'Results Published', 'Archived', 'Cancelled']), candidacyStart: z.string().optional().nullable(), candidacyEnd: z.string().optional().nullable(), votingStart: z.string().optional().nullable(), votingEnd: z.string().optional().nullable(), seats: z.number().int().min(1).max(50), maxChoicesPerVoter: z.number().int().min(1).max(50), description: s(10000) }),
   candidates: z.object({ fullName: z.string().trim().min(3).max(150), election: z.string().min(1), studentNumber: z.string().min(1), status: z.enum(['Pending', 'Approved', 'Rejected', 'Withdrawn']), statement: s(5000), photoUrl: imgUrl, reviewNote: s(2000) }),
   voters: z.object({ studentNumber: z.string().min(1), election: z.string().min(1), fullName: s(150), majorName: s(150), nationalId: z.string().optional().nullable() }),
 };
@@ -89,7 +89,24 @@ const STRUCT = {
     d.label = `${pos} — ${where}`;
     d.position = [d.position]; d.academicYear = [d.academicYear]; d.associationYear = d.associationYear ? [d.associationYear] : [];
   },
-  elections: async (d: Record<string, unknown>) => {
+  elections: async (d: Record<string, unknown>, id?: string) => {
+    const prev = id ? await zite.elections.findOne({ id }) : undefined;
+    const from = String(prev?.status ?? 'Draft');
+    if (!id && d.status !== 'Draft') bad('انتخابات جدید باید در مرحله‌ی پیش‌نویس ساخته شود.');
+    if (prev && !canTransition(from, String(d.status))) bad('این تغییر مرحله مجاز نیست؛ مراحل باید به ترتیب طی شوند.');
+    if (prev && listsLocked(from)) {
+      // From the final list onwards only the stage may change; dates, seats and rules are frozen.
+      for (const k of ['candidacyStart', 'candidacyEnd', 'votingStart', 'votingEnd', 'seats', 'maxChoicesPerVoter', 'associationYear'] as const) {
+        const a = prev[k as keyof typeof prev], b = d[k];
+        const same = k === 'associationYear' ? String(Array.isArray(a) ? a[0] : a) === String(b) : (a == null && (b == null || b === '')) || (a != null && b != null && (typeof b === 'number' ? Number(a) === b : new Date(String(a)).getTime() === new Date(String(b)).getTime()));
+        if (!same) bad('پس از نهایی شدن فهرست، زمان‌بندی و قواعد انتخابات قابل تغییر نیست.');
+      }
+    }
+    if (d.status === 'Voting Open' && from !== 'Voting Open') {
+      const c = await zite.sql({ query: `SELECT (SELECT COUNT(*) FROM "Candidates" c JOIN "CandidatesElections" l ON l."candidatesId" = c.id WHERE l."electionsId" = $1 AND c.status = 'Approved')::int AS cands, (SELECT COUNT(*) FROM "ElectionsEligibleVoters" WHERE "electionsId" = $1)::int AS voters`, params: [id] });
+      if (!Number(c.rows[0]?.cands)) bad('برای شروع رأی‌گیری دست‌کم یک نامزد تأییدشده لازم است.');
+      if (!Number(c.rows[0]?.voters)) bad('برای شروع رأی‌گیری فهرست واجدین نباید خالی باشد.');
+    }
     const lt = (a: unknown, b: unknown) => a && b && String(b) < String(a);
     if (lt(d.candidacyStart, d.candidacyEnd)) bad('پایان ثبت‌نام باید بعد از شروع آن باشد.');
     if (lt(d.votingStart, d.votingEnd)) bad('پایان رأی‌گیری باید بعد از شروع آن باشد.');
@@ -99,6 +116,8 @@ const STRUCT = {
     d.associationYear = [d.associationYear];
   },
   candidates: async (d: Record<string, unknown>, id?: string) => {
+    const ce = await zite.elections.findOne({ id: String(d.election) });
+    if (listsLocked(String(ce?.status))) bad('فهرست نامزدهای این انتخابات نهایی شده و قابل تغییر نیست.');
     const sn = normalizeStudentNumber(String(d.studentNumber));
     if (!sn) bad('شماره دانشجویی نامعتبر است.');
     d.studentNumber = sn;
@@ -115,7 +134,7 @@ const STRUCT = {
     const dup = await zite.sql({ query: `SELECT v.id FROM "EligibleVoters" v JOIN "ElectionsEligibleVoters" l ON l."eligibleVotersId" = v.id WHERE l."electionsId" = $1 AND v."studentNumber" = $2`, params: [d.election, sn] });
     if (dup.rows.some((r) => r.id !== id)) bad('این شماره دانشجویی در این انتخابات قبلاً ثبت شده است.');
     const el = await zite.elections.findOne({ id: String(d.election) });
-    if (!['Draft', 'Candidacy Open', 'Candidate Review'].includes(String(el?.status))) bad('پس از شروع رأی‌گیری، فهرست واجدین قابل تغییر نیست.');
+    if (listsLocked(String(el?.status))) bad('پس از نهایی شدن فهرست، فهرست واجدین قابل تغییر نیست. پس از شروع رأی‌گیری، فهرست واجدین قابل تغییر نیست.');
     // Major → association rule: the voter's major must be mapped to this election's association
     const majorId = resolveMajor(String(d.majorName ?? ''), await mappedMajors(String(d.election)));
     if (!majorId) bad('رشته‌ی این دانشجو به انجمن این انتخابات نگاشت نشده است.');

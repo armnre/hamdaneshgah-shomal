@@ -1,3 +1,4 @@
+import { MajorChip } from '../lib/majorIcon';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Building2, BookOpen, Users } from 'lucide-react';
@@ -31,7 +32,7 @@ export default function Faculties() {
               <div className="mt-6 grid gap-6 md:grid-cols-2">
                 <div>
                   <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-muted-foreground"><BookOpen className="h-4 w-4" />رشته‌ها</h3>
-                  <div className="flex flex-wrap gap-2">{(f.majors as Row[]).length ? (f.majors as Row[]).map((m) => <span key={String(m.id)} className="rounded-lg bg-muted px-3 py-1.5 text-sm">{String(m.name)}</span>) : <span className="text-sm text-muted-foreground">—</span>}</div>
+                  <div className="flex flex-wrap gap-2">{(f.majors as Row[]).length ? (f.majors as Row[]).map((m) => <MajorChip key={String(m.id)} name={String(m.name)} />) : <span className="text-sm text-muted-foreground">—</span>}</div>
                 </div>
                 <div>
                   <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-muted-foreground"><Users className="h-4 w-4" />انجمن‌های علمی</h3>

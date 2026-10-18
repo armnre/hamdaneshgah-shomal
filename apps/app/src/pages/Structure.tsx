@@ -1,3 +1,4 @@
+import { MajorChip } from '../lib/majorIcon';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -52,7 +53,7 @@ function YearChart({ year }: { year: Year }) {
                   )}
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {a.majors.map((m) => <Badge key={m} variant="secondary" className="font-normal">{m}</Badge>)}
+                  {a.majors.map((m) => <MajorChip key={m} name={m} className="text-xs" />)}
                 </div>
                 <div className="mt-auto space-y-1 border-t pt-3">
                   {a.leaders.length ? a.leaders.map((l, i) => <Holder key={i} l={l} />) : <span className="text-sm text-muted-foreground">سمت‌ها تعیین‌نشده</span>}

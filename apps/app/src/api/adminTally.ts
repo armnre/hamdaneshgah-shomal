@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { requireAccess, audit } from '../lib/server';
+import { tallyAllowed } from '../lib/policy';
+import { ZiteError } from 'zitejs/backend';
 
 export default createEndpoint({
   description: 'Counts ballots of one election for the admin panel',
@@ -14,6 +16,8 @@ export default createEndpoint({
   execute: async ({ input, context }) => {
     await requireAccess(context.user, 'elections');
     const e = await zite.elections.findOne({ id: input.electionId });
+    // No counts (not even partial) while voting is open
+    if (!e || !tallyAllowed(String(e.status))) throw new ZiteError({ code: 'BAD_REQUEST', message: 'tally locked', userFacingMessage: 'شمارش آرا فقط پس از پایان رأی‌گیری ممکن است.' });
     const [cands, ballots, stats] = await Promise.all([
       zite.sql({ query: `SELECT c.id, c."fullName" FROM "Candidates" c JOIN "CandidatesElections" l ON l."candidatesId" = c.id WHERE l."electionsId" = $1 AND c.status = 'Approved'`, params: [input.electionId] }),
       zite.sql({ query: `SELECT b."candidateIds" AS ids FROM "Ballots" b JOIN "BallotsElections" l ON l."ballotsId" = b.id WHERE l."electionsId" = $1`, params: [input.electionId] }),
