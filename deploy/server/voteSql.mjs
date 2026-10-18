@@ -12,8 +12,9 @@ export function castVoteStatements(p) {
       WHERE s."tokenHash" = $1 AND s."electionId" = $2 AND s."expiresAt" > now()
         AND e."status" = 'Voting Open' AND now() BETWEEN e."votingStart" AND e."votingEnd"`,
       [p.sessionHash, p.electionId, p.code, p.votedOn]],
-    // 2) ballot — only if step 1 inserted the participation row in this same transaction
-    [`INSERT INTO "Ballots" ("receipt", "election", "candidateIds")
+    // 2) ballot — into PendingBallots (moved to Ballots, shuffled, by close_election) and only if
+    //    step 1 inserted the participation row in this same transaction
+    [`INSERT INTO "PendingBallots" ("receipt", "election", "candidateIds")
       SELECT $1, jsonb_build_array($2::text), $3
       WHERE EXISTS (SELECT 1 FROM "VoterParticipation" WHERE "label" = $4)`,
       [p.ballotUuid, p.electionId, p.candidateIds, p.code]],
@@ -23,3 +24,6 @@ export function castVoteStatements(p) {
     [`SELECT EXISTS (SELECT 1 FROM "VoterParticipation" WHERE "label" = $1) AS ok`, [p.code]],
   ];
 }
+
+// Close + seal (Pending → Ballots in random order, one transaction). See db/migrations/0005.
+export const closeElectionStatement = (electionId) => [`SELECT close_election($1) AS moved`, [electionId]];

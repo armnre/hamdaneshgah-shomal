@@ -6,15 +6,17 @@ import { readdirSync, readFileSync } from 'node:fs';
 
 const dir = new URL('../src/api/', import.meta.url);
 const files = readdirSync(dir).filter((f) => f.endsWith('.ts')).map((f) => [f, readFileSync(new URL(f, dir), 'utf8')] as const);
+const libDir = new URL('../src/lib/', import.meta.url);
+const libs = readdirSync(libDir).filter((f) => f.endsWith('.ts')).map((f) => [`lib/${f}`, readFileSync(new URL(f, libDir), 'utf8')] as const);
 const server = ['db.ts', 'handler.ts'].map((f) => [f, readFileSync(new URL(`../../../deploy/server/${f}`, import.meta.url), 'utf8')] as const);
 
 test('no endpoint updates or deletes ballots', () => {
   for (const [f, s] of [...files, ...server]) assert.ok(!/ballots\.(update|delete)\s*\(/.test(s) && !/(UPDATE|DELETE FROM)\s+"Ballots"/i.test(s), f);
 });
 
-test('no SQL joins Ballots with voters, participation or sessions', () => {
-  for (const [f, s] of files) {
-    for (const stmt of s.split('`').filter((x) => /"Ballots"/.test(x))) {
+test('no SQL joins Ballots or PendingBallots with voters, participation or sessions', () => {
+  for (const [f, s] of [...files, ...libs]) {
+    for (const stmt of s.split('`').filter((x) => /"(Pending)?Ballots"/.test(x))) {
       assert.ok(!/EligibleVoters|VoterParticipation|VoterSessions|studentNumber/.test(stmt), `${f}: ${stmt.slice(0, 80)}`);
     }
   }

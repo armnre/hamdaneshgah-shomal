@@ -174,3 +174,15 @@ export function canTransition(from: string, to: string) {
 export const tallyAllowed = (status: string) => ['Closed', 'Counting', 'Results Confirmed', 'Results Published', 'Archived'].includes(status);
 /** Voter list and candidate list are frozen from the final list onwards. */
 export const listsLocked = (status: string) => !['Draft', 'Candidacy Open', 'Candidate Review'].includes(status);
+
+/** Fisher–Yates with crypto randomness — order of ballots moved Pending → Ballots on the Zite path. */
+export function secureShuffle<T>(items: readonly T[]): T[] {
+  const a = [...items];
+  for (let i = a.length - 1; i > 0; i--) {
+    const r = new Uint32Array(1);
+    crypto.getRandomValues(r);
+    const j = r[0] % (i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}

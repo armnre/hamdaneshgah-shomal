@@ -2,7 +2,7 @@
 // backed by Neon Postgres. The app's endpoint files run against it unchanged.
 import { neon } from '@neondatabase/serverless';
 // @ts-expect-error plain ESM module shared with the PGlite test
-import { castVoteStatements } from './voteSql.mjs';
+import { castVoteStatements, closeElectionStatement } from './voteSql.mjs';
 
 type Kind = 'text' | 'bool' | 'num' | 'ts' | 'link' | 'auto';
 type Row = Record<string, unknown>;
@@ -28,6 +28,7 @@ const SCHEMA: Record<string, Record<string, Kind>> = {
   EligibleVoters: { studentNumber: 'text', election: 'link', major: 'link', fullName: 'text', majorName: 'text', nationalIdHash: 'text', nationalIdLast4: 'text' },
   VoterParticipation: { label: 'text', election: 'link', voter: 'link', votedOn: 'ts' },
   Ballots: { receipt: 'text', election: 'link', candidateIds: 'text' },
+  PendingBallots: { receipt: 'text', election: 'link', candidateIds: 'text' },
   VoterSessions: { tokenHash: 'text', election: 'link', voter: 'link', expiresAt: 'ts' },
   VoterAttempts: { bucket: 'text', windowStart: 'ts', failures: 'num' },
   ContactMessages: { subject: 'text', senderName: 'text', senderEmail: 'text', message: 'text', status: 'text', receivedAt: 'auto' },
@@ -171,6 +172,7 @@ export const zite = {
   eligibleVoters: tableClient('EligibleVoters'),
   voterParticipation: tableClient('VoterParticipation'),
   ballots: tableClient('Ballots'),
+  pendingBallots: tableClient('PendingBallots'),
   voterSessions: tableClient('VoterSessions'),
   voterAttempts: tableClient('VoterAttempts'),
   /** Participation + ballot + session close in ONE Postgres transaction (see server/voteSql.mjs). */
@@ -184,6 +186,12 @@ export const zite = {
       if ((e as { code?: string }).code === '23505') return 'already_voted' as const;
       throw e;
     }
+  },
+  /** Close voting + move PendingBallots → Ballots in random order, ONE transaction (migration 0005). */
+  async closeElectionAtomic(electionId: string) {
+    const [text, params] = closeElectionStatement(electionId) as [string, unknown[]];
+    const rows = await query(text, params);
+    return Number(rows[0]?.moved ?? 0);
   },
   async sql(p: { query: string; params?: unknown[] }) {
     if (!/^\s*(select|with)\b/i.test(p.query)) throw new Error('zite.sql is read-only');

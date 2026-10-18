@@ -3,6 +3,7 @@ import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { requireAccess, audit } from '../lib/server';
 import { canTransition } from '../lib/policy';
+import { closeAndSeal } from '../lib/sealBallots';
 
 // Post-voting stages driven from the tally page: close → counting → confirm → publish → archive.
 const POST = ['Closed', 'Counting', 'Results Confirmed', 'Results Published', 'Archived'] as const;
@@ -19,11 +20,9 @@ export default createEndpoint({
     const from = String(e.status);
     if (!canTransition(from, input.to)) throw new ZiteError({ code: 'BAD_REQUEST', message: 'transition', userFacingMessage: 'این تغییر مرحله مجاز نیست؛ مراحل باید به ترتیب طی شوند.' });
     if (input.to === 'Closed') {
-      // Early close also ends the voting window so no session can still vote
-      const now = new Date().toISOString();
-      await zite.elections.update({ id: e.id, record: { status: 'Closed', votingEnd: e.votingEnd && String(e.votingEnd) < now ? e.votingEnd : now } });
-      const s = await zite.sql({ query: `SELECT "voterSessionsId" AS id FROM "ElectionsVoterSessions" WHERE "electionsId" = $1`, params: [e.id] });
-      for (const r of s.rows) await zite.voterSessions.delete({ id: String(r.id) });
+      // Ends the voting window, closes sessions and seals PendingBallots → Ballots (shuffled)
+      const moved = await closeAndSeal(e);
+      await audit(context.user, 'seal', 'elections', e.id, `${moved} ballots sealed`);
     } else {
       await zite.elections.update({ id: e.id, record: { status: input.to } });
     }

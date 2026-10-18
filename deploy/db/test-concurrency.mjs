@@ -2,7 +2,7 @@
 // (e.g. a throwaway Neon branch): TEST_DATABASE_URL=postgres://... node db/test-concurrency.mjs
 // Fires 20 simultaneous castVote transactions for ONE voter on 20 separate pooled connections,
 // using the exact SQL from server/voteSql.mjs. Pass = exactly 1 participation + 1 ballot.
-// Ballots are append-only, so fixtures are left behind — never point this at production.
+// Ballots / PendingBallots are append-only, so fixtures are left behind — never point this at production.
 import { Pool } from '@neondatabase/serverless';
 import { randomUUID, randomBytes } from 'crypto';
 import { castVoteStatements } from '../server/voteSql.mjs';
@@ -52,7 +52,7 @@ const results = await Promise.all(Array.from({ length: N }, (_, i) => castOnce(i
 const tally = results.reduce((m, x) => ({ ...m, [x]: (m[x] ?? 0) + 1 }), {});
 const one = async (sql) => Number((await pool.query(sql, [id('e')])).rows[0].n);
 const parts = await one(`SELECT COUNT(*) n FROM "VoterParticipation" WHERE "electionId" = $1`);
-const ballots = await one(`SELECT COUNT(*) n FROM "Ballots" WHERE election ? $1`);
+const ballots = await one(`SELECT COUNT(*) n FROM "PendingBallots" WHERE election ? $1`);
 const sessions = await one(`SELECT COUNT(*) n FROM "VoterSessions" WHERE "electionId" = $1`);
 console.log({ requests: N, outcomes: tally, participation: parts, ballots, openSessions: sessions });
 await pool.end();

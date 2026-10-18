@@ -55,7 +55,8 @@ export default createEndpoint({
     });
     if (voted.rows.length) fail('با این مشخصات قبلاً رأی ثبت شده است.', 'CONFLICT');
     await zite.voterParticipation.create({ record: { label: code, election: [electionId], voter: [voterId], votedOn } });
-    await zite.ballots.create({ record: { receipt: ballotUuid, election: [electionId], candidateIds: choices.join(',') } });
+    // Pending only: moved to Ballots (shuffled) when the election closes — see adminElectionStage / lib/sealBallots
+    await zite.pendingBallots.create({ record: { receipt: ballotUuid, election: [electionId], candidateIds: choices.join(',') } });
     return { confirmationCode: code };
   },
 });

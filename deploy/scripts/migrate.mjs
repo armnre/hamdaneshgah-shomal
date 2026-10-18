@@ -6,6 +6,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { neon } from '@neondatabase/serverless';
+import { splitSql } from '../db/splitSql.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 if (!process.env.DATABASE_URL) {
@@ -27,8 +28,8 @@ for (const file of files) {
     if (applied.get(version) !== checksum) throw new Error(`Migration ${file} was edited after being applied; add a new migration instead.`);
     continue;
   }
-  const statements = text.split('\n').filter((l) => !l.trim().startsWith('--')).join('\n')
-    .split(/;\s*\n/).map((s) => s.trim()).filter(Boolean);
+  // $$-aware split: plpgsql bodies contain ';' and must stay whole
+  const statements = splitSql(text);
   await sql.transaction([
     ...statements.map((s) => sql.query(s)),
     sql.query(`INSERT INTO "schemaMigrations" (version, checksum) VALUES ($1, $2)`, [version, checksum]),
