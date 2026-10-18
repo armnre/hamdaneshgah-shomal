@@ -1,0 +1,93 @@
+import { z } from 'zod';
+import { createEndpoint, ZiteError } from 'zitejs/backend';
+import { zite } from 'zitejs/db';
+import { requireAccess, audit, slugify, first } from '../lib/server';
+
+const s = (max: number) => z.string().trim().max(max).optional().nullable();
+const url = z.string().trim().url().max(1000).optional().nullable().or(z.literal(''));
+const id = z.string().optional().nullable().or(z.literal(''));
+const status = z.enum(['Draft', 'Published', 'Archived']);
+
+const SCHEMAS = {
+  associations: z.object({ name: z.string().trim().min(2).max(150), slug: s(80), shortDescription: s(250), about: s(10000), logoUrl: url, coverUrl: url, faculty: id, major: id, contactEmail: z.string().email().optional().nullable().or(z.literal('')), telegramUrl: url, active: z.boolean().default(true), featured: z.boolean().default(false) }),
+  faculties: z.object({ name: z.string().trim().min(2).max(150), slug: s(80), description: s(5000), imageUrl: url, sortOrder: z.number().int().optional().nullable(), active: z.boolean().default(true), verified: z.boolean().default(false) }),
+  majors: z.object({ name: z.string().trim().min(2).max(150), faculty: z.string().min(1), description: s(5000), active: z.boolean().default(true), verified: z.boolean().default(false) }),
+  news: z.object({ title: z.string().trim().min(3).max(250), slug: s(80), excerpt: s(600), body: s(50000), coverUrl: url, category: id, association: id, status, publishAt: z.string().optional().nullable(), featured: z.boolean().default(false), isAnnouncement: z.boolean().default(false) }),
+  events: z.object({ title: z.string().trim().min(3).max(250), slug: s(80), summary: s(600), body: s(50000), coverUrl: url, kind: z.enum(['Event', 'Conference', 'Course', 'Call']), startAt: z.string().min(1), endAt: z.string().optional().nullable(), location: s(250), registrationUrl: url, association: id, status, featured: z.boolean().default(false) }),
+  categories: z.object({ name: z.string().trim().min(2).max(80), slug: s(80) }),
+  media: z.object({ title: z.string().trim().min(2).max(200), fileUrl: z.string().url(), altText: s(300), source: s(500), license: s(200) }),
+  members: z.object({ email: z.string().trim().email(), role: z.enum(['Super Admin', 'Content Editor', 'Association Manager']), association: id, active: z.boolean().default(true) }),
+  settings: z.object({ key: z.string().trim().min(1).max(60), value: s(5000) }),
+  messages: z.object({ status: z.enum(['New', 'Read', 'Closed']) }),
+};
+type Entity = keyof typeof SCHEMAS;
+
+const TABLES = {
+  associations: zite.associations, faculties: zite.faculties, majors: zite.majors, news: zite.news, events: zite.events,
+  categories: zite.categories, media: zite.mediaAssets, members: zite.adminMembers, settings: zite.siteSettings, messages: zite.contactMessages,
+};
+
+export default createEndpoint({
+  description: 'Creates or updates a record in an admin section with validation and audit logging',
+  authenticated: true,
+  inputSchema: z.object({ entity: z.enum(Object.keys(SCHEMAS) as [Entity, ...Entity[]]), id: z.string().optional(), data: z.record(z.any()) }),
+  outputSchema: z.object({ id: z.string() }),
+  execute: async ({ input, context }) => {
+    const access = await requireAccess(context.user, input.entity);
+    const parsed = SCHEMAS[input.entity].safeParse(input.data);
+    if (!parsed.success) {
+      const issue = parsed.error.issues[0];
+      throw new ZiteError({ code: 'BAD_REQUEST', message: parsed.error.message, userFacingMessage: `فیلد «${issue?.path.join('.')}» معتبر نیست.` });
+    }
+    const data: Record<string, unknown> = { ...parsed.data };
+    for (const k of Object.keys(data)) if (data[k] === '') data[k] = null;
+    const table = TABLES[input.entity] as unknown as {
+      findOne: (p: object) => Promise<Record<string, unknown> | undefined>;
+      create: (p: object) => Promise<{ id: string }>;
+      update: (p: object) => Promise<{ id: string }>;
+    };
+
+    // Association managers may only touch their own association's records
+    if (access.role === 'Association Manager') {
+      if (input.entity === 'associations') {
+        if (!input.id || input.id !== access.associationId) throw new ZiteError({ code: 'FORBIDDEN', message: 'scope', userFacingMessage: 'فقط انجمن خودتان قابل ویرایش است.' });
+        delete data.active; delete data.featured;
+      }
+      if (input.entity === 'media' && input.id) throw new ZiteError({ code: 'FORBIDDEN', message: 'scope', userFacingMessage: 'ویرایش رسانه‌های مشترک فقط توسط ویراستار یا مدیر کل ممکن است.' });
+      if (input.entity === 'news' || input.entity === 'events') {
+        data.association = access.associationId;
+        if (input.id) {
+          const existing = await table.findOne({ id: input.id });
+          if (first(existing?.association as string[]) !== access.associationId) throw new ZiteError({ code: 'FORBIDDEN', message: 'scope', userFacingMessage: 'دسترسی به این مورد ندارید.' });
+        }
+      }
+    }
+
+    if (['associations', 'faculties', 'news', 'events', 'categories'].includes(input.entity)) {
+      data.slug = slugify(String(data.slug || data.name || data.title));
+      const dup = await table.findOne({ filters: { slug: data.slug } });
+      if (dup && dup.id !== input.id) throw new ZiteError({ code: 'BAD_REQUEST', message: 'dup slug', userFacingMessage: 'این نشانی (slug) قبلاً استفاده شده است.' });
+    }
+    if (input.entity === 'news' && data.status === 'Published' && !data.publishAt) data.publishAt = new Date().toISOString();
+    if (input.entity === 'events' && data.endAt && String(data.endAt) < String(data.startAt)) {
+      throw new ZiteError({ code: 'BAD_REQUEST', message: 'dates', userFacingMessage: 'زمان پایان باید بعد از زمان شروع باشد.' });
+    }
+    if (input.entity === 'members') {
+      const { records } = await zite.auth.findAllUsers({ filters: { email: String(data.email).toLowerCase() }, limit: 1 });
+      const u = records[0];
+      if (!u) throw new ZiteError({ code: 'BAD_REQUEST', message: 'no user', userFacingMessage: 'کاربری با این ایمیل یافت نشد؛ ابتدا باید یک‌بار وارد سامانه شود.' });
+      if (data.role === 'Association Manager' && !data.association) throw new ZiteError({ code: 'BAD_REQUEST', message: 'assoc', userFacingMessage: 'برای مدیر انجمن، انجمن را انتخاب کنید.' });
+      if (u.id === context.user.id && (data.role !== 'Super Admin' || !data.active)) throw new ZiteError({ code: 'BAD_REQUEST', message: 'self', userFacingMessage: 'نمی‌توانید دسترسی خودتان را کاهش دهید.' });
+      const dup = await zite.adminMembers.findOne({ filters: { member: u.id } });
+      if (dup && dup.id !== input.id) throw new ZiteError({ code: 'BAD_REQUEST', message: 'dup', userFacingMessage: 'این کاربر قبلاً نقش دارد.' });
+      delete data.email;
+      data.member = u.id; data.label = u.email;
+      if (data.role !== 'Association Manager') data.association = null;
+    }
+
+    const res = input.id ? await table.update({ id: input.id, record: data }) : await table.create({ record: data });
+    const summary = Object.keys(data).filter((k) => !['body', 'about'].includes(k)).join(', ');
+    await audit(context.user, input.id ? 'update' : 'create', input.entity, res.id, `fields: ${summary}`);
+    return { id: res.id };
+  },
+});

@@ -1,0 +1,9 @@
+{
+  "id": "ub3cbvarn3",
+  "accessMode": "external",
+  "envVars": {
+    "ZITE_BOOTSTRAP_ADMIN_EMAILS": {
+      "description": "ایمیل(های) مجاز برای ایجاد مدیر کل اولیه، جداشده با ویرگول"
+    }
+  }
+}

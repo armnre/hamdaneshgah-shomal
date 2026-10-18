@@ -1,0 +1,17 @@
+{
+  "project": {
+    "name": "University Platform",
+    "basePublicIdentifier": "6d611924819c4d32"
+  },
+  "integrations": {
+    "github": {
+      "type": "github",
+      "connectionId": "svc_565217"
+    }
+  },
+  "envVars": {
+    "ZITE_BOOTSTRAP_ADMIN_EMAILS": {
+      "description": "ایمیل(های) مجاز برای ایجاد مدیر کل اولیه، جداشده با ویرگول"
+    }
+  }
+}

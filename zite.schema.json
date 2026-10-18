@@ -1,0 +1,1058 @@
+{
+  "tables": [
+    {
+      "id": "tjVALk6N3FS",
+      "sdkName": "faculties",
+      "name": "Faculties",
+      "primaryFieldId": "fvog79ixZ4N",
+      "fields": [
+        {
+          "id": "fvog79ixZ4N",
+          "sdkName": "name",
+          "definition": {
+            "name": "Name",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "faib6y93yBy",
+          "sdkName": "slug",
+          "definition": {
+            "name": "Slug",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fmL4aJ2gqGY",
+          "sdkName": "description",
+          "definition": {
+            "name": "Description",
+            "type": "long_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fvnumMpjGYA",
+          "sdkName": "imageUrl",
+          "definition": {
+            "name": "Image Url",
+            "type": "url",
+            "template": {}
+          }
+        },
+        {
+          "id": "fot1KkM4Aoh",
+          "sdkName": "sortOrder",
+          "definition": {
+            "name": "Sort Order",
+            "type": "number",
+            "template": {
+              "numberFormat": "local",
+              "decimalPlaces": 0
+            }
+          }
+        },
+        {
+          "id": "fkST4wzQmHK",
+          "sdkName": "active",
+          "definition": {
+            "name": "Active",
+            "type": "checkbox",
+            "template": {
+              "defaultValue": true
+            }
+          }
+        },
+        {
+          "id": "fmMDGbNYdhj",
+          "sdkName": "verified",
+          "definition": {
+            "name": "Verified",
+            "type": "checkbox",
+            "template": {}
+          }
+        },
+        {
+          "id": "fpFwVa8uMMf",
+          "sdkName": "majors",
+          "definition": {
+            "name": "Majors",
+            "type": "linked_record",
+            "template": {
+              "tableId": "ttLfPL4tNxm",
+              "isInverse": true,
+              "allowMultiple": true,
+              "inverseFieldId": "fpxCcjbdgio"
+            }
+          }
+        },
+        {
+          "id": "ffBNF4sHRJx",
+          "sdkName": "associations",
+          "definition": {
+            "name": "Associations",
+            "type": "linked_record",
+            "template": {
+              "tableId": "ttaNzQwebXK",
+              "isInverse": true,
+              "allowMultiple": true,
+              "inverseFieldId": "faTMy8vqEjw"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ttLfPL4tNxm",
+      "sdkName": "majors",
+      "name": "Majors",
+      "primaryFieldId": "fcxnuevXefL",
+      "fields": [
+        {
+          "id": "fcxnuevXefL",
+          "sdkName": "name",
+          "definition": {
+            "name": "Name",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fpxCcjbdgio",
+          "sdkName": "faculty",
+          "definition": {
+            "name": "Faculty",
+            "type": "linked_record",
+            "template": {
+              "tableId": "tjVALk6N3FS",
+              "isInverse": false,
+              "allowMultiple": true,
+              "inverseFieldId": "fpFwVa8uMMf"
+            }
+          }
+        },
+        {
+          "id": "f446fWPVcX4",
+          "sdkName": "description",
+          "definition": {
+            "name": "Description",
+            "type": "long_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fiC1rq1bUYP",
+          "sdkName": "active",
+          "definition": {
+            "name": "Active",
+            "type": "checkbox",
+            "template": {
+              "defaultValue": true
+            }
+          }
+        },
+        {
+          "id": "fq1Dz2w9BLL",
+          "sdkName": "verified",
+          "definition": {
+            "name": "Verified",
+            "type": "checkbox",
+            "template": {}
+          }
+        },
+        {
+          "id": "fs4sQJp9Fgy",
+          "sdkName": "associations",
+          "definition": {
+            "name": "Associations",
+            "type": "linked_record",
+            "template": {
+              "tableId": "ttaNzQwebXK",
+              "isInverse": true,
+              "allowMultiple": true,
+              "inverseFieldId": "f4NyYL6UPHk"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ttaNzQwebXK",
+      "sdkName": "associations",
+      "name": "Associations",
+      "primaryFieldId": "fpDjYBysE7g",
+      "fields": [
+        {
+          "id": "fpDjYBysE7g",
+          "sdkName": "name",
+          "definition": {
+            "name": "Name",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "f89yCLjKjxQ",
+          "sdkName": "slug",
+          "definition": {
+            "name": "Slug",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "f3SDr5DJ9wf",
+          "sdkName": "shortDescription",
+          "definition": {
+            "name": "Short Description",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "frEBtrrm9gq",
+          "sdkName": "about",
+          "definition": {
+            "name": "About",
+            "type": "long_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fdxYqBpiKRs",
+          "sdkName": "logoUrl",
+          "definition": {
+            "name": "Logo Url",
+            "type": "url",
+            "template": {}
+          }
+        },
+        {
+          "id": "fk2pABi7nNt",
+          "sdkName": "coverUrl",
+          "definition": {
+            "name": "Cover Url",
+            "type": "url",
+            "template": {}
+          }
+        },
+        {
+          "id": "faTMy8vqEjw",
+          "sdkName": "faculty",
+          "definition": {
+            "name": "Faculty",
+            "type": "linked_record",
+            "template": {
+              "tableId": "tjVALk6N3FS",
+              "isInverse": false,
+              "allowMultiple": true,
+              "inverseFieldId": "ffBNF4sHRJx"
+            }
+          }
+        },
+        {
+          "id": "f4NyYL6UPHk",
+          "sdkName": "major",
+          "definition": {
+            "name": "Major",
+            "type": "linked_record",
+            "template": {
+              "tableId": "ttLfPL4tNxm",
+              "isInverse": false,
+              "allowMultiple": true,
+              "inverseFieldId": "fs4sQJp9Fgy"
+            }
+          }
+        },
+        {
+          "id": "fu9Tf3F9KYQ",
+          "sdkName": "contactEmail",
+          "definition": {
+            "name": "Contact Email",
+            "type": "email",
+            "template": {}
+          }
+        },
+        {
+          "id": "fvt9PsQDtQL",
+          "sdkName": "telegramUrl",
+          "definition": {
+            "name": "Telegram Url",
+            "type": "url",
+            "template": {}
+          }
+        },
+        {
+          "id": "fc3oHaDkFf4",
+          "sdkName": "active",
+          "definition": {
+            "name": "Active",
+            "type": "checkbox",
+            "template": {
+              "defaultValue": true
+            }
+          }
+        },
+        {
+          "id": "f5NZqyh54Bv",
+          "sdkName": "featured",
+          "definition": {
+            "name": "Featured",
+            "type": "checkbox",
+            "template": {}
+          }
+        },
+        {
+          "id": "fgdMrU1SZzj",
+          "sdkName": "news",
+          "definition": {
+            "name": "News",
+            "type": "linked_record",
+            "template": {
+              "tableId": "txv5V9tnNMz",
+              "isInverse": true,
+              "allowMultiple": true,
+              "inverseFieldId": "f32MZxvka5i"
+            }
+          }
+        },
+        {
+          "id": "frVg4jHiJu5",
+          "sdkName": "events",
+          "definition": {
+            "name": "Events",
+            "type": "linked_record",
+            "template": {
+              "tableId": "t3Fg9tWWrNP",
+              "isInverse": true,
+              "allowMultiple": true,
+              "inverseFieldId": "f5sAqpZn7yn"
+            }
+          }
+        },
+        {
+          "id": "fnkBzLJPzqu",
+          "sdkName": "adminMembers",
+          "definition": {
+            "name": "Admin Members",
+            "type": "linked_record",
+            "template": {
+              "tableId": "t3j3ov97ENh",
+              "isInverse": true,
+              "allowMultiple": true,
+              "inverseFieldId": "fck3tiTMH1F"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "t9p3UUTACby",
+      "sdkName": "categories",
+      "name": "Categories",
+      "primaryFieldId": "ftoY1cRBs8g",
+      "fields": [
+        {
+          "id": "ftoY1cRBs8g",
+          "sdkName": "name",
+          "definition": {
+            "name": "Name",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fqYSpKN1jQp",
+          "sdkName": "slug",
+          "definition": {
+            "name": "Slug",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fciMpESq9iH",
+          "sdkName": "news",
+          "definition": {
+            "name": "News",
+            "type": "linked_record",
+            "template": {
+              "tableId": "txv5V9tnNMz",
+              "isInverse": true,
+              "allowMultiple": true,
+              "inverseFieldId": "fa6RuGkN1Mr"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "txv5V9tnNMz",
+      "sdkName": "news",
+      "name": "News",
+      "primaryFieldId": "fqGERxdUho9",
+      "fields": [
+        {
+          "id": "fqGERxdUho9",
+          "sdkName": "title",
+          "definition": {
+            "name": "Title",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fhUaGJf2Ted",
+          "sdkName": "slug",
+          "definition": {
+            "name": "Slug",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fvYzUuFKxRd",
+          "sdkName": "excerpt",
+          "definition": {
+            "name": "Excerpt",
+            "type": "long_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "f8F95dkRFkL",
+          "sdkName": "body",
+          "definition": {
+            "name": "Body",
+            "type": "long_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fmYs2sXJdAL",
+          "sdkName": "coverUrl",
+          "definition": {
+            "name": "Cover Url",
+            "type": "url",
+            "template": {}
+          }
+        },
+        {
+          "id": "fa6RuGkN1Mr",
+          "sdkName": "category",
+          "definition": {
+            "name": "Category",
+            "type": "linked_record",
+            "template": {
+              "tableId": "t9p3UUTACby",
+              "isInverse": false,
+              "allowMultiple": true,
+              "inverseFieldId": "fciMpESq9iH"
+            }
+          }
+        },
+        {
+          "id": "f32MZxvka5i",
+          "sdkName": "association",
+          "definition": {
+            "name": "Association",
+            "type": "linked_record",
+            "template": {
+              "tableId": "ttaNzQwebXK",
+              "isInverse": false,
+              "allowMultiple": true,
+              "inverseFieldId": "fgdMrU1SZzj"
+            }
+          }
+        },
+        {
+          "id": "frLKnJRoLeU",
+          "sdkName": "status",
+          "definition": {
+            "name": "Status",
+            "type": "single_select",
+            "template": {
+              "options": [
+                {
+                  "value": "o7S6",
+                  "label": "Draft",
+                  "color": "purple"
+                },
+                {
+                  "value": "6G3t",
+                  "label": "Published",
+                  "color": "orange"
+                },
+                {
+                  "value": "fYV7",
+                  "label": "Archived",
+                  "color": "blue"
+                }
+              ],
+              "disableColors": false
+            }
+          }
+        },
+        {
+          "id": "fmxytnncFSr",
+          "sdkName": "publishAt",
+          "definition": {
+            "name": "Publish At",
+            "type": "datetime",
+            "template": {
+              "timezone": "",
+              "dateFormat": "local",
+              "timeFormat": "12h",
+              "displayTimeZone": false
+            }
+          }
+        },
+        {
+          "id": "frSjCJCHWba",
+          "sdkName": "featured",
+          "definition": {
+            "name": "Featured",
+            "type": "checkbox",
+            "template": {}
+          }
+        },
+        {
+          "id": "f5kDpCumA5y",
+          "sdkName": "isAnnouncement",
+          "definition": {
+            "name": "Is Announcement",
+            "type": "checkbox",
+            "template": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "t3Fg9tWWrNP",
+      "sdkName": "events",
+      "name": "Events",
+      "primaryFieldId": "fxxe11FTHPH",
+      "fields": [
+        {
+          "id": "fxxe11FTHPH",
+          "sdkName": "title",
+          "definition": {
+            "name": "Title",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fadV3BuFVdb",
+          "sdkName": "slug",
+          "definition": {
+            "name": "Slug",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "ftxVka2h9et",
+          "sdkName": "summary",
+          "definition": {
+            "name": "Summary",
+            "type": "long_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "favWF4kUnEX",
+          "sdkName": "body",
+          "definition": {
+            "name": "Body",
+            "type": "long_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "f6bmGjQHeYg",
+          "sdkName": "coverUrl",
+          "definition": {
+            "name": "Cover Url",
+            "type": "url",
+            "template": {}
+          }
+        },
+        {
+          "id": "f8jcUavFWcJ",
+          "sdkName": "kind",
+          "definition": {
+            "name": "Kind",
+            "type": "single_select",
+            "template": {
+              "options": [
+                {
+                  "value": "fKeT",
+                  "label": "Event",
+                  "color": "purple"
+                },
+                {
+                  "value": "5eyp",
+                  "label": "Conference",
+                  "color": "orange"
+                },
+                {
+                  "value": "fKyE",
+                  "label": "Course",
+                  "color": "blue"
+                },
+                {
+                  "value": "7dTf",
+                  "label": "Call",
+                  "color": "gray"
+                }
+              ],
+              "disableColors": false
+            }
+          }
+        },
+        {
+          "id": "f8wuJ1hjEeJ",
+          "sdkName": "startAt",
+          "definition": {
+            "name": "Start At",
+            "type": "datetime",
+            "template": {
+              "timezone": "",
+              "dateFormat": "local",
+              "timeFormat": "12h",
+              "displayTimeZone": false
+            }
+          }
+        },
+        {
+          "id": "fdLqhMkUDdR",
+          "sdkName": "endAt",
+          "definition": {
+            "name": "End At",
+            "type": "datetime",
+            "template": {
+              "timezone": "",
+              "dateFormat": "local",
+              "timeFormat": "12h",
+              "displayTimeZone": false
+            }
+          }
+        },
+        {
+          "id": "fr4ChJSnJU1",
+          "sdkName": "location",
+          "definition": {
+            "name": "Location",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fdmjzmQ1Ko2",
+          "sdkName": "registrationUrl",
+          "definition": {
+            "name": "Registration Url",
+            "type": "url",
+            "template": {}
+          }
+        },
+        {
+          "id": "f5sAqpZn7yn",
+          "sdkName": "association",
+          "definition": {
+            "name": "Association",
+            "type": "linked_record",
+            "template": {
+              "tableId": "ttaNzQwebXK",
+              "isInverse": false,
+              "allowMultiple": true,
+              "inverseFieldId": "frVg4jHiJu5"
+            }
+          }
+        },
+        {
+          "id": "fhhfLHCVj1X",
+          "sdkName": "status",
+          "definition": {
+            "name": "Status",
+            "type": "single_select",
+            "template": {
+              "options": [
+                {
+                  "value": "sK4W",
+                  "label": "Draft",
+                  "color": "purple"
+                },
+                {
+                  "value": "m6Vm",
+                  "label": "Published",
+                  "color": "orange"
+                },
+                {
+                  "value": "3aTU",
+                  "label": "Archived",
+                  "color": "blue"
+                }
+              ],
+              "disableColors": false
+            }
+          }
+        },
+        {
+          "id": "fvtqyA5NrvZ",
+          "sdkName": "featured",
+          "definition": {
+            "name": "Featured",
+            "type": "checkbox",
+            "template": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "tivQbUNuetQ",
+      "sdkName": "mediaAssets",
+      "name": "Media Assets",
+      "primaryFieldId": "fjd2ntWAr6k",
+      "fields": [
+        {
+          "id": "fjd2ntWAr6k",
+          "sdkName": "title",
+          "definition": {
+            "name": "Title",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "f8Qs2yXbAKJ",
+          "sdkName": "fileUrl",
+          "definition": {
+            "name": "File Url",
+            "type": "url",
+            "template": {}
+          }
+        },
+        {
+          "id": "foFQ5QRqs4D",
+          "sdkName": "altText",
+          "definition": {
+            "name": "Alt Text",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fe9m2C2LyRG",
+          "sdkName": "source",
+          "definition": {
+            "name": "Source",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fc7Se5PTtK1",
+          "sdkName": "license",
+          "definition": {
+            "name": "License",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "f7duxAV7KjR",
+          "sdkName": "uploadedAt",
+          "definition": {
+            "name": "Uploaded At",
+            "type": "created_at",
+            "template": {
+              "timezone": "",
+              "dateFormat": "local",
+              "timeFormat": "12h",
+              "displayTimeZone": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "t3j3ov97ENh",
+      "sdkName": "adminMembers",
+      "name": "Admin Members",
+      "primaryFieldId": "f6Jw9f1Bdgg",
+      "fields": [
+        {
+          "id": "f6Jw9f1Bdgg",
+          "sdkName": "label",
+          "definition": {
+            "name": "Label",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fjA12M6TL7J",
+          "sdkName": "member",
+          "definition": {
+            "name": "Member",
+            "type": "user",
+            "template": {
+              "internalOnly": false,
+              "allowMultiple": false,
+              "deleteRowWhenUserDeleted": true
+            }
+          }
+        },
+        {
+          "id": "fcrfLoAVYZ3",
+          "sdkName": "role",
+          "definition": {
+            "name": "Role",
+            "type": "single_select",
+            "template": {
+              "options": [
+                {
+                  "value": "d37w",
+                  "label": "Super Admin",
+                  "color": "purple"
+                },
+                {
+                  "value": "nZYu",
+                  "label": "Content Editor",
+                  "color": "orange"
+                },
+                {
+                  "value": "5RaS",
+                  "label": "Association Manager",
+                  "color": "blue"
+                }
+              ],
+              "disableColors": false
+            }
+          }
+        },
+        {
+          "id": "fck3tiTMH1F",
+          "sdkName": "association",
+          "definition": {
+            "name": "Association",
+            "type": "linked_record",
+            "template": {
+              "tableId": "ttaNzQwebXK",
+              "isInverse": false,
+              "allowMultiple": true,
+              "inverseFieldId": "fnkBzLJPzqu"
+            }
+          }
+        },
+        {
+          "id": "f83TzytHJfL",
+          "sdkName": "active",
+          "definition": {
+            "name": "Active",
+            "type": "checkbox",
+            "template": {
+              "defaultValue": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "t59Rq9RCsCm",
+      "sdkName": "auditLogs",
+      "name": "Audit Logs",
+      "primaryFieldId": "ffykWttKoUf",
+      "fields": [
+        {
+          "id": "ffykWttKoUf",
+          "sdkName": "action",
+          "definition": {
+            "name": "Action",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fimsWknp2BZ",
+          "sdkName": "entity",
+          "definition": {
+            "name": "Entity",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "ffYfQeUXnuc",
+          "sdkName": "entityId",
+          "definition": {
+            "name": "Entity Id",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "f3n7S6QVmwJ",
+          "sdkName": "details",
+          "definition": {
+            "name": "Details",
+            "type": "long_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fwhDwRmRfRQ",
+          "sdkName": "actor",
+          "definition": {
+            "name": "Actor",
+            "type": "user",
+            "template": {
+              "internalOnly": false,
+              "allowMultiple": false,
+              "deleteRowWhenUserDeleted": false
+            }
+          }
+        },
+        {
+          "id": "f2QEZXW11Wr",
+          "sdkName": "actorEmail",
+          "definition": {
+            "name": "Actor Email",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fmYu2xTq8Q4",
+          "sdkName": "loggedAt",
+          "definition": {
+            "name": "Logged At",
+            "type": "created_at",
+            "template": {
+              "timezone": "",
+              "dateFormat": "local",
+              "timeFormat": "12h",
+              "displayTimeZone": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "tr1yEWjEjth",
+      "sdkName": "siteSettings",
+      "name": "Site Settings",
+      "primaryFieldId": "fs2a5zoTAbC",
+      "fields": [
+        {
+          "id": "fs2a5zoTAbC",
+          "sdkName": "key",
+          "definition": {
+            "name": "Key",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fpddYyMdRL2",
+          "sdkName": "value",
+          "definition": {
+            "name": "Value",
+            "type": "long_text",
+            "template": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "tpM3y3raHkN",
+      "sdkName": "contactMessages",
+      "name": "Contact Messages",
+      "primaryFieldId": "f1hMbCgbbvr",
+      "fields": [
+        {
+          "id": "f1hMbCgbbvr",
+          "sdkName": "subject",
+          "definition": {
+            "name": "Subject",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fewS9gfMboU",
+          "sdkName": "senderName",
+          "definition": {
+            "name": "Sender Name",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fsfS4KLKe7b",
+          "sdkName": "senderEmail",
+          "definition": {
+            "name": "Sender Email",
+            "type": "email",
+            "template": {}
+          }
+        },
+        {
+          "id": "fbNKTEmE3qR",
+          "sdkName": "message",
+          "definition": {
+            "name": "Message",
+            "type": "long_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "ftDW9kP9mSD",
+          "sdkName": "status",
+          "definition": {
+            "name": "Status",
+            "type": "single_select",
+            "template": {
+              "options": [
+                {
+                  "value": "qh53",
+                  "label": "New",
+                  "color": "purple"
+                },
+                {
+                  "value": "qMRM",
+                  "label": "Read",
+                  "color": "orange"
+                },
+                {
+                  "value": "pkdr",
+                  "label": "Closed",
+                  "color": "blue"
+                }
+              ],
+              "disableColors": false
+            }
+          }
+        },
+        {
+          "id": "f5Wo9eb9ekW",
+          "sdkName": "receivedAt",
+          "definition": {
+            "name": "Received At",
+            "type": "created_at",
+            "template": {
+              "timezone": "",
+              "dateFormat": "local",
+              "timeFormat": "12h",
+              "displayTimeZone": false
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
