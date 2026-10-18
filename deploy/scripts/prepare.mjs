@@ -1,5 +1,5 @@
-// Copies the shared app source (apps/app + packages/components) into .build/ and generates
-// the `zitejs/api` frontend shim and the server endpoint registry from apps/app/src/api/*.ts.
+// Copies the shared app source (apps/hamdaneshgah-shomal + packages/components) into .build/ and generates
+// the `zitejs/api` frontend shim and the server endpoint registry from apps/hamdaneshgah-shomal/src/api/*.ts.
 import { cpSync, rmSync, mkdirSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,8 +10,11 @@ const build = resolve(root, '.build');
 
 rmSync(build, { recursive: true, force: true });
 mkdirSync(build, { recursive: true });
-cpSync(resolve(repo, 'apps/app/src'), resolve(build, 'app/src'), { recursive: true });
-cpSync(resolve(repo, 'apps/app/public'), resolve(build, 'public'), { recursive: true });
+// GitHub repo keeps the app at apps/app; the Zite workspace at apps/hamdaneshgah-shomal.
+const APP = ['apps/app', 'apps/hamdaneshgah-shomal'].map((d) => resolve(repo, d)).find((d) => existsSync(resolve(d, 'src/App.tsx')));
+if (!APP) throw new Error('app source not found');
+cpSync(resolve(APP, 'src'), resolve(build, 'app/src'), { recursive: true });
+cpSync(resolve(APP, 'public'), resolve(build, 'public'), { recursive: true });
 cpSync(resolve(repo, 'packages/components'), resolve(build, 'components'), { recursive: true });
 
 const names = readdirSync(resolve(build, 'app/src/api'))

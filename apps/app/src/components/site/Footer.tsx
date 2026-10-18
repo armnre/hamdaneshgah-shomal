@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Mail, MapPin, ExternalLink, Send } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { Brand, NAV, useSettings } from './PublicLayout';
 
 export default function Footer() {
@@ -11,7 +11,7 @@ export default function Footer() {
         <div className="md:col-span-2">
           <div className="text-sidebar-accent-foreground"><Brand light /></div>
           <p className="mt-4 max-w-md text-sm leading-7">{st.tagline}</p>
-          <p className="mt-3 text-xs text-sidebar-foreground/60">این پلتفرم در حال توسعه است و وب‌سایت رسمی دانشگاه نیست.</p>
+          <p className="mt-3 text-xs text-sidebar-foreground/60">هم‌دانشگاهی یک شبکه دانشجویی مستقل است و وب‌سایت دانشگاه شمال نیست.</p>
         </div>
         <div>
           <h2 className="mb-4 font-bold text-sidebar-accent-foreground">بخش‌ها</h2>
@@ -23,10 +23,8 @@ export default function Footer() {
         <div>
           <h2 className="mb-4 font-bold text-sidebar-accent-foreground">ارتباط</h2>
           <ul className="grid gap-3 text-sm">
-            {st.contactAddress && <li className="flex gap-2 leading-6"><MapPin className="mt-1 h-4 w-4 shrink-0" />{st.contactAddress}</li>}
-            {st.contactEmail && <li className="flex items-center gap-2"><Mail className="h-4 w-4" /><a href={`mailto:${st.contactEmail}`} dir="ltr">{st.contactEmail}</a></li>}
-            {st.universityUrl && <li><a href={st.universityUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-sidebar-primary"><ExternalLink className="h-4 w-4" />وب‌سایت رسمی دانشگاه</a></li>}
-            {st.telegramUrl && <li><a href={st.telegramUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-sidebar-primary"><Send className="h-4 w-4" />کانال رسمی تلگرام</a></li>}
+            {st.contactEmail && <li className="flex items-center gap-2"><Mail className="h-4 w-4" /><a href={`mailto:${st.contactEmail}`} dir="ltr" className="hover:text-sidebar-primary">{st.contactEmail}</a></li>}
+            <li><Link to="/contact" className="hover:text-sidebar-primary">فرم تماس با سامانه</Link></li>
           </ul>
         </div>
       </div>

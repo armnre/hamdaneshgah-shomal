@@ -26,6 +26,13 @@ export default createEndpoint({
     if (Number(recent.rows[0]?.c ?? 0) >= 3) {
       throw new ZiteError({ code: 'BAD_REQUEST', message: 'rate limited', userFacingMessage: 'تعداد پیام‌های شما زیاد است؛ لطفاً بعداً تلاش کنید.' });
     }
+    // Growth cap for the whole table: at most 200 new messages per hour from everyone combined
+    const total = await zite.sql({
+      query: `SELECT COUNT(*)::int AS "c" FROM "ContactMessages" WHERE "receivedAt" > NOW() - INTERVAL '1 hour'`,
+    });
+    if (Number(total.rows[0]?.c ?? 0) >= 200) {
+      throw new ZiteError({ code: 'BAD_REQUEST', message: 'global cap', userFacingMessage: 'سامانه موقتاً پیام جدید نمی‌پذیرد؛ لطفاً ساعتی دیگر تلاش کنید.' });
+    }
     const { website: _w, ...rec } = parsed.data;
     await zite.contactMessages.create({ record: { ...rec, status: 'New' } });
     return { ok: true };

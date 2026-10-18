@@ -4,7 +4,7 @@ import { ArrowLeft, Users, Building2, BookOpen, CalendarDays, MapPin, ShieldChec
 import { Button } from '@project/components/ui/button';
 import { Skeleton } from '@project/components/ui/skeleton';
 import { faNum } from '../../lib/format';
-import { IMG } from '../../lib/brand';
+import { IMG, altFor } from '../../lib/brand';
 
 type Props = { title?: string; subtitle?: string; stats?: Record<string, unknown>; loading: boolean };
 
@@ -21,7 +21,7 @@ export default function HomeHero({ title, subtitle, stats, loading }: Props) {
   return (
     <section className="relative isolate overflow-hidden bg-primary text-primary-foreground">
       <motion.img
-        src={IMG.campus} alt="فضای سبز پردیس دانشگاه شمال" fetchPriority="high"
+        src={IMG.campus} alt={altFor(IMG.campus)} fetchPriority="high"
         initial={{ scale: 1.08 }} animate={{ scale: 1 }} transition={{ duration: 1.6, ease: 'easeOut' }}
         className="absolute inset-0 -z-20 h-full w-full object-cover"
       />
@@ -60,9 +60,9 @@ export default function HomeHero({ title, subtitle, stats, loading }: Props) {
 
         <motion.div {...fade(0.2)} className="relative hidden lg:block">
           <div className="grid grid-cols-5 grid-rows-2 gap-3">
-            <Photo src={IMG.campusAlt} alt="نمای پردیس دانشگاه شمال" className="col-span-5 aspect-[16/7]" />
-            <Photo src={IMG.life[0]} alt="مراسم دانشجویی در دانشگاه شمال" className="col-span-3 aspect-[4/3]" />
-            <Photo src={IMG.life[2]} alt="فعالیت دانشجویان دانشگاه شمال" className="col-span-2 aspect-[4/3]" />
+            <Photo src={IMG.campusAlt} alt={altFor(IMG.campusAlt)} className="col-span-5 aspect-[16/7]" />
+            <Photo src={IMG.life[0]} alt={altFor(IMG.life[0])} className="col-span-3 aspect-[4/3]" />
+            <Photo src={IMG.life[2]} alt={altFor(IMG.life[2])} className="col-span-2 aspect-[4/3]" />
           </div>
           <div className="absolute -bottom-10 start-6 end-6 grid grid-cols-4 gap-2 rounded-2xl border border-primary-foreground/15 bg-primary/85 p-3 shadow-2xl backdrop-blur-md">
             {STATS.map(({ k, l, i: Icon }) => <Stat key={k} label={l} value={stats?.[k]} Icon={Icon} />)}

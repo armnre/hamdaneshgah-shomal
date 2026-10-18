@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@project/components/ui/sonner';
 import PublicLayout from './components/site/PublicLayout';
@@ -14,6 +14,8 @@ import EventDetail from './pages/EventDetail';
 import Contact from './pages/Contact';
 import Legal, { NotFound } from './pages/Legal';
 import AdminApp from './admin/AdminApp';
+import AdminLogin from './admin/AdminLogin';
+import { ElectionsList, ElectionDetail, VotePage } from './pages/Elections';
 import Dashboard from './admin/Dashboard';
 import ResourcePage from './admin/ResourcePage';
 import { AuditPage, MessagesPage, SettingsPage } from './admin/OtherPages';
@@ -42,8 +44,14 @@ export default function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/privacy" element={<Legal kind="privacy" />} />
             <Route path="/terms" element={<Legal kind="terms" />} />
+            <Route path="/elections" element={<ElectionsList />} />
+            <Route path="/elections/:slug" element={<ElectionDetail />} />
+            <Route path="/vote" element={<VotePage />} />
             <Route path="*" element={<NotFound />} />
           </Route>
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/login" element={<Navigate to="/admin/login" replace />} />
+          <Route path="/signin" element={<Navigate to="/admin/login" replace />} />
           <Route path="/admin" element={<AdminApp />}>
             <Route index element={<Dashboard />} />
             <Route path="settings" element={<SettingsPage />} />

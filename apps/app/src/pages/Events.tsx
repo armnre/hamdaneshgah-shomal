@@ -21,7 +21,7 @@ export default function Events({ courses }: { courses?: boolean }) {
 
   return (
     <>
-      <PageHero image={courses ? "/shomal/life-2.webp" : "/shomal/life-3.webp"} title={title} subtitle={courses ? 'کارگاه‌ها و دوره‌هایی که انجمن‌ها و واحدهای دانشگاه برگزار می‌کنند.' : 'برنامه رویدادهای علمی، فرهنگی و فراخوان‌های دانشجویی.'} />
+      <PageHero image={courses ? "/shomal/ai-library.webp" : "/shomal/ai-lab.webp"} title={title} subtitle={courses ? 'کارگاه‌ها و دوره‌هایی که انجمن‌ها و واحدهای دانشگاه برگزار می‌کنند.' : 'برنامه رویدادهای علمی، فرهنگی و فراخوان‌های دانشجویی.'} />
       <div className="container-page py-10">
         <Tabs value={when} onValueChange={(v) => { setWhen(v as 'upcoming' | 'past'); setPage(1); }} className="mb-8">
           <TabsList><TabsTrigger value="upcoming">پیش رو</TabsTrigger><TabsTrigger value="past">برگزارشده</TabsTrigger></TabsList>

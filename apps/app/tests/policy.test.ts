@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { canAccess, canBootstrap, managerMayMutateMedia, slugify } from '../src/lib/policy.ts';
+import { canAccess, canBootstrap, managerMayMutateMedia, slugify, isSafeUrl, bootstrapWinner } from '../src/lib/policy.ts';
 
 test('role matrix', () => {
   assert.equal(canAccess('Super Admin', 'members'), true);
@@ -34,4 +34,22 @@ test('association manager cannot edit/delete shared media', () => {
 test('slugify keeps Persian letters', () => {
   assert.equal(slugify('  انجمن علمی کامپیوتر! '), 'انجمن-علمی-کامپیوتر');
   assert.match(slugify('!!!'), /^[a-z0-9]{1,6}$/);
+});
+
+test('URL fields accept only http/https', () => {
+  assert.equal(isSafeUrl('https://shomal.ac.ir/x'), true);
+  assert.equal(isSafeUrl('http://example.com'), true);
+  assert.equal(isSafeUrl('javascript:alert(1)'), false);
+  assert.equal(isSafeUrl('data:text/html,hi'), false);
+  assert.equal(isSafeUrl('ftp://x.ir/a'), false);
+  assert.equal(isSafeUrl('/api/file/abc.png'), false);
+  assert.equal(isSafeUrl('/api/file/abc.png', true), true);
+  assert.equal(isSafeUrl('/api/file/../x', true), false);
+});
+
+test('concurrent bootstrap claims agree on a single winner', () => {
+  const rows = [{ id: 'b' }, { id: 'a' }, { id: 'c' }];
+  assert.equal(bootstrapWinner(rows), 'a');
+  assert.equal(bootstrapWinner([...rows].reverse()), 'a');
+  assert.equal(bootstrapWinner([]), null);
 });

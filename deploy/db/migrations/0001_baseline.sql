@@ -1,7 +1,4 @@
--- Neon / Postgres schema for the Netlify deployment of «پردیس شمال».
--- Table and column names mirror the Zite SDK names so the shared endpoint SQL runs unchanged.
--- Linked-record fields are JSONB arrays of ids on the owning table; the link "tables" the
--- SQL joins through are views that unnest them. Idempotent: safe to run on every deploy.
+-- 0001 baseline: the schema as it existed before versioned migrations (was db/schema.sql).
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 

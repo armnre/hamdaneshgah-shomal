@@ -1,9 +1,8 @@
 import { createContext, useContext, useState } from 'react';
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Link, NavLink, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { LayoutDashboard, Users, Building2, BookOpen, Newspaper, CalendarDays, Tags, Image, ShieldCheck, ScrollText, Settings, Inbox, Menu, LogOut, ExternalLink, Loader2, Lock } from 'lucide-react';
 import { useAuth, logout } from 'zitejs/auth';
-import AdminLogin from './AdminLogin';
 import { getMyAccess, claimSuperAdmin, adminOptions, GetMyAccessOutputType } from 'zitejs/api';
 import { Button } from '@project/components/ui/button';
 import { Sheet, SheetContent, SheetTitle } from '@project/components/ui/sheet';
@@ -43,11 +42,12 @@ function Center({ children }: { children: React.ReactNode }) {
 export default function AdminApp() {
   useTitle('پنل مدیریت', undefined, true);
   const { user, isLoading } = useAuth();
+  const loc = useLocation();
   const q = useQuery({ queryKey: ['myAccess'], queryFn: () => getMyAccess({}), enabled: !!user });
   const qc = useQueryClient();
   const claim = useMutation({ mutationFn: () => claimSuperAdmin({}), onSuccess: () => { toast.success('شما مدیر کل سامانه شدید.'); qc.invalidateQueries(); }, onError: (e) => toast.error(errMsg(e)) });
 
-  if (!isLoading && !user) return <AdminLogin />;
+  if (!isLoading && !user) return <Navigate to={`/admin/login?next=${encodeURIComponent(loc.pathname + loc.search)}`} replace />;
   if (isLoading || !user || q.isLoading) return <Center><Loader2 className="h-6 w-6 animate-spin text-primary" /></Center>;
   if (q.isError) return <Center><p>{errMsg(q.error)}</p></Center>;
   const access = q.data!;

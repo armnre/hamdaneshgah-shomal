@@ -29,3 +29,20 @@ export function slugify(s: string) {
     Math.random().toString(36).slice(2, 8)
   );
 }
+
+/** Only absolute http(s) URLs (blocks javascript:, data:, etc.). Uploaded files may also be same-origin /api/file/ paths. */
+export function isSafeUrl(value: string, allowUploadPath = false) {
+  const v = value.trim();
+  if (allowUploadPath && /^\/api\/file\/(?!.*\.\.)[A-Za-z0-9/_.-]+$/.test(v)) return true;
+  try {
+    const u = new URL(v);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+/** Race-safe bootstrap: when concurrent claims each inserted a Super Admin row, only the earliest-created one survives. */
+export function bootstrapWinner(rows: { id: string; createdAt?: string }[]) {
+  return [...rows].sort((a, b) => String(a.createdAt ?? '').localeCompare(String(b.createdAt ?? '')) || a.id.localeCompare(b.id))[0]?.id ?? null;
+}

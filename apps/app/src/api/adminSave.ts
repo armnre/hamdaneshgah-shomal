@@ -2,20 +2,23 @@ import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { requireAccess, audit, slugify, first } from '../lib/server';
+import { isSafeUrl } from '../lib/policy';
 
 const s = (max: number) => z.string().trim().max(max).optional().nullable();
-const url = z.string().trim().url().max(1000).optional().nullable().or(z.literal(''));
+const httpUrl = (uploads = false) => z.string().trim().max(1000).refine((v) => isSafeUrl(v, uploads), 'فقط نشانی‌های http و https مجاز است.');
+const url = httpUrl().optional().nullable().or(z.literal(''));
+const imgUrl = httpUrl(true).optional().nullable().or(z.literal(''));
 const id = z.string().optional().nullable().or(z.literal(''));
 const status = z.enum(['Draft', 'Published', 'Archived']);
 
 const SCHEMAS = {
-  associations: z.object({ name: z.string().trim().min(2).max(150), slug: s(80), shortDescription: s(250), about: s(10000), logoUrl: url, coverUrl: url, faculty: id, major: id, contactEmail: z.string().email().optional().nullable().or(z.literal('')), telegramUrl: url, active: z.boolean().default(true), featured: z.boolean().default(false) }),
-  faculties: z.object({ name: z.string().trim().min(2).max(150), slug: s(80), description: s(5000), imageUrl: url, sortOrder: z.number().int().optional().nullable(), active: z.boolean().default(true), verified: z.boolean().default(false) }),
+  associations: z.object({ name: z.string().trim().min(2).max(150), slug: s(80), shortDescription: s(250), about: s(10000), logoUrl: imgUrl, coverUrl: imgUrl, faculty: id, major: id, contactEmail: z.string().email().optional().nullable().or(z.literal('')), telegramUrl: url, active: z.boolean().default(true), featured: z.boolean().default(false) }),
+  faculties: z.object({ name: z.string().trim().min(2).max(150), slug: s(80), description: s(5000), imageUrl: imgUrl, sortOrder: z.number().int().optional().nullable(), active: z.boolean().default(true), verified: z.boolean().default(false) }),
   majors: z.object({ name: z.string().trim().min(2).max(150), faculty: z.string().min(1), description: s(5000), active: z.boolean().default(true), verified: z.boolean().default(false) }),
-  news: z.object({ title: z.string().trim().min(3).max(250), slug: s(80), excerpt: s(600), body: s(50000), coverUrl: url, category: id, association: id, status, publishAt: z.string().optional().nullable(), featured: z.boolean().default(false), isAnnouncement: z.boolean().default(false) }),
-  events: z.object({ title: z.string().trim().min(3).max(250), slug: s(80), summary: s(600), body: s(50000), coverUrl: url, kind: z.enum(['Event', 'Conference', 'Course', 'Call']), startAt: z.string().min(1), endAt: z.string().optional().nullable(), location: s(250), registrationUrl: url, association: id, status, featured: z.boolean().default(false) }),
+  news: z.object({ title: z.string().trim().min(3).max(250), slug: s(80), excerpt: s(600), body: s(50000), coverUrl: imgUrl, category: id, association: id, status, publishAt: z.string().optional().nullable(), featured: z.boolean().default(false), isAnnouncement: z.boolean().default(false) }),
+  events: z.object({ title: z.string().trim().min(3).max(250), slug: s(80), summary: s(600), body: s(50000), coverUrl: imgUrl, kind: z.enum(['Event', 'Conference', 'Course', 'Call']), startAt: z.string().min(1), endAt: z.string().optional().nullable(), location: s(250), registrationUrl: url, association: id, status, featured: z.boolean().default(false) }),
   categories: z.object({ name: z.string().trim().min(2).max(80), slug: s(80) }),
-  media: z.object({ title: z.string().trim().min(2).max(200), fileUrl: z.string().url(), altText: s(300), source: s(500), license: s(200) }),
+  media: z.object({ title: z.string().trim().min(2).max(200), fileUrl: httpUrl(true), altText: s(300), source: s(500), license: s(200) }),
   members: z.object({ email: z.string().trim().email(), role: z.enum(['Super Admin', 'Content Editor', 'Association Manager']), association: id, active: z.boolean().default(true) }),
   settings: z.object({ key: z.string().trim().min(1).max(60), value: s(5000) }),
   messages: z.object({ status: z.enum(['New', 'Read', 'Closed']) }),

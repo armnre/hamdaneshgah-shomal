@@ -1,4 +1,4 @@
-# Netlify deployment of «پردیس شمال» — frontend (Vite) + API (Netlify Functions) + Neon Postgres.
+# Netlify deployment of «هم‌دانشگاهی» — frontend (Vite) + API (Netlify Functions) + Neon Postgres.
 [build]
   base = "deploy"
   command = "npm run build"
@@ -10,6 +10,13 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+
+# API first: /api/* must never fall through to the SPA index.html below.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
 
 [[redirects]]
   from = "/*"
@@ -24,6 +31,8 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: blob: https:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+    Cross-Origin-Opener-Policy = "same-origin"
 
 [[headers]]
   for = "/assets/*"

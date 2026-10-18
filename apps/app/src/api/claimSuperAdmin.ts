@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { audit } from '../lib/server';
-import { canBootstrap } from '../lib/policy';
+import { canBootstrap, bootstrapWinner } from '../lib/policy';
 
 const MESSAGES = {
   closed: 'مدیر سامانه قبلاً تعیین شده است.',
@@ -28,6 +28,17 @@ export default createEndpoint({
       records: [{ label: context.user.email, member: context.user.id, role: 'Super Admin', association: null, active: true }],
       matchOn: ['member'],
     });
+    // Race guard: if two allowlisted users claimed at the same moment, both rows exist now.
+    // Wait briefly so concurrent inserts are visible, then every claimant agrees on one winner;
+    // losers remove their own row.
+    await new Promise((r) => setTimeout(r, 400));
+    const all = await zite.adminMembers.findAll({ filters: { role: 'Super Admin' }, limit: 50 });
+    const winner = bootstrapWinner(all.records.map((r) => ({ id: r.id })));
+    if (all.records.length > 1 && winner !== records[0].id) {
+      await zite.adminMembers.delete({ id: records[0].id });
+      await audit(context.user, 'bootstrap_super_admin_lost_race', 'members', records[0].id);
+      throw new ZiteError({ code: 'FORBIDDEN', message: 'bootstrap race lost', userFacingMessage: MESSAGES.closed });
+    }
     await audit(context.user, 'bootstrap_super_admin', 'members', records[0].id);
     return { ok: true };
   },

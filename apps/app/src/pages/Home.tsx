@@ -9,7 +9,7 @@ import { AssociationCard, EventCard, NewsCard } from '../components/site/cards';
 import { EmptyState, ErrorState, SectionHeading } from '../components/site/ui';
 import { faNum } from '../lib/format';
 import { useTitle } from '../lib/useTitle';
-import { IMG } from '../lib/brand';
+
 
 type Row = Record<string, unknown>;
 
@@ -103,18 +103,6 @@ function HomeSections({ d, loading, st }: { d?: Row; loading: boolean; st: Recor
         </div>
       </section>
 
-      <section className="container-page mt-20">
-        <SectionHeading eyebrow="زندگی دانشجویی" title="در پردیس دانشگاه شمال" />
-        <div className="grid gap-4 md:grid-cols-4 md:grid-rows-2">
-          <figure className="relative overflow-hidden rounded-3xl md:col-span-2 md:row-span-2">
-            <img src={IMG.campus} alt="پردیس دانشگاه شمال" loading="lazy" className="h-full min-h-64 w-full object-cover" />
-            <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-5 text-sm font-semibold text-white">پردیس دانشگاه شمال، آمل</figcaption>
-          </figure>
-          {IMG.life.map((src, i) => (
-            <img key={src} src={src} alt="فعالیت‌های دانشجویی دانشگاه شمال" loading="lazy" className={`h-full min-h-44 w-full rounded-3xl object-cover ${i === 2 ? 'md:col-span-2' : ''}`} />
-          ))}
-        </div>
-      </section>
 
       <section className="container-page mt-20 grid gap-6 md:grid-cols-2">
         <div className="rounded-3xl border bg-card p-8">

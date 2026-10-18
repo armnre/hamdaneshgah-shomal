@@ -2,7 +2,7 @@
 import { query } from './db';
 import type { SessionUser } from './backend';
 
-const COOKIE = 'pardis_session';
+const COOKIE = 'hd_session';
 const SESSION_DAYS = 30;
 const TOKEN_MINUTES = 15;
 const enc = new TextEncoder();
@@ -60,14 +60,13 @@ export function safeRedirect(r: string | null) {
 export async function requestMagicLink(emailRaw: string, redirect: string, origin: string) {
   const email = emailRaw.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || email.length > 200) return { ok: false, status: 400, message: 'ایمیل معتبر نیست.' };
-  const recent = await query(`SELECT COUNT(*)::int AS c FROM "authTokens" WHERE "email" = $1 AND created_at > now() - interval '1 hour'`, [email]);
-  if (Number(recent[0]?.c ?? 0) >= 5) return { ok: false, status: 429, message: 'تعداد درخواست‌ها زیاد است؛ یک ساعت دیگر تلاش کنید.' };
+  if (!(await rateLimit(`login-email:${email}`, 5, 3600))) return { ok: false, status: 429, message: 'تعداد درخواست‌ها زیاد است؛ یک ساعت دیگر تلاش کنید.' };
 
   const token = b64url(crypto.getRandomValues(new Uint8Array(32)));
   await query(`INSERT INTO "authTokens" ("tokenHash", "email", "expiresAt") VALUES ($1, $2, now() + interval '${TOKEN_MINUTES} minutes')`, [await sha256(token), email]);
   await query(`DELETE FROM "authTokens" WHERE "expiresAt" < now() - interval '1 day'`);
 
-  const link = `${origin}/api/auth/verify?token=${token}&redirect=${encodeURIComponent(safeRedirect(redirect))}`;
+  const link = `${origin}/api/auth/confirm?token=${token}&redirect=${encodeURIComponent(safeRedirect(redirect))}`;
   await sendEmail(email, link);
   return { ok: true, status: 200, message: '' };
 }
@@ -100,5 +99,25 @@ export async function verifyMagicLink(token: string) {
      ON CONFLICT ("email") DO UPDATE SET updated_at = now() RETURNING id`,
     [email],
   );
-  return String(users[0].id);
+  return { id: String(users[0].id), email };
+}
+
+/** Fixed-window rate limiter backed by Postgres ("rateLimits" table, migration 0002). Returns false when over the limit. */
+export async function rateLimit(bucket: string, max: number, windowSeconds: number) {
+  const rows = await query(
+    `INSERT INTO "rateLimits" ("bucket", "windowStart", "count") VALUES ($1, to_timestamp(floor(extract(epoch from now()) / $2::int) * $2::int), 1)
+     ON CONFLICT ("bucket", "windowStart") DO UPDATE SET "count" = "rateLimits"."count" + 1 RETURNING "count"`,
+    [await sha256(bucket), windowSeconds],
+  );
+  if (Math.random() < 0.02) await query(`DELETE FROM "rateLimits" WHERE "windowStart" < now() - interval '2 days'`);
+  return Number(rows[0]?.count ?? 0) <= max;
+}
+
+/** Login events go to the audit log; the email is stored masked. */
+export async function logLogin(action: 'login_success' | 'login_failed' | 'login_link_requested', email: string | null, userId: string | null) {
+  const masked = email ? email.replace(/^(.).*(@.*)$/, '$1***$2') : '';
+  await query(
+    `INSERT INTO "AuditLogs" ("action", "entity", "entityId", "details", "actor", "actorEmail") VALUES ($1, 'auth', '', '', $2, $3)`,
+    [action, JSON.stringify(userId ? [userId] : []), masked],
+  ).catch((e) => console.error('[audit]', e instanceof Error ? e.message : 'error'));
 }

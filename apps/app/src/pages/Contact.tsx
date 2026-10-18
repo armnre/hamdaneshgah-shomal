@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { Loader2, Mail, MapPin } from 'lucide-react';
+import { Loader2, Mail } from 'lucide-react';
 import { submitContact } from 'zitejs/api';
 import { Input } from '@project/components/ui/input';
 import { Textarea } from '@project/components/ui/textarea';
@@ -35,12 +35,11 @@ export default function Contact() {
   );
   return (
     <>
-      <PageHero image="/shomal/banner-1.webp" title="تماس با ما" subtitle="پیشنهادها، گزارش خطا یا درخواست همکاری خود را با تیم پلتفرم در میان بگذارید." />
+      <PageHero image="/shomal/ai-campus.webp" title="تماس با ما" subtitle="پیشنهادها، گزارش خطا یا درخواست همکاری خود را با تیم پلتفرم در میان بگذارید." />
       <div className="container-page grid gap-10 py-12 lg:grid-cols-[1fr_1.4fr]">
         <div className="grid h-fit gap-4">
-          {st.contactAddress && <div className="flex gap-3 rounded-2xl border bg-card p-5"><MapPin className="h-5 w-5 text-primary" /><div><p className="font-bold">نشانی دانشگاه</p><p className="mt-1 text-sm leading-7 text-muted-foreground">{st.contactAddress}</p></div></div>}
-          {st.contactEmail && <div className="flex gap-3 rounded-2xl border bg-card p-5"><Mail className="h-5 w-5 text-primary" /><div><p className="font-bold">ایمیل</p><a dir="ltr" href={`mailto:${st.contactEmail}`} className="mt-1 block text-sm text-muted-foreground">{st.contactEmail}</a></div></div>}
-          <p className="text-xs text-muted-foreground leading-6">اطلاعات تماس از وب‌سایت رسمی دانشگاه (shomal.ac.ir) برداشته شده است.</p>
+          {st.contactEmail && <div className="flex gap-3 rounded-2xl border bg-card p-5"><Mail className="h-5 w-5 text-primary" /><div><p className="font-bold">ایمیل سامانه</p><a dir="ltr" href={`mailto:${st.contactEmail}`} className="mt-1 block text-sm text-muted-foreground">{st.contactEmail}</a></div></div>}
+          <p className="text-xs text-muted-foreground leading-6">این فرم به تیم سامانه هم‌دانشگاهی می‌رسد، نه به دانشگاه. برای امور اداری دانشگاه به خود دانشگاه مراجعه کنید.</p>
         </div>
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-5 rounded-3xl border bg-card p-6 sm:p-8" noValidate>
           <div className="grid gap-5 sm:grid-cols-2">
@@ -50,7 +49,7 @@ export default function Contact() {
           {field('subject', 'موضوع', <Input id="subject" {...register('subject')} />)}
           {field('message', 'پیام', <Textarea id="message" rows={6} {...register('message')} />)}
           <input type="text" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden {...register('website')} />
-          <Button type="submit" disabled={!isValid || isSubmitting} className="justify-self-start">{isSubmitting && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}ارسال پیام</Button>
+          <Button type="submit" disabled={!isValid || isSubmitting} className="justify-self-start">{isSubmitting && <Loader2 className="me-2 h-4 w-4 animate-spin" />}ارسال پیام</Button>
         </form>
       </div>
     </>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { Loader2, Mail, ArrowRight, ShieldCheck } from 'lucide-react';
-import { loginWithRedirect } from 'zitejs/auth';
+import { loginWithRedirect, useAuth } from 'zitejs/auth';
 import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';
 import { Label } from '@project/components/ui/label';
@@ -9,21 +9,28 @@ import { LogoMark } from '../components/site/Logo';
 
 // Standalone (Netlify) build sends the magic link itself; on Zite the platform handles it.
 const STANDALONE = import.meta.env.VITE_STANDALONE_AUTH === '1';
-const expired = new URLSearchParams(window.location.search).get('error') === 'expired';
+const params = new URLSearchParams(window.location.search);
+const expired = params.get('error') === 'expired';
+// Return to the page the visitor came from (same-site paths only)
+const rawNext = params.get('next') ?? '/admin';
+const NEXT = rawNext.startsWith('/') && !rawNext.startsWith('//') && !rawNext.startsWith('/admin/login') ? rawNext : '/admin';
 
 export default function AdminLogin() {
+  const { user, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [state, setState] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [error, setError] = useState(expired ? 'پیوند ورود منقضی یا قبلاً استفاده شده است. دوباره درخواست دهید.' : '');
   const valid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
 
+  if (!isLoading && user) return <Navigate to={NEXT} replace />;
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!valid) return;
-    if (!STANDALONE) { loginWithRedirect({ redirectUrl: '/admin' }); return; }
+    if (!STANDALONE) { loginWithRedirect({ redirectUrl: NEXT }); return; }
     setState('sending'); setError('');
     try {
-      const res = await fetch('/api/auth/request', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: email.trim(), redirect: '/admin' }) });
+      const res = await fetch('/api/auth/request', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: email.trim(), redirect: NEXT }) });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j?.error?.userFacingMessage ?? 'ارسال پیوند ممکن نشد.');
       setState('sent');
@@ -35,7 +42,7 @@ export default function AdminLogin() {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="relative hidden overflow-hidden bg-primary lg:block">
-        <img src="/shomal/life-3.webp" alt="دانشجویان دانشگاه شمال" className="absolute inset-0 h-full w-full object-cover opacity-60" />
+        <img src="/shomal/ai-group.webp" alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" />
         <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/70 to-primary/20" />
         <div className="relative flex h-full flex-col justify-end p-12 text-primary-foreground">
           <LogoMark className="mb-6 h-16 w-16" />
@@ -57,6 +64,11 @@ export default function AdminLogin() {
             </div>
           ) : (
             <form onSubmit={submit} className="mt-6 grid gap-4" noValidate>
+              {!STANDALONE && (
+                <p className="rounded-lg border border-accent/40 bg-accent/10 p-3 text-xs leading-6 text-foreground">
+                  در نسخه پیش‌نمایش Zite، ورود با صفحه انگلیسیِ خود پلتفرم انجام می‌شود. پس از زدن دکمه به آن صفحه می‌روید و بعد از ورود به همین‌جا برمی‌گردید.
+                </p>
+              )}
               <p className="text-sm leading-7 text-muted-foreground">ایمیل سازمانی خود را وارد کنید تا پیوند ورود یک‌بارمصرف برایتان ارسال شود. ورود فقط برای مدیران تعریف‌شده ممکن است.</p>
               <div className="grid gap-2">
                 <Label htmlFor="email">ایمیل</Label>
@@ -65,7 +77,7 @@ export default function AdminLogin() {
               </div>
               {error && <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
               <Button type="submit" className="h-11" disabled={!valid || state === 'sending'}>
-                {state === 'sending' && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}ارسال پیوند ورود
+                {state === 'sending' && <Loader2 className="me-2 h-4 w-4 animate-spin" />}ارسال پیوند ورود
               </Button>
             </form>
           )}

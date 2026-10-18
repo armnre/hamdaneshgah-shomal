@@ -24,7 +24,7 @@ export default function NewsList() {
 
   return (
     <>
-      <PageHero image="/shomal/life-2.webp" title="اخبار و اطلاعیه‌ها" subtitle="اطلاعیه‌های رسمی، اخبار انجمن‌ها و گزارش فعالیت‌های دانشجویی." />
+      <PageHero image="/shomal/ai-library.webp" title="اخبار و اطلاعیه‌ها" subtitle="اطلاعیه‌های رسمی، اخبار انجمن‌ها و گزارش فعالیت‌های دانشجویی." />
       <div className="container-page py-10">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex gap-2 overflow-x-auto pb-1">

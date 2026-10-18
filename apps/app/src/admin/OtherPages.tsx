@@ -18,8 +18,7 @@ type Row = Record<string, unknown>;
 const SETTING_LABELS: Record<string, { label: string; long?: boolean }> = {
   productName: { label: 'نام محصول' }, tagline: { label: 'عنوان توصیفی', long: true }, heroTitle: { label: 'عنوان بخش اصلی صفحه نخست', long: true },
   heroSubtitle: { label: 'زیرعنوان صفحه نخست', long: true }, mission: { label: 'مأموریت', long: true }, electionStatus: { label: 'وضعیت انتخابات (none = غیرفعال)' },
-  electionNote: { label: 'توضیح بخش انتخابات', long: true }, contactAddress: { label: 'نشانی', long: true }, contactPhone: { label: 'تلفن' },
-  contactEmail: { label: 'ایمیل تماس' }, universityUrl: { label: 'وب‌سایت رسمی دانشگاه' }, telegramUrl: { label: 'کانال تلگرام' },
+  electionNote: { label: 'توضیح بخش انتخابات', long: true }, contactEmail: { label: 'ایمیل تماس با سامانه' },
 };
 
 export function SettingsPage() {

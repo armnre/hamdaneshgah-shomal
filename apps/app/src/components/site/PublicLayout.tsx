@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Menu, X, ExternalLink, Mail } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { SITE_NAME } from '../../lib/brand';
 import { LogoWordmark } from './Logo';
 import { getSiteSettings } from 'zitejs/api';
@@ -26,22 +26,6 @@ export function Brand({ light }: { light?: boolean }) {
     <Link to="/" aria-label={`${SITE_NAME} — صفحه نخست`}>
       <LogoWordmark light={light} />
     </Link>
-  );
-}
-
-function TopBar() {
-  const { data } = useSettings();
-  const st = data?.settings ?? {};
-  return (
-    <div className="hidden bg-primary text-primary-foreground/85 md:block">
-      <div className="container-page flex h-9 items-center justify-between text-xs">
-        <span>دانشگاه غیردولتی ـ غیرانتفاعی شمال · آمل</span>
-        <span className="flex items-center gap-5">
-          {st.contactEmail && <a href={`mailto:${st.contactEmail}`} className="flex items-center gap-1.5 hover:text-accent" dir="ltr"><Mail className="h-3.5 w-3.5" />{st.contactEmail}</a>}
-          <a href={st.universityUrl || 'https://shomal.ac.ir'} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 hover:text-accent"><ExternalLink className="h-3.5 w-3.5" />وب‌سایت رسمی دانشگاه</a>
-        </span>
-      </div>
-    </div>
   );
 }
 
@@ -78,7 +62,6 @@ function Header() {
 export default function PublicLayout() {
   return (
     <div className="flex min-h-screen flex-col">
-      <TopBar />
       <Header />
       <main id="main" className="flex-1"><Outlet /></main>
       <Footer />
