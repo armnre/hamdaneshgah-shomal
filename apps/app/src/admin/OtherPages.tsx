@@ -17,7 +17,7 @@ type Row = Record<string, unknown>;
 
 const SETTING_LABELS: Record<string, { label: string; long?: boolean }> = {
   productName: { label: 'نام محصول' }, tagline: { label: 'عنوان توصیفی', long: true }, heroTitle: { label: 'عنوان بخش اصلی صفحه نخست', long: true },
-  heroSubtitle: { label: 'زیرعنوان صفحه نخست', long: true }, mission: { label: 'مأموریت', long: true }, electionStatus: { label: 'وضعیت انتخابات (none = غیرفعال)' },
+  heroSubtitle: { label: 'زیرعنوان صفحه نخست', long: true }, electionStatus: { label: 'وضعیت انتخابات (none = غیرفعال)' },
   electionNote: { label: 'توضیح بخش انتخابات', long: true }, contactEmail: { label: 'ایمیل تماس با سامانه' },
 };
 
@@ -35,7 +35,7 @@ export function SettingsPage() {
     <div className="max-w-3xl">
       <h1 className="text-2xl font-extrabold">تنظیمات عمومی</h1>
       <div className="mt-6 grid gap-5 rounded-2xl border bg-card p-6">
-        {q.isLoading ? <Skeleton className="h-96" /> : Object.keys(vals).sort((a, b) => Object.keys(SETTING_LABELS).indexOf(a) - Object.keys(SETTING_LABELS).indexOf(b)).map((k) => {
+        {q.isLoading ? <Skeleton className="h-96" /> : Object.keys(vals).filter((k) => k !== 'mission').sort((a, b) => Object.keys(SETTING_LABELS).indexOf(a) - Object.keys(SETTING_LABELS).indexOf(b)).map((k) => {
           const meta = SETTING_LABELS[k] ?? { label: k };
           const on = (value: string) => setVals((p) => ({ ...p, [k]: { ...p[k], value } }));
           return <div key={k} className="grid gap-2"><Label htmlFor={k}>{meta.label}</Label>{meta.long ? <Textarea id={k} rows={2} value={vals[k].value} onChange={(e) => on(e.target.value)} /> : <Input id={k} value={vals[k].value} onChange={(e) => on(e.target.value)} />}</div>;
