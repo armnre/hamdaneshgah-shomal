@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Users, Building2, Newspaper, CalendarDays, Vote, BookOpen, Megaphone } from 'lucide-react';
+import { ArrowLeft, Users, Building2, Newspaper, CalendarDays, Vote, BookOpen } from 'lucide-react';
 import HomeHero from '../components/site/HomeHero';
 import { getPublicHome, listPublicElections } from 'zitejs/api';
 import { HomeElections } from '../components/site/HomeElections';
@@ -106,15 +106,6 @@ function HomeSections({ d, loading, st }: { d?: Row; loading: boolean; st: Recor
 
 
       <ElectionsBlock />
-
-      <section className="container-page mt-20 grid gap-6">
-        <div className="rounded-3xl bg-primary p-8 text-primary-foreground">
-          <Megaphone className="h-8 w-8 text-accent" />
-          <h2 className="mt-4 text-xl font-extrabold">مأموریت ما</h2>
-          <p className="mt-3 leading-8 text-primary-foreground/80">{st.mission}</p>
-          <Button asChild variant="outline" className="mt-5 border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"><Link to="/associations">مشاهده انجمن‌ها</Link></Button>
-        </div>
-      </section>
     </>
   );
 }
