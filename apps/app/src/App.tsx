@@ -12,6 +12,7 @@ import NewsDetail from './pages/NewsDetail';
 import Events from './pages/Events';
 import EventDetail from './pages/EventDetail';
 import Contact from './pages/Contact';
+import Structure from './pages/Structure';
 import Legal, { NotFound } from './pages/Legal';
 import AdminLogin from './admin/AdminLogin';
 import { ElectionsList, ElectionDetail, VotePage } from './pages/Elections';
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="/associations" element={<Associations />} />
             <Route path="/associations/:slug" element={<AssociationDetail />} />
             <Route path="/faculties" element={<Faculties />} />
+            <Route path="/structure" element={<Structure />} />
             <Route path="/news" element={<NewsList />} />
             <Route path="/news/:slug" element={<NewsDetail />} />
             <Route path="/events" element={<Events />} />

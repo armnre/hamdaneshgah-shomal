@@ -12,6 +12,7 @@ import Footer from './Footer';
 export const NAV = [
   { to: '/associations', label: 'انجمن‌های علمی' },
   { to: '/faculties', label: 'دانشکده‌ها' },
+  { to: '/structure', label: 'ساختار انجمن‌ها' },
   { to: '/news', label: 'اخبار و اطلاعیه‌ها' },
   { to: '/events', label: 'رویدادها' },
 ];

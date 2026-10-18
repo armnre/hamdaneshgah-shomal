@@ -1,21 +1,80 @@
 import { KIND_LABEL, ROLE_LABEL, STATUS_LABEL } from '../lib/format';
 
 export type FieldType = 'text' | 'textarea' | 'markdown' | 'url' | 'image' | 'email' | 'number' | 'checkbox' | 'datetime' | 'select';
-export type OptionSource = 'faculties' | 'majors' | 'categories' | 'associations';
+export type OptionSource = 'faculties' | 'majors' | 'categories' | 'associations' | 'years' | 'associationYears' | 'positions';
 export type Field = {
   name: string; label: string; type: FieldType; required?: boolean; hint?: string;
   options?: { value: string; label: string }[]; source?: OptionSource; wide?: boolean; dir?: 'ltr';
 };
 export type Column = { key: string; label: string; kind?: 'date' | 'status' | 'bool' | 'lookup' | 'label'; source?: OptionSource; map?: Record<string, string> };
 export type Resource = {
-  entity: 'associations' | 'faculties' | 'majors' | 'news' | 'events' | 'categories' | 'media' | 'members';
+  entity: 'associations' | 'faculties' | 'majors' | 'news' | 'events' | 'categories' | 'media' | 'members' | 'years' | 'associationYears' | 'associationMajors' | 'positions' | 'terms';
   title: string; singular: string; fields: Field[]; columns: Column[]; search: string[]; defaults?: Record<string, unknown>;
 };
 
 const opts = (m: Record<string, string>) => Object.entries(m).map(([value, label]) => ({ value, label }));
 const statusOpts = opts({ Draft: STATUS_LABEL.Draft, Published: STATUS_LABEL.Published, Archived: STATUS_LABEL.Archived });
 
+const YEAR_STATUS = { Upcoming: 'آینده', Current: 'جاری', Archived: 'بایگانی' };
+const TERM_STATUS = { Undetermined: 'تعیین‌نشده', Active: 'فعال', Ended: 'پایان‌یافته', Resigned: 'مستعفی' };
+const SCOPE = { Council: 'شورای دبیران', Association: 'انجمن' };
+
 export const RESOURCES: Record<string, Resource> = {
+  years: {
+    entity: 'years', title: 'سال‌های تحصیلی', singular: 'سال تحصیلی', search: ['title'], defaults: { status: 'Upcoming' },
+    columns: [{ key: 'title', label: 'عنوان' }, { key: 'status', label: 'وضعیت', kind: 'label', map: YEAR_STATUS }, { key: 'sortOrder', label: 'ترتیب' }],
+    fields: [
+      { name: 'title', label: 'عنوان (مثلاً ۱۴۰۵-۱۴۰۶)', type: 'text', required: true },
+      { name: 'status', label: 'وضعیت', type: 'select', options: opts(YEAR_STATUS), required: true },
+      { name: 'sortOrder', label: 'ترتیب (سال شروع، مثلاً 1405)', type: 'number' },
+    ],
+  },
+  associationYears: {
+    entity: 'associationYears', title: 'انجمن‌های هر سال', singular: 'انجمنِ سال', search: ['title'], defaults: { active: true, needsUniversityApproval: false },
+    columns: [{ key: 'title', label: 'عنوان' }, { key: 'academicYear', label: 'سال', kind: 'lookup', source: 'years' }, { key: 'needsUniversityApproval', label: 'نیازمند تأیید', kind: 'bool' }, { key: 'active', label: 'فعال', kind: 'bool' }],
+    fields: [
+      { name: 'association', label: 'انجمن', type: 'select', source: 'associations', required: true },
+      { name: 'academicYear', label: 'سال تحصیلی', type: 'select', source: 'years', required: true },
+      { name: 'needsUniversityApproval', label: 'نیازمند تأیید دانشگاه', type: 'checkbox' },
+      { name: 'active', label: 'فعال', type: 'checkbox' },
+      { name: 'notes', label: 'یادداشت', type: 'textarea', wide: true },
+    ],
+  },
+  associationMajors: {
+    entity: 'associationMajors', title: 'نگاشت رشته به انجمن', singular: 'نگاشت', search: ['label'], defaults: { needsUniversityApproval: false },
+    columns: [{ key: 'label', label: 'نگاشت' }, { key: 'associationYear', label: 'انجمنِ سال', kind: 'lookup', source: 'associationYears' }, { key: 'major', label: 'رشته', kind: 'lookup', source: 'majors' }, { key: 'needsUniversityApproval', label: 'نیازمند تأیید', kind: 'bool' }],
+    fields: [
+      { name: 'associationYear', label: 'انجمنِ سال (رأی‌دهندگان این رشته در انتخابات این انجمن رأی می‌دهند)', type: 'select', source: 'associationYears', required: true, wide: true },
+      { name: 'major', label: 'رشته', type: 'select', source: 'majors', required: true },
+      { name: 'needsUniversityApproval', label: 'نیازمند تأیید دانشگاه', type: 'checkbox' },
+    ],
+  },
+  positions: {
+    entity: 'positions', title: 'سمت‌ها', singular: 'سمت', search: ['name'], defaults: { scope: 'Association' },
+    columns: [{ key: 'name', label: 'نام' }, { key: 'scope', label: 'سطح', kind: 'label', map: SCOPE }, { key: 'rank', label: 'رتبه' }],
+    fields: [
+      { name: 'name', label: 'نام سمت', type: 'text', required: true },
+      { name: 'scope', label: 'سطح', type: 'select', options: opts(SCOPE), required: true },
+      { name: 'rank', label: 'رتبه نمایش', type: 'number' },
+    ],
+  },
+  terms: {
+    entity: 'terms', title: 'دوره‌های مسئولیت', singular: 'دوره مسئولیت', search: ['label', 'personName'], defaults: { status: 'Undetermined', publishName: false },
+    columns: [{ key: 'label', label: 'عنوان' }, { key: 'personName', label: 'فرد' }, { key: 'position', label: 'سمت', kind: 'lookup', source: 'positions' }, { key: 'status', label: 'وضعیت', kind: 'label', map: TERM_STATUS }, { key: 'publishName', label: 'انتشار نام', kind: 'bool' }],
+    fields: [
+      { name: 'position', label: 'سمت', type: 'select', source: 'positions', required: true },
+      { name: 'academicYear', label: 'سال تحصیلی', type: 'select', source: 'years', required: true },
+      { name: 'associationYear', label: 'انجمنِ سال (برای دبیر دبیران خالی بماند)', type: 'select', source: 'associationYears', wide: true },
+      { name: 'personName', label: 'نام فرد', type: 'text' },
+      { name: 'personEmail', label: 'ایمیل فرد', type: 'email', dir: 'ltr' },
+      { name: 'status', label: 'وضعیت', type: 'select', options: opts(TERM_STATUS), required: true },
+      { name: 'startDate', label: 'تاریخ شروع', type: 'datetime' },
+      { name: 'endDate', label: 'تاریخ پایان', type: 'datetime' },
+      { name: 'publishName', label: 'انتشار نام در صفحه عمومی (فقط با رضایت فرد)', type: 'checkbox', wide: true },
+      { name: 'notes', label: 'یادداشت', type: 'textarea', wide: true },
+    ],
+  },
+
   news: {
     entity: 'news', title: 'اخبار و اطلاعیه‌ها', singular: 'خبر', search: ['title', 'excerpt'],
     defaults: { status: 'Draft', featured: false, isAnnouncement: false },

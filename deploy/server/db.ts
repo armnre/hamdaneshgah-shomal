@@ -16,6 +16,11 @@ const SCHEMA: Record<string, Record<string, Kind>> = {
   AdminMembers: { label: 'text', member: 'link', role: 'text', association: 'link', active: 'bool' },
   AuditLogs: { action: 'text', entity: 'text', entityId: 'text', details: 'text', actor: 'link', actorEmail: 'text', loggedAt: 'auto' },
   SiteSettings: { key: 'text', value: 'text' },
+  AcademicYears: { title: 'text', status: 'text', startDate: 'ts', endDate: 'ts', sortOrder: 'num' },
+  AssociationYears: { title: 'text', association: 'link', academicYear: 'link', active: 'bool', needsUniversityApproval: 'bool', notes: 'text' },
+  AssociationMajors: { label: 'text', associationYear: 'link', major: 'link', needsUniversityApproval: 'bool' },
+  Positions: { name: 'text', scope: 'text', rank: 'num' },
+  LeadershipTerms: { label: 'text', personName: 'text', personEmail: 'text', academicYear: 'link', associationYear: 'link', position: 'link', status: 'text', startDate: 'ts', endDate: 'ts', publishName: 'bool', notes: 'text' },
   ContactMessages: { subject: 'text', senderName: 'text', senderEmail: 'text', message: 'text', status: 'text', receivedAt: 'auto' },
 };
 
@@ -147,6 +152,11 @@ export const zite = {
   auditLogs: tableClient('AuditLogs'),
   siteSettings: tableClient('SiteSettings'),
   contactMessages: tableClient('ContactMessages'),
+  academicYears: tableClient('AcademicYears'),
+  associationYears: tableClient('AssociationYears'),
+  associationMajors: tableClient('AssociationMajors'),
+  positions: tableClient('Positions'),
+  leadershipTerms: tableClient('LeadershipTerms'),
   async sql(p: { query: string; params?: unknown[] }) {
     if (!/^\s*(select|with)\b/i.test(p.query)) throw new Error('zite.sql is read-only');
     return { rows: await query(p.query, p.params ?? []) };

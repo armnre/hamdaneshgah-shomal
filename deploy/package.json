@@ -6,7 +6,8 @@
     "prepare:src": "node scripts/prepare.mjs",
     "dev": "node scripts/prepare.mjs && vite",
     "build": "node scripts/prepare.mjs && vite build && node scripts/build-functions.mjs && node scripts/migrate.mjs",
-    "migrate": "node scripts/migrate.mjs"
+    "migrate": "node scripts/migrate.mjs",
+    "test:migrations": "npm i --no-save @electric-sql/pglite@0.5.10 && node db/test-migrations.mjs"
   },
   "engines": {
     "node": ">=20"

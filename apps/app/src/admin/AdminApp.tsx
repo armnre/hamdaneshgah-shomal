@@ -1,7 +1,7 @@
 import { createContext, useContext, useState } from 'react';
 import { Link, NavLink, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { LayoutDashboard, Users, Building2, BookOpen, Newspaper, CalendarDays, Tags, Image, ShieldCheck, ScrollText, Settings, Inbox, Menu, LogOut, ExternalLink, Loader2, Lock } from 'lucide-react';
+import { LayoutDashboard, Users, Building2, BookOpen, Newspaper, CalendarDays, Tags, Image, ShieldCheck, ScrollText, Settings, Inbox, Menu, LogOut, ExternalLink, Loader2, Lock, CalendarRange, Network, GitMerge, BadgeCheck, UserCog } from 'lucide-react';
 import { useAuth, logout } from 'zitejs/auth';
 import { getMyAccess, claimSuperAdmin, adminOptions, GetMyAccessOutputType } from 'zitejs/api';
 import { Button } from '@project/components/ui/button';
@@ -27,6 +27,11 @@ const NAV = [
   { to: '/admin/associations', label: 'انجمن‌ها', icon: Users, entity: 'associations' },
   { to: '/admin/faculties', label: 'دانشکده‌ها', icon: Building2, entity: 'faculties' },
   { to: '/admin/majors', label: 'رشته‌ها', icon: BookOpen, entity: 'majors' },
+  { to: '/admin/years', label: 'سال‌های تحصیلی', icon: CalendarRange, entity: 'years' },
+  { to: '/admin/associationYears', label: 'انجمن‌های هر سال', icon: Network, entity: 'associationYears' },
+  { to: '/admin/associationMajors', label: 'نگاشت رشته به انجمن', icon: GitMerge, entity: 'associationMajors' },
+  { to: '/admin/positions', label: 'سمت‌ها', icon: BadgeCheck, entity: 'positions' },
+  { to: '/admin/terms', label: 'دوره‌های مسئولیت', icon: UserCog, entity: 'terms' },
   { to: '/admin/categories', label: 'دسته‌بندی‌ها', icon: Tags, entity: 'categories' },
   { to: '/admin/media', label: 'رسانه‌ها', icon: Image, entity: 'media' },
   { to: '/admin/messages', label: 'پیام‌ها', icon: Inbox, entity: 'messages' },

@@ -2,7 +2,7 @@
 export type Role = 'Super Admin' | 'Content Editor' | 'Association Manager';
 
 export const ROLE_ENTITIES: Record<Role, string[]> = {
-  'Super Admin': ['associations', 'faculties', 'majors', 'news', 'events', 'categories', 'media', 'members', 'settings', 'messages', 'audit'],
+  'Super Admin': ['associations', 'faculties', 'majors', 'news', 'events', 'categories', 'media', 'members', 'settings', 'messages', 'audit', 'years', 'associationYears', 'associationMajors', 'positions', 'terms'],
   'Content Editor': ['news', 'events', 'categories', 'media', 'messages'],
   'Association Manager': ['associations', 'news', 'events', 'media'],
 };

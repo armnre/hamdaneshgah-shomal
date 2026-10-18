@@ -22,18 +22,69 @@ const SCHEMAS = {
   members: z.object({ email: z.string().trim().email(), role: z.enum(['Super Admin', 'Content Editor', 'Association Manager']), association: id, active: z.boolean().default(true) }),
   settings: z.object({ key: z.string().trim().min(1).max(60), value: s(5000) }),
   messages: z.object({ status: z.enum(['New', 'Read', 'Closed']) }),
+  years: z.object({ title: z.string().trim().regex(/^[۰-۹0-9]{4}-[۰-۹0-9]{4}$/, 'قالب سال'), status: z.enum(['Upcoming', 'Current', 'Archived']), sortOrder: z.number().int().optional().nullable() }),
+  associationYears: z.object({ association: z.string().min(1), academicYear: z.string().min(1), needsUniversityApproval: z.boolean().default(false), active: z.boolean().default(true), notes: s(5000) }),
+  associationMajors: z.object({ associationYear: z.string().min(1), major: z.string().min(1), needsUniversityApproval: z.boolean().default(false) }),
+  positions: z.object({ name: z.string().trim().min(2).max(100), scope: z.enum(['Council', 'Association']), rank: z.number().int().optional().nullable() }),
+  terms: z.object({ position: z.string().min(1), academicYear: z.string().min(1), associationYear: id, personName: s(150), personEmail: z.string().email().optional().nullable().or(z.literal('')), status: z.enum(['Undetermined', 'Active', 'Ended', 'Resigned']), startDate: z.string().optional().nullable(), endDate: z.string().optional().nullable(), publishName: z.boolean().default(false), notes: s(5000) }),
 };
 type Entity = keyof typeof SCHEMAS;
 
 const TABLES = {
   associations: zite.associations, faculties: zite.faculties, majors: zite.majors, news: zite.news, events: zite.events,
   categories: zite.categories, media: zite.mediaAssets, members: zite.adminMembers, settings: zite.siteSettings, messages: zite.contactMessages,
+  years: zite.academicYears, associationYears: zite.associationYears, associationMajors: zite.associationMajors, positions: zite.positions, terms: zite.leadershipTerms,
 };
 
 async function activeSuperAdminCount(): Promise<number> {
   const r = await zite.sql({ query: `SELECT COUNT(*)::int AS n FROM "AdminMembers" WHERE "role" = 'Super Admin' AND "active" = true` });
   return Number(r.rows[0]?.n ?? 0);
 }
+
+const bad = (m: string) => { throw new ZiteError({ code: 'BAD_REQUEST', message: m, userFacingMessage: m }); };
+const nameOf = async (sql: string, idv: unknown) => String((await zite.sql({ query: sql, params: [idv] })).rows[0]?.n ?? '');
+// Integrity rules the Zite DB cannot express (Neon enforces the same with UNIQUE/CHECK in migration 0003).
+const STRUCT = {
+  years: async (d: Record<string, unknown>, id?: string) => {
+    const dup = await zite.academicYears.findOne({ filters: { title: d.title as string } });
+    if (dup && dup.id !== id) bad('این سال تحصیلی قبلاً ثبت شده است.');
+    if (d.status === 'Current') {
+      const cur = await zite.sql({ query: `SELECT id FROM "AcademicYears" WHERE "status" = 'Current' AND id <> $1`, params: [id ?? '00000000-0000-0000-0000-000000000000'] });
+      if (cur.rows.length) bad('فقط یک سال می‌تواند «جاری» باشد؛ ابتدا سال جاری قبلی را بایگانی کنید.');
+    }
+  },
+  associationYears: async (d: Record<string, unknown>, id?: string) => {
+    const dup = await zite.sql({ query: `SELECT ay.id FROM "AssociationYears" ay JOIN "AssociationYearsAssociations" a ON a."associationYearsId" = ay.id JOIN "AcademicYearsAssociationYears" y ON y."associationYearsId" = ay.id WHERE a."associationsId" = $1 AND y."academicYearsId" = $2`, params: [d.association, d.academicYear] });
+    if (dup.rows.some((r) => r.id !== id)) bad('این انجمن برای این سال قبلاً ثبت شده است.');
+    d.title = `${await nameOf(`SELECT "name" AS n FROM "Associations" WHERE id = $1`, d.association)} — ${await nameOf(`SELECT "title" AS n FROM "AcademicYears" WHERE id = $1`, d.academicYear)}`;
+    d.association = [d.association]; d.academicYear = [d.academicYear];
+  },
+  associationMajors: async (d: Record<string, unknown>, id?: string) => {
+    // A major maps to exactly one association per academic year — this decides where its students vote.
+    const clash = await zite.sql({ query: `
+      SELECT am.id FROM "AssociationMajors" am
+      JOIN "AssociationMajorsMajors" mm ON mm."associationMajorsId" = am.id
+      JOIN "AssociationMajorsAssociationYears" l ON l."associationMajorsId" = am.id
+      JOIN "AcademicYearsAssociationYears" y ON y."associationYearsId" = l."associationYearsId"
+      WHERE mm."majorsId" = $1 AND y."academicYearsId" = (SELECT "academicYearsId" FROM "AcademicYearsAssociationYears" WHERE "associationYearsId" = $2 LIMIT 1)`, params: [d.major, d.associationYear] });
+    if (clash.rows.some((r) => r.id !== id)) bad('این رشته در این سال به انجمن دیگری نگاشت شده است.');
+    d.label = `${await nameOf(`SELECT "name" AS n FROM "Majors" WHERE id = $1`, d.major)} → ${await nameOf(`SELECT "title" AS n FROM "AssociationYears" WHERE id = $1`, d.associationYear)}`;
+    d.associationYear = [d.associationYear]; d.major = [d.major];
+  },
+  positions: async () => {},
+  terms: async (d: Record<string, unknown>, id?: string) => {
+    if (id) {
+      const prev = await zite.leadershipTerms.findOne({ id });
+      if (prev && ['Ended', 'Resigned'].includes(String(prev.status))) bad('سوابق دوره‌های پایان‌یافته قابل ویرایش نیست؛ برای دوره جدید رکورد تازه بسازید.');
+    }
+    if (d.endDate && d.startDate && String(d.endDate) < String(d.startDate)) bad('تاریخ پایان باید بعد از تاریخ شروع باشد.');
+    if (d.status === 'Active' && !d.personName) bad('برای دوره فعال، نام فرد الزامی است.');
+    const pos = await nameOf(`SELECT "name" AS n FROM "Positions" WHERE id = $1`, d.position);
+    const where = d.associationYear ? await nameOf(`SELECT "title" AS n FROM "AssociationYears" WHERE id = $1`, d.associationYear) : await nameOf(`SELECT "title" AS n FROM "AcademicYears" WHERE id = $1`, d.academicYear);
+    d.label = `${pos} — ${where}`;
+    d.position = [d.position]; d.academicYear = [d.academicYear]; d.associationYear = d.associationYear ? [d.associationYear] : [];
+  },
+};
 
 export default createEndpoint({
   description: 'Creates or updates a record in an admin section with validation and audit logging',
@@ -93,6 +144,7 @@ export default createEndpoint({
       if (data.role !== 'Association Manager') data.association = null;
     }
 
+    if (input.entity in STRUCT) await STRUCT[input.entity as keyof typeof STRUCT](data, input.id);
     if (input.entity === 'members' && input.id) {
       const prev = await zite.adminMembers.findOne({ id: input.id });
       const losesSuper = prev?.role === 'Super Admin' && prev?.active && (data.role !== 'Super Admin' || !data.active);

@@ -3,10 +3,11 @@ import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { requireAccess, audit, first } from '../lib/server';
 
-const ENTITY = z.enum(['associations', 'faculties', 'majors', 'news', 'events', 'categories', 'media', 'members', 'messages']);
+const ENTITY = z.enum(['associations', 'faculties', 'majors', 'news', 'events', 'categories', 'media', 'members', 'messages', 'years', 'associationYears', 'associationMajors', 'positions', 'terms']);
 const TABLES = {
   associations: zite.associations, faculties: zite.faculties, majors: zite.majors, news: zite.news, events: zite.events,
   categories: zite.categories, media: zite.mediaAssets, members: zite.adminMembers, messages: zite.contactMessages,
+  years: zite.academicYears, associationYears: zite.associationYears, associationMajors: zite.associationMajors, positions: zite.positions, terms: zite.leadershipTerms,
 };
 
 async function activeSuperAdminCount(): Promise<number> {
@@ -36,6 +37,14 @@ export default createEndpoint({
     }
     if (input.entity === 'members' && first(existing.member as string[]) === context.user.id) {
       throw new ZiteError({ code: 'BAD_REQUEST', message: 'self', userFacingMessage: 'نمی‌توانید نقش خودتان را حذف کنید.' });
+    }
+    // Leadership history is never erased: ended/resigned terms are kept as records.
+    if (input.entity === 'terms' && ['Ended', 'Resigned'].includes(String(existing.status))) {
+      throw new ZiteError({ code: 'BAD_REQUEST', message: 'history', userFacingMessage: 'سوابق دوره‌های پایان‌یافته قابل حذف نیست.' });
+    }
+    if (input.entity === 'years') {
+      const deps = await zite.associationYears.findAll({ filters: { academicYear: input.id }, limit: 1 });
+      if (deps.records.length) throw new ZiteError({ code: 'BAD_REQUEST', message: 'deps', userFacingMessage: 'این سال انجمن ثبت‌شده دارد و قابل حذف نیست.' });
     }
     if (input.entity === 'faculties') {
       const deps = await zite.majors.findAll({ filters: { faculty: input.id }, limit: 1 });
