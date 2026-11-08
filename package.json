@@ -1,5 +1,5 @@
 {
-  "name": "university-platform",
+  "name": "hamdaneshgah-shomal",
   "private": true,
   "workspaces": [
     "apps/*",
@@ -10,6 +10,6 @@
     "typecheck": "zitejs check"
   },
   "dependencies": {
-    "zitejs": "0.9.136"
+    "zitejs": "0.9.148"
   }
 }

@@ -1,10 +1,11 @@
 node_modules
 dist
+.env
 .env.local
 .tsbuildinfo
 __zite__*
 .npmrc
-deploy/.build
-deploy/netlify/functions
-deploy/server/.generated
-deploy/dist
+web/.build
+server/src/.generated
+server/storage
+server/tmp
