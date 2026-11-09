@@ -83,6 +83,20 @@ async function sendEmail(to: string, link: string) {
   await sendMail({ to, subject: 'پیوند ورود به هم‌دانشگاهی', html, text: `پیوند ورود: ${link}` });
 }
 
+/** Email + password login. Hash format: pbkdf2$<iter>$<saltB64>$<hashB64> (written by scripts/set-admin.mjs). */
+export async function verifyPassword(emailRaw: string, password: string) {
+  const email = emailRaw.trim().toLowerCase();
+  const rows = await query(`SELECT id, "passwordHash" FROM "ziteUsers" WHERE "email" = $1`, [email]);
+  const stored = rows[0]?.passwordHash as string | undefined;
+  const [kind, iter, salt, hash] = (stored ?? 'pbkdf2$1000$AAAA$AAAA').split('$');
+  const key = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
+  const salt8 = Uint8Array.from(atob(salt), (ch) => ch.charCodeAt(0));
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: salt8, iterations: Number(iter) }, key, 256);
+  const got = btoa(String.fromCharCode(...new Uint8Array(bits)));
+  if (!stored || kind !== 'pbkdf2' || !safeEqual(got, hash)) return null;
+  return { id: String(rows[0].id), email };
+}
+
 export async function verifyMagicLink(token: string) {
   const rows = await query(
     `UPDATE "authTokens" SET "usedAt" = now() WHERE "tokenHash" = $1 AND "usedAt" IS NULL AND "expiresAt" > now() RETURNING "email"`,

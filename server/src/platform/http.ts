@@ -3,7 +3,7 @@
 import endpoints from '../.generated/endpoints';
 import { putFile, getFile } from './storage';
 import { ZiteError, type EndpointConfig } from './backend';
-import { getSessionUser, requestMagicLink, verifyMagicLink, sessionCookie, clearCookie, safeRedirect, rateLimit, logLogin } from './auth';
+import { getSessionUser, requestMagicLink, verifyMagicLink, verifyPassword, sessionCookie, clearCookie, safeRedirect, rateLimit, logLogin } from './auth';
 import { getAccess } from '../lib/server';
 
 const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
@@ -103,6 +103,18 @@ export async function handleApi(req: Request): Promise<Response> {
     if (req.method === 'GET' && path === 'auth/me') {
       const user = await getSessionUser(req);
       return json({ user });
+    }
+    if (req.method === 'POST' && path === 'auth/password') {
+      if (!sameOrigin(req)) return fail('FORBIDDEN', 'درخواست نامعتبر است.');
+      if (!(await rateLimit(`pw-ip:${clientIp(req)}`, 20, 900))) return fail('TOO_MANY', 'تعداد تلاش‌ها زیاد است؛ ۱۵ دقیقه دیگر تلاش کنید.');
+      const { email, password } = await req.json().catch(() => ({}));
+      const res = await verifyPassword(String(email ?? ''), String(password ?? ''));
+      if (!res) {
+        await logLogin('login_failed', String(email ?? ''), null);
+        return json({ error: { userFacingMessage: 'ایمیل یا رمز عبور نادرست است.' } }, 401);
+      }
+      await logLogin('login_success', res.email, res.id);
+      return json({ ok: true }, 200, { 'set-cookie': await sessionCookie(res.id) });
     }
     if (req.method === 'POST' && path === 'auth/request') {
       if (!sameOrigin(req)) return fail('FORBIDDEN', 'درخواست نامعتبر است.');

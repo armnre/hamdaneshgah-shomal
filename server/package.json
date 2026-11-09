@@ -10,6 +10,7 @@
     "start": "node --env-file-if-exists=.env dist/server.mjs",
     "dev": "npm run build && npm start",
     "migrate": "node scripts/migrate.mjs",
+    "set-admin": "node scripts/set-admin.mjs",
     "typecheck": "node scripts/gen-endpoints.mjs && tsc --noEmit",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
     "test:migrations": "npm i --no-save @electric-sql/pglite@0.5.10 && node db/test-migrations.mjs",
