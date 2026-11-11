@@ -55,7 +55,7 @@ export function Countdown({ to, label }: { to: string; label: string }) {
       <span className="text-sm text-muted-foreground">{label}</span>
       <div className="flex gap-1.5">
         {parts.map(([v, u]) => (
-          <span key={u} className="min-w-[3rem] rounded-2xl border bg-background px-2 py-1.5 text-center shadow-[var(--shadow-sm)] sm:min-w-[3.5rem]">
+          <span key={u} className="min-w-[3rem] rounded-2xl border bg-card px-2 py-1.5 text-card-foreground text-center shadow-[var(--shadow-sm)] sm:min-w-[3.5rem]">
             <span className="block text-lg font-black tabular-nums leading-none">{faNum(v)}</span>
             <span className="text-[10px] text-muted-foreground">{u}</span>
           </span>

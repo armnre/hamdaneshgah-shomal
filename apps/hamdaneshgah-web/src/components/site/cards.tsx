@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Calendar, MapPin, ArrowLeft } from 'lucide-react';
 import { Badge } from '@project/components/ui/badge';
 import { Cover } from './ui';
+import { majorIcon } from '../../lib/majorIcon';
 import { faDate, faDayMonth, KIND_LABEL } from '../../lib/format';
 
 type Row = Record<string, unknown>;
@@ -45,19 +46,23 @@ export function EventCard({ e }: { e: Row }) {
 }
 
 export function AssociationCard({ a }: { a: Row }) {
+  const name = s(a.name).replace(/^انجمن علمی\s*/, '');
+  const Icon = majorIcon(s(a.majorName) || name);
   return (
-    <Link to={`/associations/${s(a.slug)}`} className="group flex flex-col overflow-hidden rounded-2xl border bg-card transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]">
-      <div className="relative aspect-[16/7]">
-        <Cover src={a.coverUrl} alt={s(a.name)} label="انجمن" />
-        <div className="absolute -bottom-6 end-5 h-14 w-14 overflow-hidden rounded-xl border-4 border-card bg-card">
-          <Cover src={a.logoUrl} alt={`لوگوی ${s(a.name)}`} label={s(a.name).replace('انجمن علمی', '')} className="text-lg" />
+    <Link to={`/associations/${s(a.slug)}`} className="group relative flex h-full flex-col overflow-hidden rounded-2xl border bg-card p-5 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[var(--shadow-md)] motion-reduce:hover:translate-y-0">
+      <div aria-hidden className="absolute -end-10 -top-10 h-28 w-28 rounded-full bg-primary/[0.06] transition group-hover:bg-primary/10" />
+      <div className="relative flex items-center gap-3">
+        {a.logoUrl ? <img src={s(a.logoUrl)} alt="" className="h-12 w-12 shrink-0 rounded-xl border object-cover" loading="lazy" />
+          : <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-primary text-accent"><Icon className="h-6 w-6" aria-hidden /></span>}
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold text-muted-foreground">انجمن علمی</p>
+          <h3 className="font-extrabold leading-7 group-hover:text-primary">{name}</h3>
         </div>
       </div>
-      <div className="flex flex-1 flex-col p-5 pt-9">
-        <h3 className="font-bold leading-7 group-hover:text-primary">{s(a.name)}</h3>
-        {Boolean(a.facultyName) && <p className="mt-1 text-xs text-muted-foreground">{s(a.facultyName)}{a.majorName ? ` · ${s(a.majorName)}` : ''}</p>}
-        {Boolean(a.shortDescription) && <p className="mt-3 line-clamp-2 text-sm leading-7 text-muted-foreground">{s(a.shortDescription)}</p>}
-        <span className="mt-auto flex items-center gap-1 pt-4 text-sm font-semibold text-primary">مشاهده انجمن <ArrowLeft className="h-4 w-4 transition group-hover:-translate-x-1" /></span>
+      {Boolean(a.shortDescription) && <p className="relative mt-3 line-clamp-2 text-sm leading-7 text-muted-foreground">{s(a.shortDescription)}</p>}
+      <div className="relative mt-auto flex items-center justify-between gap-2 pt-4">
+        <span className="truncate text-xs text-muted-foreground">{s(a.facultyName)}</span>
+        <span className="flex shrink-0 items-center gap-1 text-sm font-semibold text-primary">مشاهده<ArrowLeft className="h-4 w-4 transition group-hover:-translate-x-1" /></span>
       </div>
     </Link>
   );

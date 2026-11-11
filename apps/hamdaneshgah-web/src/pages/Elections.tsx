@@ -1,20 +1,28 @@
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Vote, Trophy, Search, ScrollText, Building2, CalendarClock } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Vote, Trophy, Search, ScrollText, ArrowRight, ChevronLeft, IdCard, ListChecks, ShieldCheck, Users, Armchair, CalendarClock, Building2 } from 'lucide-react';
 import { CandidateAvatar } from '../components/site/CandidateAvatar';
-import { ElectionCard, DemoBadge, STAGE } from '../components/site/ElectionCards';
+import { DemoBadge, STAGE, StatusPill, type Election } from '../components/site/ElectionCards';
 import { StageTimeline, Countdown } from '../components/site/ElectionUI';
 import { listPublicElections } from '../lib/api';
 import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';
 import { Skeleton } from '@project/components/ui/skeleton';
-import { PageHero, EmptyState, ErrorState, Crumbs } from '../components/site/ui';
+import { EmptyState, ErrorState } from '../components/site/ui';
 import { useSettings } from '../components/site/PublicLayout';
 import { useTitle } from '../lib/useTitle';
 import { faDate, faNum } from '../lib/format';
 
 const useElections = () => useQuery({ queryKey: ['publicElections'], queryFn: () => listPublicElections({}) });
+const short = (e: Election) => (e.association ?? e.title).replace(/^انجمن علمی\s*/, '');
+
+const HOW = [
+  { icon: Search, t: 'انجمن رشته‌ات را پیدا کن', d: 'هر دانشجو فقط در انجمن رشته‌ی خودش رأی می‌دهد.' },
+  { icon: IdCard, t: 'با شماره دانشجویی و کد ملی وارد شو', d: 'کد ملی ذخیره نمی‌شود؛ فقط برای تطبیق است.' },
+  { icon: ListChecks, t: 'نامزدت را انتخاب و رأی را ثبت کن', d: 'رأی بی‌نام ذخیره می‌شود و کد پیگیری می‌گیری.' },
+];
 
 export function ElectionsList() {
   useTitle('انتخابات انجمن‌های علمی', 'زمان‌بندی، نامزدهای تأییدشده و نتایج رسمی انتخابات انجمن‌های علمی دانشگاه شمال');
@@ -22,52 +30,96 @@ export function ElectionsList() {
   const q = useElections();
   const list = q.data?.elections ?? [];
   const [text, setText] = useState('');
-  const shown = list.filter((e) => !text || `${e.association ?? ''} ${e.title}`.includes(text.trim()));
-  const summary = useMemo(() => {
+  const shown = list.filter((e) => !text.trim() || `${e.association ?? ''} ${e.title}`.includes(text.trim()));
+  const sum = useMemo(() => {
     const real = list.filter((e) => !e.isDemo);
     return {
       open: real.some((e) => e.votingOpenNow),
-      start: real.map((e) => e.votingStart).filter(Boolean).sort()[0],
-      end: real.map((e) => e.votingEnd).filter(Boolean).sort().slice(-1)[0],
+      start: real.map((e) => e.votingStart).filter(Boolean).sort()[0] as string | undefined,
+      end: real.map((e) => e.votingEnd).filter(Boolean).sort().slice(-1)[0] as string | undefined,
       cands: real.reduce((n, e) => n + e.candidates.length, 0),
       count: real.length,
     };
   }, [list]);
+  const before = sum.start && new Date(sum.start) > new Date();
   return (
     <>
-      <PageHero image="/shomal/campus-grounds-4.jpg" title="انتخابات انجمن‌های علمی" subtitle="انجمن رشته‌ات را پیدا کن و نامزدها را ببین" />
-      <div className="container-page max-w-4xl py-10">
-        <Crumbs items={[{ to: '/', label: 'خانه' }, { label: 'انتخابات' }]} />
-        {q.isLoading ? <div className="space-y-2">{[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
-          : q.isError ? <ErrorState onRetry={() => q.refetch()} />
-          : !list.length ? <EmptyState title="هنوز انتخاباتی اعلام نشده است" text={s?.settings?.electionNote || 'زمان ثبت‌نام نامزدها و رأی‌گیری پس از تصویب، در این صفحه منتشر می‌شود.'} />
-          : (
-            <>
-              {summary.start && (
-                <div className="mb-6 flex flex-col gap-4 rounded-2xl border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="flex items-center gap-2 text-sm text-muted-foreground"><CalendarClock className="h-4 w-4 text-primary" aria-hidden />زمان رأی‌گیری (همه‌ی انجمن‌ها هم‌زمان)</p>
-                    <p className="mt-1 font-bold">{faDate(summary.start, true)} تا {faDate(summary.end, true)}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{faNum(summary.count)} انجمن · {faNum(summary.cands)} نامزد</p>
-                  </div>
-                  {summary.open && <Button asChild size="lg" className="rounded-full"><Link to="/vote"><Vote className="ms-2 h-5 w-5" />ورود به رأی‌گیری</Link></Button>}
-                </div>
-              )}
-              <div className="relative mb-4">
-                <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-                <Input aria-label="جست‌وجوی انجمن" placeholder="جست‌وجوی انجمن یا رشته…" value={text} onChange={(x) => setText(x.target.value)} className="h-11 ps-9" />
+      <section className="relative isolate overflow-hidden bg-primary text-primary-foreground">
+        <div aria-hidden className="girih-gold absolute inset-0 -z-10 opacity-[0.07]" />
+        <div aria-hidden className="absolute -end-24 -top-24 -z-10 h-72 w-72 rounded-full bg-accent/25 blur-3xl" />
+        <div className="container-page grid gap-8 pb-16 pt-10 sm:pb-20 sm:pt-14 lg:grid-cols-[1.2fr_1fr] lg:items-center">
+          <div>
+            <p className="text-sm font-semibold text-accent">سال تحصیلی ۱۴۰۵–۱۴۰۶</p>
+            <h1 className="font-display mt-2 text-3xl font-black leading-[1.4] sm:text-5xl">انتخابات انجمن‌های علمی</h1>
+            <p className="mt-4 max-w-lg leading-8 text-primary-foreground/80">همه‌ی انجمن‌ها هم‌زمان رأی می‌دهند. انجمن رشته‌ات را پیدا کن، نامزدها را بشناس و در روز رأی‌گیری رأی بده.</p>
+            {sum.count > 0 && (
+              <div className="mt-6 flex flex-wrap gap-2 text-sm">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/10 px-3 py-1.5"><Building2 className="h-4 w-4 text-accent" />{faNum(sum.count)} انجمن</span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/10 px-3 py-1.5"><Users className="h-4 w-4 text-accent" />{faNum(sum.cands)} نامزد</span>
+                {sum.start && <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/10 px-3 py-1.5"><CalendarClock className="h-4 w-4 text-accent" />{faDate(sum.start, true)} تا {faDate(sum.end, true).split(' ').slice(-1)}</span>}
               </div>
-              {!shown.length ? <EmptyState title="انجمنی با این نام یافت نشد" action={<Button variant="outline" onClick={() => setText('')}>پاک کردن جست‌وجو</Button>} />
-                : <div className="space-y-2">{shown.map((e) => <ElectionCard key={e.id} e={e} />)}</div>}
-            </>
+            )}
+            {sum.open && <Button asChild size="lg" className="mt-6 h-12 w-full rounded-full bg-accent px-8 font-bold text-accent-foreground hover:bg-accent/90 sm:w-auto"><Link to="/vote"><Vote className="ms-2 h-5 w-5" />ورود به رأی‌گیری</Link></Button>}
+          </div>
+          {sum.start && (
+            <div className="rounded-2xl bg-card p-4 text-card-foreground shadow-xl sm:p-6">
+              <Countdown to={(before ? sum.start : sum.end)!} label={before ? 'تا شروع رأی‌گیری' : 'تا پایان رأی‌گیری'} />
+            </div>
           )}
+        </div>
+      </section>
+
+      <div className="container-page -mt-8 pb-16">
+        <ol className="grid gap-3 rounded-2xl border bg-card p-3 shadow-[var(--shadow-md)] sm:grid-cols-3 sm:p-4">
+          {HOW.map(({ icon: Icon, t, d }, i) => (
+            <li key={t} className="flex items-start gap-3 rounded-xl p-2">
+              <span className="relative grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /><span className="absolute -end-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-accent text-[10px] font-black text-accent-foreground">{faNum(i + 1)}</span></span>
+              <span><span className="block text-sm font-bold">{t}</span><span className="text-xs leading-6 text-muted-foreground">{d}</span></span>
+            </li>
+          ))}
+        </ol>
+
+        <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div><h2 className="text-xl font-black sm:text-2xl">انجمن‌ها و نامزدها</h2><p className="mt-1 text-sm text-muted-foreground">روی انجمن بزن تا نامزدهایش را ببینی.</p></div>
+          <div className="relative sm:w-72">
+            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <Input aria-label="جست‌وجوی انجمن" placeholder="جست‌وجوی انجمن…" value={text} onChange={(x) => setText(x.target.value)} className="h-11 rounded-full ps-9" />
+          </div>
+        </div>
+
+        <div className="mt-5">
+          {q.isLoading ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{[0, 1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-36 rounded-2xl" />)}</div>
+            : q.isError ? <ErrorState onRetry={() => q.refetch()} />
+            : !list.length ? <EmptyState title="هنوز انتخاباتی اعلام نشده است" text={s?.settings?.electionNote || 'زمان ثبت‌نام نامزدها و رأی‌گیری پس از تصویب، در این صفحه منتشر می‌شود.'} />
+            : !shown.length ? <EmptyState title="انجمنی با این نام یافت نشد" action={<Button variant="outline" onClick={() => setText('')}>پاک کردن جست‌وجو</Button>} />
+            : <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{shown.map((e, i) => <Tile key={e.id} e={e} i={i} />)}</div>}
+        </div>
       </div>
     </>
   );
 }
 
-function Fact({ k, v }: { k: string; v: string }) {
-  return <div className="rounded-xl bg-muted/60 p-3"><dt className="text-xs text-muted-foreground">{k}</dt><dd className="mt-1 font-bold">{v}</dd></div>;
+function Tile({ e, i }: { e: Election; i: number }) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 10) * 0.03 }}>
+      <Link to={`/elections/${e.id}`} className="group flex h-full flex-col rounded-2xl border bg-card p-4 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[var(--shadow-md)] motion-reduce:hover:translate-y-0 sm:p-5">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="font-extrabold leading-7">{short(e)}</h3>
+          <StatusPill status={e.status} />
+        </div>
+        <div className="mt-auto flex items-center justify-between pt-5">
+          <div className="flex items-center">
+            <div className="flex -space-x-2 space-x-reverse">
+              {e.candidates.slice(0, 4).map((c) => <CandidateAvatar key={c.id} name={c.fullName} photoUrl={c.photoUrl} className="h-8 w-8 ring-2 ring-card" />)}
+            </div>
+            <span className="ms-2 text-xs text-muted-foreground">{faNum(e.candidates.length)} نامزد · {faNum(e.seats)} کرسی</span>
+          </div>
+          <span className="grid h-8 w-8 place-items-center rounded-full bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground"><ChevronLeft className="h-4 w-4" /></span>
+        </div>
+        {e.isDemo && <DemoBadge className="mt-3 self-start" />}
+      </Link>
+    </motion.div>
+  );
 }
 
 export function ElectionDetail() {
@@ -75,79 +127,82 @@ export function ElectionDetail() {
   const q = useElections();
   const { data: s } = useSettings();
   const e = q.data?.elections.find((x) => x.id === slug);
+  const [text, setText] = useState('');
   useTitle(e?.title ?? 'انتخابات', e ? `${STAGE[e.status] ?? ''} — ${e.association ?? ''}` : undefined);
   if (q.isLoading) return <div className="container-page py-12"><Skeleton className="h-64 rounded-2xl" /></div>;
   if (!e) return (
     <div className="container-page py-12">
-      <Crumbs items={[{ to: '/', label: 'خانه' }, { to: '/elections', label: 'انتخابات' }, { label: 'یافت نشد' }]} />
       <EmptyState title="این انتخابات یافت نشد" text="ممکن است هنوز اعلام نشده یا نشانی اشتباه باشد." action={<Button asChild variant="outline"><Link to="/elections">همه انتخابات</Link></Button>} />
     </div>
   );
   const published = e.resultsVisible;
   const rules = s?.settings?.electionRules;
+  const cands = e.candidates.filter((c) => !text.trim() || c.fullName.includes(text.trim()));
+  const target = e.status === 'Voting Open' ? e.votingEnd : e.status === 'Final List' && e.votingStart && new Date(e.votingStart) > new Date() ? e.votingStart : e.status === 'Candidacy Open' ? e.candidacyEnd : null;
   return (
-    <div className="container-page space-y-8 py-10 pb-28 sm:pb-10">
-      <Crumbs items={[{ to: '/', label: 'خانه' }, { to: '/elections', label: 'انتخابات' }, { label: e.title }]} />
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2"><span className="text-sm font-semibold text-primary">{STAGE[e.status]}</span>{e.isDemo && <DemoBadge />}</div>
-          <h1 className="mt-1 text-3xl font-black leading-[1.4]">{e.title}</h1>
-          {e.association && <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground"><Building2 className="h-4 w-4" aria-hidden />{e.associationSlug ? <Link className="underline-offset-4 hover:underline" to={`/associations/${e.associationSlug}`}>{e.association}</Link> : e.association}{e.academicYear && ` · سال تحصیلی ${e.academicYear}`}</p>}
-        </div>
-        {e.votingOpenNow && <Button asChild size="lg" className="hidden rounded-full sm:inline-flex"><Link to={`/vote?e=${e.id}`}><Vote className="ms-2 h-5 w-5" />ورود به رأی‌گیری</Link></Button>}
-        {e.votingOpenNow && <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 p-3 backdrop-blur sm:hidden" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}><Button asChild size="lg" className="h-12 w-full rounded-full text-base"><Link to={`/vote?e=${e.id}`}><Vote className="ms-2 h-5 w-5" />ورود به رأی‌گیری</Link></Button></div>}
-        {e.isDemo && e.status === 'Voting Open' && <span className="rounded-lg border border-dashed px-4 py-2 text-sm text-muted-foreground">انتخابات نمایشی — امکان رأی‌دادن ندارد</span>}
-      </div>
-      <div className="space-y-5 rounded-2xl border bg-card p-5 sm:p-6">
-        <StageTimeline status={e.status} />
-        {e.status === 'Candidacy Open' && e.candidacyEnd && <Countdown to={e.candidacyEnd} label="تا پایان ثبت‌نام نامزدها:" />}
-        {e.status === 'Final List' && e.votingStart && new Date(e.votingStart) > new Date() && <Countdown to={e.votingStart} label="تا شروع رأی‌گیری:" />}
-        {e.status === 'Voting Open' && e.votingEnd && <Countdown to={e.votingEnd} label="تا پایان رأی‌گیری:" />}
-      </div>
-      <dl className="grid gap-3 sm:grid-cols-3">
-        <Fact k="کرسی‌ها" v={faNum(e.seats)} />
-        <Fact k="حداکثر انتخاب هر رأی‌دهنده" v={faNum(e.maxChoicesPerVoter)} />
-        <Fact k="زمان رأی‌گیری" v={e.votingStart ? `${faDate(e.votingStart, true)} تا ${faDate(e.votingEnd, true)}` : 'اعلام نشده'} />
-      </dl>
-      {e.description && <p className="max-w-3xl whitespace-pre-line leading-8">{e.description}</p>}
-      {published && (
-        <section aria-labelledby="res" className="space-y-4">
-          <div className="flex flex-wrap items-center gap-2"><h2 id="res" className="text-xl font-extrabold">{e.isDemo ? 'نتایج نمایشی (غیررسمی)' : 'نتایج رسمی'}</h2>{e.isDemo && <DemoBadge />}</div>
-          {e.isDemo && <p className="rounded-xl border border-dashed border-accent/60 bg-accent/10 p-3 text-sm">این اعداد ساختگی‌اند و فقط برای پیش‌نمایش ظاهر صفحه ساخته شده‌اند؛ هیچ اعتبار رسمی ندارند.</p>}
-          <Turnout turnout={Number(e.turnout ?? 0)} eligible={Number(e.eligible ?? 0)} />
-          {Number(e.blank ?? 0) > 0 && <p className="text-sm text-muted-foreground">رأی سفید: {faNum(e.blank)}</p>}
-        </section>
-      )}
-      <section>
-        <h2 className="mb-4 text-xl font-extrabold">{published ? 'آرای نامزدها' : 'نامزدهای تأییدشده'}</h2>
-        {!e.candidates.length ? <EmptyState title="هنوز نامزدی تأیید نشده است" text="فهرست نامزدها پس از بررسی صلاحیت منتشر می‌شود." /> : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {e.candidates.map((c, i) => (
-              <article key={c.id} className={`rounded-xl border bg-card p-4 ${published && i < e.seats ? 'border-primary/50 bg-primary/[0.03]' : ''}`}>
-                <div className="flex items-center gap-4">
-                  <CandidateAvatar name={c.fullName} photoUrl={c.photoUrl} className="h-12 w-12" />
-                  <div className="min-w-0">
-                    <h3 className="font-bold leading-7">{c.fullName}</h3>
-                                        {published && <p className="mt-1 flex items-center gap-1 text-sm font-bold text-primary">{i < e.seats && <Trophy className="h-4 w-4" aria-label="برگزیده" />}{faNum(c.votes ?? 0)} رأی</p>}
-                  </div>
-                </div>
-                {published && <VoteBar votes={c.votes ?? 0} max={e.candidates[0]?.votes ?? 0} />}
-              </article>
-            ))}
+    <>
+      <section className="bg-primary text-primary-foreground">
+        <div className="container-page pb-14 pt-6 sm:pt-10">
+          <Link to="/elections" className="inline-flex items-center gap-1.5 text-sm text-primary-foreground/75 hover:text-primary-foreground"><ArrowRight className="h-4 w-4" />همه‌ی انجمن‌ها</Link>
+          <div className="mt-4 flex flex-wrap items-center gap-2"><StatusPill status={e.status} />{e.isDemo && <DemoBadge />}</div>
+          <h1 className="font-display mt-3 text-2xl font-black leading-[1.5] sm:text-4xl">{e.association ?? e.title}</h1>
+          <div className="mt-4 flex flex-wrap gap-2 text-sm">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/10 px-3 py-1.5"><Users className="h-4 w-4 text-accent" />{faNum(e.candidates.length)} نامزد</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/10 px-3 py-1.5"><Armchair className="h-4 w-4 text-accent" />{faNum(e.seats)} کرسی · حداکثر {faNum(e.maxChoicesPerVoter)} انتخاب</span>
+            {e.votingStart && <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/10 px-3 py-1.5"><CalendarClock className="h-4 w-4 text-accent" />{faDate(e.votingStart, true)}</span>}
           </div>
-        )}
+        </div>
       </section>
-      <section className="rounded-2xl border bg-card p-5 sm:p-6">
-        <h2 className="flex items-center gap-2 text-lg font-extrabold"><ScrollText className="h-5 w-5 text-primary" aria-hidden />قوانین و شرایط</h2>
-        {rules ? <p className="mt-3 whitespace-pre-line leading-8">{rules}</p> : (
-          <ul className="mt-3 list-disc space-y-1 ps-5 leading-8 text-muted-foreground">
-            <li>فقط دانشجویان موجود در فهرست واجدین این انجمن حق رأی دارند؛ هر نفر یک‌بار.</li>
-            <li>برگه‌ی رأی بدون هیچ شناسه‌ای ذخیره می‌شود و نتایج پیش از پایان رأی‌گیری و انتشار رسمی نمایش داده نمی‌شود.</li>
-            <li>قواعد صلاحیت نامزدها و روش تعیین برنده: <strong>نیازمند تأیید رسمی دانشگاه</strong>.</li>
-          </ul>
+
+      <div className="container-page -mt-8 space-y-8 pb-28 sm:pb-16">
+        <div className="space-y-5 rounded-2xl border bg-card p-4 shadow-[var(--shadow-md)] sm:p-6">
+          <StageTimeline status={e.status} />
+          {target && <Countdown to={target} label={e.status === 'Voting Open' ? 'تا پایان رأی‌گیری:' : e.status === 'Candidacy Open' ? 'تا پایان ثبت‌نام:' : 'تا شروع رأی‌گیری:'} />}
+          {e.votingOpenNow && <Button asChild size="lg" className="hidden h-12 rounded-full px-8 sm:inline-flex"><Link to={`/vote?e=${e.id}`}><Vote className="ms-2 h-5 w-5" />ورود به رأی‌گیری</Link></Button>}
+        </div>
+        {e.votingOpenNow && <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 p-3 backdrop-blur sm:hidden" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}><Button asChild size="lg" className="h-12 w-full rounded-full text-base"><Link to={`/vote?e=${e.id}`}><Vote className="ms-2 h-5 w-5" />ورود به رأی‌گیری</Link></Button></div>}
+
+        {e.description && <p className="max-w-3xl whitespace-pre-line leading-8">{e.description}</p>}
+
+        {published && (
+          <section className="space-y-3">
+            <h2 className="text-xl font-extrabold">{e.isDemo ? 'نتایج نمایشی (غیررسمی)' : 'نتایج رسمی'}</h2>
+            <Turnout turnout={Number(e.turnout ?? 0)} eligible={Number(e.eligible ?? 0)} />
+            {Number(e.blank ?? 0) > 0 && <p className="text-sm text-muted-foreground">رأی سفید: {faNum(e.blank)}</p>}
+          </section>
         )}
-      </section>
-    </div>
+
+        <section>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-xl font-extrabold">{published ? 'آرای نامزدها' : 'نامزدهای تأییدشده'} <span className="text-base font-bold text-muted-foreground">({faNum(e.candidates.length)})</span></h2>
+            {e.candidates.length > 8 && <div className="relative sm:w-64"><Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="جست‌وجوی نام نامزد…" aria-label="جست‌وجوی نامزد" value={text} onChange={(x) => setText(x.target.value)} className="h-10 rounded-full ps-9" /></div>}
+          </div>
+          {!e.candidates.length ? <EmptyState title="هنوز نامزدی تأیید نشده است" text="فهرست نامزدها پس از بررسی صلاحیت منتشر می‌شود." /> : !cands.length ? <EmptyState title="نامزدی با این نام نیست" /> : (
+            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+              {cands.map((c, i) => (
+                <article key={c.id} className={`flex items-center gap-3 rounded-xl border bg-card p-3 ${published && i < e.seats ? 'border-primary/50 bg-primary/[0.04]' : ''}`}>
+                  <CandidateAvatar name={c.fullName} photoUrl={c.photoUrl} className="h-11 w-11" />
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate font-bold">{c.fullName}</h3>
+                    {published && <><p className="flex items-center gap-1 text-xs font-bold text-primary">{i < e.seats && <Trophy className="h-3.5 w-3.5" aria-label="برگزیده" />}{faNum(c.votes ?? 0)} رأی</p><VoteBar votes={c.votes ?? 0} max={e.candidates[0]?.votes ?? 0} /></>}
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <details className="group rounded-2xl border bg-card p-4 sm:p-6">
+          <summary className="flex cursor-pointer list-none items-center justify-between font-extrabold"><span className="flex items-center gap-2"><ScrollText className="h-5 w-5 text-primary" />قوانین و شرایط</span><ChevronLeft className="h-4 w-4 transition group-open:-rotate-90" /></summary>
+          {rules ? <p className="mt-3 whitespace-pre-line leading-8">{rules}</p> : (
+            <ul className="mt-3 space-y-2 text-sm leading-7 text-muted-foreground">
+              <li className="flex gap-2"><ShieldCheck className="mt-1 h-4 w-4 shrink-0 text-primary" />فقط دانشجویان موجود در فهرست واجدین این انجمن حق رأی دارند؛ هر نفر یک‌بار.</li>
+              <li className="flex gap-2"><ShieldCheck className="mt-1 h-4 w-4 shrink-0 text-primary" />برگه‌ی رأی بدون هیچ شناسه‌ای ذخیره می‌شود و نتایج پیش از انتشار رسمی نمایش داده نمی‌شود.</li>
+            </ul>
+          )}
+        </details>
+      </div>
+    </>
   );
 }
 
@@ -163,7 +218,7 @@ function Turnout({ turnout, eligible }: { turnout: number; eligible: number }) {
 }
 
 function VoteBar({ votes, max }: { votes: number; max: number }) {
-  return <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${max ? (votes / max) * 100 : 0}%` }} /></div>;
+  return <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${max ? (votes / max) * 100 : 0}%` }} /></div>;
 }
 
 export { VotePage } from './Vote';
