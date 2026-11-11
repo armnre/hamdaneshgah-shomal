@@ -13,8 +13,9 @@ for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.sql')).sort()) {
 }
 const q=(s)=>db.query(s);
 const expectFail=async(n,s)=>{try{await db.exec(s);console.log('FAIL (accepted):',n);process.exitCode=1}catch(e){console.log('pass (rejected):',n)}};
+{ const c=await db.query(`SELECT (SELECT count(*) FROM "Candidates")::int n, (SELECT count(*) FROM "Candidates" WHERE "reviewNote" LIKE 'نیاز به بررسی%')::int r, (SELECT count(*) FROM "AssociationMajors")::int am`); console.log('0011:', JSON.stringify(c.rows[0])); }
 // 0008 ships real 1405-1406 election data; the fixtures below need empty tables.
-await db.exec(`DELETE FROM "Candidates"; DELETE FROM "Elections"; DELETE FROM "AssociationYears"; DELETE FROM "Associations"; DELETE FROM "AcademicYears"; DELETE FROM "Majors"; DELETE FROM "Faculties";`);
+await db.exec(`DELETE FROM "AssociationMajors"; DELETE FROM "Candidates"; DELETE FROM "Elections"; DELETE FROM "AssociationYears"; DELETE FROM "Associations"; DELETE FROM "AcademicYears"; DELETE FROM "Majors"; DELETE FROM "Faculties";`);
 await db.exec(`INSERT INTO "Faculties"(id,name) VALUES('f1','F'); INSERT INTO "Majors"(id,name) VALUES('m1','PE'),('m2','SS');
 INSERT INTO "Associations"(id,name) VALUES('a1','Sport'),('a2','Other');
 INSERT INTO "AcademicYears"(id,title,status) VALUES('y1','1404-1405','Archived'),('y2','۱۴۰۵-۱۴۰۶','Current');
