@@ -34,7 +34,7 @@ await pool.query(`INSERT INTO "VoterSessions"("tokenHash",election,voter,"expire
 
 const castOnce = async (i) => {
   const c = await pool.connect();
-  const p = { sessionHash, electionId: id('e'), code: `T${r}-${String(i).padStart(4, '0')}`.toUpperCase(), ballotUuid: randomUUID(), candidateIds: 'none', votedOn: new Date().toISOString().slice(0, 10) };
+  const p = { sessionHash, electionId: id('e'), code: `${r.slice(0, 5)}-${String(i).padStart(5, '0')}`.toUpperCase(), ballotUuid: randomUUID(), candidateIds: 'none', votedOn: new Date().toISOString().slice(0, 10) };
   try {
     await c.query('BEGIN');
     let last;
