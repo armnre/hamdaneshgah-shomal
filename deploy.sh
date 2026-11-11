@@ -20,6 +20,14 @@ if [ -f server/data/students.xlsx ]; then
   (cd server && npm run import-voters -- data/students.xlsx --commit) && shred -u server/data/students.xlsx
 fi
 
+# Voter list (encrypted in git). Runs only while STUDENTS_KEY is in server/.env; remove it after the import.
+if [ -f server/data/students.xlsx.enc ] && grep -q '^STUDENTS_KEY=' server/.env 2>/dev/null; then
+  echo "── voters (encrypted list) ──"
+  (cd server && export STUDENTS_KEY="$(grep '^STUDENTS_KEY=' .env | cut -d= -f2-)" \
+    && node scripts/decrypt-students.mjs data/students.xlsx.enc /tmp/students.xlsx \
+    && npm run import-voters -- /tmp/students.xlsx --commit; shred -u /tmp/students.xlsx 2>/dev/null || true)
+fi
+
 # Tell Passenger to restart the app
 mkdir -p server/tmp && touch server/tmp/restart.txt
 echo "✓ deployed"

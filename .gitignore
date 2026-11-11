@@ -11,5 +11,6 @@ server/storage
 server/tmp
 
 # Student lists contain national IDs — never commit
-server/data/
+server/data/*
+!server/data/students.xlsx.enc
 *.xlsx
