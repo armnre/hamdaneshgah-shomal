@@ -1,109 +1,68 @@
-import { useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { useCallback } from 'react';
-import { Vote, CheckCircle2, Loader2, Trophy, ShieldCheck, Copy, Search, ScrollText, Building2 } from 'lucide-react';
-import { useMemo } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@project/components/ui/select';
+import { useMemo, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { Vote, Trophy, Search, ScrollText, Building2, CalendarClock } from 'lucide-react';
 import { CandidateAvatar } from '../components/site/CandidateAvatar';
-import { ElectionCard, DemoBadge, STAGE, type Election } from '../components/site/ElectionCards';
-import { toast } from 'sonner';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@project/components/ui/alert-dialog';
-import { StageTimeline, Countdown, SessionTimer } from '../components/site/ElectionUI';
-import { listPublicElections, castVote, verifyVoter } from '../lib/api';
+import { ElectionCard, DemoBadge, STAGE } from '../components/site/ElectionCards';
+import { StageTimeline, Countdown } from '../components/site/ElectionUI';
+import { listPublicElections } from '../lib/api';
 import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';
-import { Label } from '@project/components/ui/label';
-import { Checkbox } from '@project/components/ui/checkbox';
 import { Skeleton } from '@project/components/ui/skeleton';
 import { PageHero, EmptyState, ErrorState, Crumbs } from '../components/site/ui';
 import { useSettings } from '../components/site/PublicLayout';
 import { useTitle } from '../lib/useTitle';
-import { errMsg, faDate, faNum } from '../lib/format';
+import { faDate, faNum } from '../lib/format';
 
 const useElections = () => useQuery({ queryKey: ['publicElections'], queryFn: () => listPublicElections({}) });
-const ALL = '__all';
 
 export function ElectionsList() {
   useTitle('انتخابات انجمن‌های علمی', 'زمان‌بندی، نامزدهای تأییدشده و نتایج رسمی انتخابات انجمن‌های علمی دانشگاه شمال');
   const { data: s } = useSettings();
   const q = useElections();
   const list = q.data?.elections ?? [];
-  const [status, setStatus] = useState(ALL);
-  const [assoc, setAssoc] = useState(ALL);
-  const [year, setYear] = useState(ALL);
   const [text, setText] = useState('');
-  const opts = useMemo(() => ({
-    status: [...new Set(list.map((e) => e.status))],
-    assoc: [...new Set(list.map((e) => e.association).filter(Boolean))] as string[],
-    year: [...new Set(list.map((e) => e.academicYear).filter(Boolean))] as string[],
-  }), [list]);
-  const shown = list.filter((e) => (status === ALL || e.status === status) && (assoc === ALL || e.association === assoc) && (year === ALL || e.academicYear === year) && (!text || e.title.includes(text)));
-  const reset = () => { setStatus(ALL); setAssoc(ALL); setYear(ALL); setText(''); };
+  const shown = list.filter((e) => !text || `${e.association ?? ''} ${e.title}`.includes(text.trim()));
+  const summary = useMemo(() => {
+    const real = list.filter((e) => !e.isDemo);
+    return {
+      open: real.some((e) => e.votingOpenNow),
+      start: real.map((e) => e.votingStart).filter(Boolean).sort()[0],
+      end: real.map((e) => e.votingEnd).filter(Boolean).sort().slice(-1)[0],
+      cands: real.reduce((n, e) => n + e.candidates.length, 0),
+      count: real.length,
+    };
+  }, [list]);
   return (
     <>
-      <PageHero image="/shomal/campus-grounds-4.jpg" title="انتخابات انجمن‌های علمی" subtitle="زمان‌بندی، نامزدها و نتایج انتخابات انجمن‌ها" />
-      <div className="container-page py-10">
+      <PageHero image="/shomal/campus-grounds-4.jpg" title="انتخابات انجمن‌های علمی" subtitle="انجمن رشته‌ات را پیدا کن و نامزدها را ببین" />
+      <div className="container-page max-w-4xl py-10">
         <Crumbs items={[{ to: '/', label: 'خانه' }, { label: 'انتخابات' }]} />
-        {list.length > 0 && (
-          <div className="mb-6 grid gap-3 rounded-2xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="relative"><Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden /><Input aria-label="جست‌وجو در عنوان" placeholder="جست‌وجو…" value={text} onChange={(x) => setText(x.target.value)} className="ps-9" /></div>
-            <Filter label="وضعیت" value={status} onChange={setStatus} items={opts.status.map((v) => [String(v), STAGE[String(v)] ?? String(v)])} />
-            <Filter label="انجمن" value={assoc} onChange={setAssoc} items={opts.assoc.map((v) => [v, v])} />
-            <Filter label="سال تحصیلی" value={year} onChange={setYear} items={opts.year.map((v) => [v, v])} />
-          </div>
-        )}
-        {q.isLoading ? <div className="grid gap-4 md:grid-cols-2">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-56 rounded-2xl" />)}</div>
+        {q.isLoading ? <div className="space-y-2">{[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
           : q.isError ? <ErrorState onRetry={() => q.refetch()} />
           : !list.length ? <EmptyState title="هنوز انتخاباتی اعلام نشده است" text={s?.settings?.electionNote || 'زمان ثبت‌نام نامزدها و رأی‌گیری پس از تصویب، در این صفحه منتشر می‌شود.'} />
-          : !shown.length ? <EmptyState title="انتخاباتی با این فیلترها یافت نشد" action={<Button variant="outline" onClick={reset}>حذف فیلترها</Button>} />
-          : <><p className="mb-3 text-sm text-muted-foreground">{faNum(shown.length)} انتخابات</p><div className="grid gap-4 md:grid-cols-2">{shown.map((e) => <ElectionCard key={e.id} e={e} />)}</div><AllCandidates list={shown} /></>}
+          : (
+            <>
+              {summary.start && (
+                <div className="mb-6 flex flex-col gap-4 rounded-2xl border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="flex items-center gap-2 text-sm text-muted-foreground"><CalendarClock className="h-4 w-4 text-primary" aria-hidden />زمان رأی‌گیری (همه‌ی انجمن‌ها هم‌زمان)</p>
+                    <p className="mt-1 font-bold">{faDate(summary.start, true)} تا {faDate(summary.end, true)}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{faNum(summary.count)} انجمن · {faNum(summary.cands)} نامزد</p>
+                  </div>
+                  {summary.open && <Button asChild size="lg" className="rounded-full"><Link to="/vote"><Vote className="ms-2 h-5 w-5" />ورود به رأی‌گیری</Link></Button>}
+                </div>
+              )}
+              <div className="relative mb-4">
+                <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+                <Input aria-label="جست‌وجوی انجمن" placeholder="جست‌وجوی انجمن یا رشته…" value={text} onChange={(x) => setText(x.target.value)} className="h-11 ps-9" />
+              </div>
+              {!shown.length ? <EmptyState title="انجمنی با این نام یافت نشد" action={<Button variant="outline" onClick={() => setText('')}>پاک کردن جست‌وجو</Button>} />
+                : <div className="space-y-2">{shown.map((e) => <ElectionCard key={e.id} e={e} />)}</div>}
+            </>
+          )}
       </div>
     </>
-  );
-}
-
-function AllCandidates({ list }: { list: Election[] }) {
-  const groups = list.filter((e) => e.candidates.length);
-  if (!groups.length) return null;
-  const total = groups.reduce((n, e) => n + e.candidates.length, 0);
-  return (
-    <section id="candidates" className="mt-14 scroll-mt-24">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-        <div><p className="text-sm font-semibold text-primary">فهرست کامل</p><h2 className="text-2xl font-black">همه‌ی نامزدها</h2></div>
-        <span className="rounded-full bg-primary/10 px-4 py-1.5 text-sm font-bold text-primary">{faNum(total)} نامزد</span>
-      </div>
-      <div className="space-y-8">
-        {groups.map((e) => (
-          <div key={e.id} className="rounded-3xl border bg-card p-5 sm:p-6">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <h3 className="font-extrabold">{e.association ?? e.title}</h3>
-              <Link to={`/elections/${e.id}`} className="text-sm text-primary underline-offset-4 hover:underline">جزئیات انتخابات</Link>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {e.candidates.map((c) => (
-                <div key={c.id} className="flex items-center gap-3 rounded-2xl bg-muted/50 p-3 transition hover:bg-muted">
-                  <CandidateAvatar name={c.fullName} photoUrl={c.photoUrl} className="h-12 w-12 text-lg" />
-                  <span className="text-sm font-bold leading-6">{c.fullName}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function Filter({ label, value, onChange, items }: { label: string; value: string; onChange: (v: string) => void; items: string[][] }) {
-  return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger aria-label={label}><SelectValue /></SelectTrigger>
-      <SelectContent>
-        <SelectItem value={ALL}>همه‌ی {label}‌ها</SelectItem>
-        {items.map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
-      </SelectContent>
-    </Select>
   );
 }
 
@@ -145,11 +104,10 @@ export function ElectionDetail() {
         {e.status === 'Final List' && e.votingStart && new Date(e.votingStart) > new Date() && <Countdown to={e.votingStart} label="تا شروع رأی‌گیری:" />}
         {e.status === 'Voting Open' && e.votingEnd && <Countdown to={e.votingEnd} label="تا پایان رأی‌گیری:" />}
       </div>
-      <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <dl className="grid gap-3 sm:grid-cols-3">
         <Fact k="کرسی‌ها" v={faNum(e.seats)} />
         <Fact k="حداکثر انتخاب هر رأی‌دهنده" v={faNum(e.maxChoicesPerVoter)} />
-        <Fact k="انجمن" v={e.association ?? '—'} />
-        <Fact k="رأی‌گیری هم‌زمان همه‌ی رشته‌ها (وقت تهران)" v={e.votingStart ? `${faDate(e.votingStart, true)} تا ${faDate(e.votingEnd, true)}` : 'اعلام نشده'} />
+        <Fact k="زمان رأی‌گیری" v={e.votingStart ? `${faDate(e.votingStart, true)} تا ${faDate(e.votingEnd, true)}` : 'اعلام نشده'} />
       </dl>
       {e.description && <p className="max-w-3xl whitespace-pre-line leading-8">{e.description}</p>}
       {published && (
@@ -163,15 +121,14 @@ export function ElectionDetail() {
       <section>
         <h2 className="mb-4 text-xl font-extrabold">{published ? 'آرای نامزدها' : 'نامزدهای تأییدشده'}</h2>
         {!e.candidates.length ? <EmptyState title="هنوز نامزدی تأیید نشده است" text="فهرست نامزدها پس از بررسی صلاحیت منتشر می‌شود." /> : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {e.candidates.map((c, i) => (
-              <article key={c.id} className={`rounded-2xl border bg-card p-5 ${published && i < e.seats ? 'border-primary/50 bg-primary/[0.03]' : ''}`}>
+              <article key={c.id} className={`rounded-xl border bg-card p-4 ${published && i < e.seats ? 'border-primary/50 bg-primary/[0.03]' : ''}`}>
                 <div className="flex items-center gap-4">
-                  <CandidateAvatar name={c.fullName} photoUrl={c.photoUrl} className="h-16 w-16 text-2xl sm:h-20 sm:w-20" />
+                  <CandidateAvatar name={c.fullName} photoUrl={c.photoUrl} className="h-12 w-12" />
                   <div className="min-w-0">
-                    <h3 className="text-base font-extrabold leading-7">{c.fullName}</h3>
-                    <p className="text-xs text-muted-foreground">نامزد دبیری {e.association ?? 'انجمن'}</p>
-                    {published && <p className="mt-1 flex items-center gap-1 text-sm font-bold text-primary">{i < e.seats && <Trophy className="h-4 w-4" aria-label="برگزیده" />}{faNum(c.votes ?? 0)} رأی</p>}
+                    <h3 className="font-bold leading-7">{c.fullName}</h3>
+                                        {published && <p className="mt-1 flex items-center gap-1 text-sm font-bold text-primary">{i < e.seats && <Trophy className="h-4 w-4" aria-label="برگزیده" />}{faNum(c.votes ?? 0)} رأی</p>}
                   </div>
                 </div>
                 {published && <VoteBar votes={c.votes ?? 0} max={e.candidates[0]?.votes ?? 0} />}
