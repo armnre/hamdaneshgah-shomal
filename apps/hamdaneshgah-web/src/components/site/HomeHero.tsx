@@ -30,7 +30,7 @@ export default function HomeHero({ title, subtitle, stats, loading }: Props) {
       <div aria-hidden className="girih-gold absolute inset-y-0 start-0 -z-10 w-2/5 opacity-25 [mask-image:linear-gradient(to_left,black,transparent)]" />
       <div aria-hidden className="pointer-events-none absolute inset-3 -z-10 border border-accent/30 sm:inset-5" />
 
-      <div className="container-page grid gap-12 pb-24 pt-14 sm:pt-20 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:pb-32">
+      <div className="container-page grid gap-12 pb-16 pt-10 sm:pb-24 sm:pt-20 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:pb-32">
         <div>
           <motion.div {...fade()} className="mb-6 inline-flex items-center gap-3 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 py-1.5 pe-4 ps-1.5 backdrop-blur">
             <img src={IMG.emblem} alt="نشان دانشگاه شمال" className="h-8 w-8 rounded-full bg-white object-contain p-0.5" />
@@ -38,7 +38,7 @@ export default function HomeHero({ title, subtitle, stats, loading }: Props) {
           </motion.div>
           <motion.div {...fade(0.08)}>
             {loading ? <Skeleton className="h-28 w-full bg-primary-foreground/10" /> : (
-              <h1 className="font-display text-balance text-4xl font-bold leading-[1.35] sm:text-5xl lg:text-[3.4rem]">
+              <h1 className="font-display text-balance text-3xl font-bold leading-[1.45] sm:text-5xl lg:text-[3.4rem]">
                 {title || 'خانه‌ی مشترک دانشجویان دانشگاه شمال'}
               </h1>
             )}
@@ -46,11 +46,11 @@ export default function HomeHero({ title, subtitle, stats, loading }: Props) {
           <motion.p {...fade(0.16)} className="mt-6 max-w-xl text-base leading-8 text-primary-foreground/85 sm:text-lg">
             {subtitle || 'انجمن‌های علمی، رویدادها، دوره‌ها و اخبار دانشجویی — همه در یک جا.'}
           </motion.p>
-          <motion.div {...fade(0.24)} className="mt-9 flex flex-wrap gap-3">
-            <Button asChild size="lg" className="h-12 bg-accent px-6 text-accent-foreground shadow-lg hover:bg-accent/90">
+          <motion.div {...fade(0.24)} className="mt-8 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
+            <Button asChild size="lg" className="h-12 bg-accent px-4 sm:px-6 text-accent-foreground shadow-lg hover:bg-accent/90">
               <Link to="/associations">کاوش انجمن‌ها<ArrowLeft className="ms-2 h-4 w-4" /></Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="h-12 border-primary-foreground/30 bg-primary-foreground/5 px-6 text-primary-foreground backdrop-blur hover:bg-primary-foreground/15 hover:text-primary-foreground">
+            <Button asChild size="lg" variant="outline" className="h-12 border-primary-foreground/30 bg-primary-foreground/5 px-4 sm:px-6 text-primary-foreground backdrop-blur hover:bg-primary-foreground/15 hover:text-primary-foreground">
               <Link to="/events">رویدادهای پیش رو</Link>
             </Button>
           </motion.div>
@@ -67,9 +67,9 @@ export default function HomeHero({ title, subtitle, stats, loading }: Props) {
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:hidden">
+        <div className="grid grid-cols-4 gap-2 sm:gap-3 lg:hidden">
           {STATS.map(({ k, l, i: Icon }) => (
-            <div key={k} className="rounded-2xl border border-primary-foreground/15 bg-primary-foreground/10 p-3 backdrop-blur">
+            <div key={k} className="rounded-xl border border-primary-foreground/15 bg-primary-foreground/10 px-1 py-2.5 backdrop-blur sm:p-3">
               <Stat label={l} value={stats?.[k]} Icon={Icon} />
             </div>
           ))}
@@ -91,7 +91,7 @@ function Stat({ label, value, Icon }: { label: string; value: unknown; Icon: typ
   return (
     <div className="text-center">
       <Icon className="mx-auto h-4 w-4 text-accent" />
-      <div className="mt-1 text-2xl font-black">{value === undefined ? '…' : faNum(value)}</div>
+      <div className="mt-1 text-xl font-black sm:text-2xl">{value === undefined ? '…' : faNum(value)}</div>
       <div className="text-[11px] text-primary-foreground/70">{label}</div>
     </div>
   );

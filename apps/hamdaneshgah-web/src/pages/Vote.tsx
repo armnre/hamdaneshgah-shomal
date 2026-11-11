@@ -72,7 +72,7 @@ export function VotePage() {
           text={closed?.votingStart ? 'زمان رأی‌گیری: ' + faDate(closed.votingStart, true) + ' تا ' + faDate(closed.votingEnd, true) : open.length ? 'روی انجمن خود بزنید تا وارد برگه‌ی رأی شوید.' : 'زمان رأی‌گیری‌ها در صفحه‌ی انتخابات اعلام می‌شود.'}>
           {open.map((o) => (
             <Link key={o.id} to={'/vote?e=' + o.id} className="flex items-center justify-between gap-3 rounded-2xl border bg-background p-4 text-start transition hover:border-primary/50 hover:bg-secondary/40">
-              <span><span className="block font-bold">{o.title}</span><span className="text-xs text-muted-foreground">{o.association}</span></span>
+              <span className="font-bold">{o.association ?? o.title}</span>
               <ArrowRight className="h-4 w-4 rotate-180 text-primary" />
             </Link>
           ))}
