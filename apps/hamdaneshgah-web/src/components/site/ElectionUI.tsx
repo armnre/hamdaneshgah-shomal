@@ -51,13 +51,13 @@ export function Countdown({ to, label }: { to: string; label: string }) {
   const d = Math.floor(left / 864e5), h = Math.floor(left / 36e5) % 24, m = Math.floor(left / 6e4) % 60, s = Math.floor(left / 1e3) % 60;
   const parts = [d ? [d, 'روز'] : null, [h, 'ساعت'], [m, 'دقیقه'], [s, 'ثانیه']].filter(Boolean) as [number, string][];
   return (
-    <div className="flex flex-wrap items-center gap-3" aria-live="off">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <div className="flex gap-1.5">
+    <div className="w-full" aria-live="off">
+      <span className="mb-2 block text-sm font-semibold text-muted-foreground">{label}</span>
+      <div className="grid gap-1.5 sm:gap-2" style={{ gridTemplateColumns: `repeat(${parts.length}, minmax(0, 1fr))` }}>
         {parts.map(([v, u]) => (
-          <span key={u} className="min-w-[3rem] rounded-2xl border bg-card px-2 py-1.5 text-card-foreground text-center shadow-[var(--shadow-sm)] sm:min-w-[3.5rem]">
-            <span className="block text-lg font-black tabular-nums leading-none">{faNum(v)}</span>
-            <span className="text-[10px] text-muted-foreground">{u}</span>
+          <span key={u} className="min-w-0 rounded-xl border bg-card px-1 py-2 text-center text-card-foreground shadow-[var(--shadow-sm)] sm:rounded-2xl sm:py-3">
+            <span className="block text-xl font-black tabular-nums leading-none text-primary sm:text-2xl">{faNum(v)}</span>
+            <span className="mt-1 block text-[10px] text-muted-foreground sm:text-xs">{u}</span>
           </span>
         ))}
       </div>

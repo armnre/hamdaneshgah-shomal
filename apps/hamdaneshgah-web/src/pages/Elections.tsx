@@ -47,7 +47,7 @@ export function ElectionsList() {
       <section className="relative isolate overflow-hidden bg-primary text-primary-foreground">
         <div aria-hidden className="girih-gold absolute inset-0 -z-10 opacity-[0.07]" />
         <div aria-hidden className="absolute -end-24 -top-24 -z-10 h-72 w-72 rounded-full bg-accent/25 blur-3xl" />
-        <div className="container-page grid gap-8 pb-16 pt-10 sm:pb-20 sm:pt-14 lg:grid-cols-[1.2fr_1fr] lg:items-center">
+        <div className="container-page grid min-w-0 gap-6 pb-16 pt-8 sm:pb-20 sm:pt-14 lg:grid-cols-[1.2fr_1fr] lg:items-center">
           <div>
             <p className="text-sm font-semibold text-accent">سال تحصیلی ۱۴۰۵–۱۴۰۶</p>
             <h1 className="font-display mt-2 text-3xl font-black leading-[1.4] sm:text-5xl">انتخابات انجمن‌های علمی</h1>
@@ -56,13 +56,13 @@ export function ElectionsList() {
               <div className="mt-6 flex flex-wrap gap-2 text-sm">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/10 px-3 py-1.5"><Building2 className="h-4 w-4 text-accent" />{faNum(sum.count)} انجمن</span>
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/10 px-3 py-1.5"><Users className="h-4 w-4 text-accent" />{faNum(sum.cands)} نامزد</span>
-                {sum.start && <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/10 px-3 py-1.5"><CalendarClock className="h-4 w-4 text-accent" />{faDate(sum.start, true)} تا {faDate(sum.end, true).split(' ').slice(-1)}</span>}
+                {sum.start && <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/10 px-3 py-1.5"><CalendarClock className="h-4 w-4 text-accent" />{faDate(sum.start)}</span>}
               </div>
             )}
             {sum.open && <Button asChild size="lg" className="mt-6 h-12 w-full rounded-full bg-accent px-8 font-bold text-accent-foreground hover:bg-accent/90 sm:w-auto"><Link to="/vote"><Vote className="ms-2 h-5 w-5" />ورود به رأی‌گیری</Link></Button>}
           </div>
           {sum.start && (
-            <div className="rounded-2xl bg-card p-4 text-card-foreground shadow-xl sm:p-6">
+            <div className="min-w-0 rounded-2xl bg-card p-3 text-card-foreground shadow-xl sm:p-6">
               <Countdown to={(before ? sum.start : sum.end)!} label={before ? 'تا شروع رأی‌گیری' : 'تا پایان رأی‌گیری'} />
             </div>
           )}
@@ -74,7 +74,7 @@ export function ElectionsList() {
           {HOW.map(({ icon: Icon, t, d }, i) => (
             <li key={t} className="flex items-start gap-3 rounded-xl p-2">
               <span className="relative grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /><span className="absolute -end-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-accent text-[10px] font-black text-accent-foreground">{faNum(i + 1)}</span></span>
-              <span><span className="block text-sm font-bold">{t}</span><span className="text-xs leading-6 text-muted-foreground">{d}</span></span>
+              <span className="min-w-0"><span className="block text-sm font-bold leading-6">{t}</span><span className="text-xs leading-6 text-muted-foreground">{d}</span></span>
             </li>
           ))}
         </ol>
@@ -104,17 +104,17 @@ function Tile({ e, i }: { e: Election; i: number }) {
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 10) * 0.03 }}>
       <Link to={`/elections/${e.id}`} className="group flex h-full flex-col rounded-2xl border bg-card p-4 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[var(--shadow-md)] motion-reduce:hover:translate-y-0 sm:p-5">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-extrabold leading-7">{short(e)}</h3>
+          <h3 className="min-w-0 break-words font-extrabold leading-7">{short(e)}</h3>
           <StatusPill status={e.status} />
         </div>
-        <div className="mt-auto flex items-center justify-between pt-5">
-          <div className="flex items-center">
+        <div className="mt-auto flex items-center justify-between gap-2 pt-5">
+          <div className="flex min-w-0 items-center">
             <div className="flex -space-x-2 space-x-reverse">
               {e.candidates.slice(0, 4).map((c) => <CandidateAvatar key={c.id} name={c.fullName} photoUrl={c.photoUrl} className="h-8 w-8 ring-2 ring-card" />)}
             </div>
-            <span className="ms-2 text-xs text-muted-foreground">{faNum(e.candidates.length)} نامزد · {faNum(e.seats)} کرسی</span>
+            <span className="ms-2 truncate text-xs text-muted-foreground">{faNum(e.candidates.length)} نامزد · {faNum(e.seats)} کرسی</span>
           </div>
-          <span className="grid h-8 w-8 place-items-center rounded-full bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground"><ChevronLeft className="h-4 w-4" /></span>
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground"><ChevronLeft className="h-4 w-4" /></span>
         </div>
         {e.isDemo && <DemoBadge className="mt-3 self-start" />}
       </Link>
