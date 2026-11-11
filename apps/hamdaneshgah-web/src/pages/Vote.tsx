@@ -44,7 +44,7 @@ function Steps({ step }: { step: 1 | 2 | 3 }) {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative overflow-hidden">
-      <div aria-hidden className="pointer-events-none absolute -top-32 start-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-secondary blur-3xl" />
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-primary" /><div aria-hidden className="girih-gold pointer-events-none absolute inset-x-0 top-0 h-48 opacity-[0.07]" />
       <div className="container-page relative px-3 py-6 sm:py-12">
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="mx-auto w-full max-w-xl">{children}</motion.div>
       </div>
@@ -70,18 +70,33 @@ export function VotePage() {
       <Shell>
         <Notice title={closed ? 'رأی‌گیری این انتخابات اکنون باز نیست' : open.length ? 'انتخابات خود را انتخاب کنید' : 'در حال حاضر رأی‌گیری فعالی نیست'}
           text={closed?.votingStart ? 'زمان رأی‌گیری: ' + faDate(closed.votingStart, true) + ' تا ' + faDate(closed.votingEnd, true) : open.length ? 'روی انجمن خود بزنید تا وارد برگه‌ی رأی شوید.' : 'زمان رأی‌گیری‌ها در صفحه‌ی انتخابات اعلام می‌شود.'}>
-          {open.map((o) => (
-            <Link key={o.id} to={'/vote?e=' + o.id} className="flex items-center justify-between gap-3 rounded-2xl border bg-background p-4 text-start transition hover:border-primary/50 hover:bg-secondary/40">
-              <span className="font-bold">{o.association ?? o.title}</span>
-              <ArrowRight className="h-4 w-4 rotate-180 text-primary" />
-            </Link>
-          ))}
+          {open.length > 0 && <Chooser open={open} />}
           <Button asChild variant="outline" className="rounded-full"><Link to="/elections">همه‌ی انتخابات</Link></Button>
         </Notice>
       </Shell>
     );
   }
   return <Ballot key={e.id} e={e} />;
+}
+
+function Chooser({ open }: { open: Election[] }) {
+  const [t, setT] = useState('');
+  const list = open.filter((o) => !t.trim() || (o.association ?? o.title).includes(t.trim()));
+  return (
+    <div className="space-y-2 text-start">
+      {open.length > 5 && <Input placeholder="جست‌وجوی انجمن…" aria-label="جست‌وجوی انجمن" value={t} onChange={(x) => setT(x.target.value)} className="h-11 rounded-full" />}
+      <div className="max-h-[55vh] space-y-2 overflow-y-auto">
+        {list.map((o) => (
+          <Link key={o.id} to={'/vote?e=' + o.id} className="flex items-center gap-3 rounded-2xl border bg-background p-3.5 transition hover:border-primary/50 hover:bg-secondary/40">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Vote className="h-4 w-4" /></span>
+            <span className="min-w-0 flex-1"><span className="block truncate font-bold">{(o.association ?? o.title).replace(/^انجمن علمی\s*/, '')}</span><span className="text-xs text-muted-foreground">{faNum(o.candidates.length)} نامزد</span></span>
+            <ArrowRight className="h-4 w-4 rotate-180 text-primary" />
+          </Link>
+        ))}
+        {!list.length && <p className="py-4 text-center text-sm text-muted-foreground">انجمنی با این نام نیست.</p>}
+      </div>
+    </div>
+  );
 }
 
 function Notice({ title, text, children }: { title: string; text?: string; children?: React.ReactNode }) {
@@ -97,9 +112,14 @@ function Notice({ title, text, children }: { title: string; text?: string; child
 function Header({ e }: { e: Election }) {
   return (
     <div>
-      {e.association && <span className="inline-flex rounded-full bg-secondary px-3 py-1 text-xs font-bold text-secondary-foreground">{e.association}</span>}
-      <h1 className="mt-2 text-xl font-extrabold leading-9 sm:text-2xl">{e.title}</h1>
-      <p className="mt-1 text-xs text-muted-foreground sm:text-sm">رأی‌گیری تا {faDate(e.votingEnd, true)} · هر نفر فقط یک‌بار</p>
+      <div className="flex items-center gap-3">
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary text-accent shadow-md"><Vote className="h-6 w-6" /></span>
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-primary">برگه‌ی رأی</p>
+          <h1 className="text-lg font-extrabold leading-8 sm:text-xl">{e.association ?? e.title}</h1>
+        </div>
+      </div>
+      <p className="mt-3 rounded-xl bg-muted/60 px-3 py-2 text-xs leading-6 text-muted-foreground">رأی‌گیری تا {faDate(e.votingEnd, true)} · هر نفر فقط یک‌بار · <Link to="/elections" className="text-primary underline-offset-4 hover:underline">انجمن دیگر؟</Link></p>
     </div>
   );
 }
@@ -184,7 +204,7 @@ function Pick({ e, session, picked, setPicked, onExpire, vote }: { e: Election; 
       <Header e={e} />
       <Steps step={2} />
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-muted/60 px-3 py-2">
-        <span className="text-sm font-semibold">{max === 1 ? 'یک نامزد را انتخاب کنید' : 'تا ' + faNum(max) + ' نامزد انتخاب کنید'}</span>
+        <span className="text-sm font-semibold">{max === 1 ? 'یک نامزد را انتخاب کنید' : 'تا ' + faNum(max) + ' نامزد انتخاب کنید'}{picked.length > 0 && <span className="ms-2 rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">{faNum(picked.length)} انتخاب</span>}</span>
         <SessionTimer expiresAt={session.expiresAt} onExpire={onExpire} />
       </div>
       <div role="group" aria-label="نامزدها" className="grid gap-2.5">
