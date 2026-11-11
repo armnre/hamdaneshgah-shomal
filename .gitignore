@@ -9,3 +9,7 @@ web/.build
 server/src/.generated
 server/storage
 server/tmp
+
+# Student lists contain national IDs — never commit
+server/data/
+*.xlsx

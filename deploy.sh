@@ -13,6 +13,13 @@ echo "── frontend ──"
 echo "── server ──"
 (cd server && npm ci --include=dev --no-audit --no-fund && npm run build && npm test && npm run migrate)
 
+# Voter list: put the Excel file at server/data/students.xlsx on the server (File Manager / scp).
+# It is git-ignored (national IDs must never be committed). Imported once, then securely deleted.
+if [ -f server/data/students.xlsx ]; then
+  echo "── voters ──"
+  (cd server && npm run import-voters -- data/students.xlsx --commit) && shred -u server/data/students.xlsx
+fi
+
 # Tell Passenger to restart the app
 mkdir -p server/tmp && touch server/tmp/restart.txt
 echo "✓ deployed"
