@@ -1,10 +1,12 @@
-// Imports the university student list (.xlsx or CSV) as eligible voters of the 1405-1406 association
-// elections; each student goes to the election of their major's association. National IDs are never
-// stored — only the per-election HMAC (same as the admin import / verifyVoter).
+// Imports the university student list (Excel .xlsx or CSV) as eligible voters of the 1405-1406
+// association elections. Each student is placed in the election of their major's association.
+// National IDs are never stored: only the per-election HMAC (same as the admin import / verifyVoter).
+//
 // Usage (in server/):
-//   npm run import-voters -- /root/students.xlsx            # dry run
+//   npm run import-voters -- /root/students.xlsx            # dry run: counts + problems only
 //   npm run import-voters -- /root/students.xlsx --commit   # write
-// Prints no student numbers or national IDs. Safe to re-run.
+// Expected columns: شماره دانشجو, نام خانوادگی, نام, شماره ملی, نام رشته تحصیلی (مقطع optional).
+// Prints no student numbers or national IDs. Safe to re-run (existing voters are skipped).
 import 'dotenv/config';
 import { readFileSync } from 'node:fs';
 import { inflateRawSync } from 'node:zlib';
@@ -17,6 +19,7 @@ if (!file) { console.error('Usage: npm run import-voters -- <file.xlsx|file.csv>
 const pepper = process.env.ZITE_VOTER_PEPPER ?? process.env.VOTER_PEPPER;
 if (!pepper || pepper.length < 32) { console.error('ZITE_VOTER_PEPPER is missing or too short in server/.env'); process.exit(1); }
 
+// ── reading ──────────────────────────────────────────────────────────────
 function unzip(buf) {
   let eocd = buf.length - 22;
   while (eocd >= 0 && buf.readUInt32LE(eocd) !== 0x06054b50) eocd--;
@@ -59,6 +62,7 @@ function readCsv(path) {
   return readFileSync(path, 'utf8').replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean).map((l) => l.split(/,|\t|;/).map((x) => x.replace(/^"|"$/g, '')));
 }
 
+// ── normalizing ──────────────────────────────────────────────────────────
 const norm = (s) => String(s ?? '').replace(/[يى]/g, 'ی').replace(/ك/g, 'ک').replace(/[\u064B-\u065F\u0670]/g, '').replace(/[\u200c\u200f\u200e]/g, ' ').replace(/\s+/g, ' ').trim();
 const digits = (s) => String(s ?? '').replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/\.0+$/, '').replace(/\D/g, '');
 function nationalId(raw) {
@@ -90,17 +94,20 @@ function associationFor(major) {
   return null;
 }
 
+// ── main ─────────────────────────────────────────────────────────────────
 const table = /\.csv$|\.txt$/i.test(file) ? readCsv(file) : readXlsx(file);
 const header = table[0].map(norm);
 const col = (...names) => header.findIndex((h) => names.some((n) => h.replace(/ /g, '') === norm(n).replace(/ /g, '')));
 const C = { sn: col('شماره دانشجو', 'شماره دانشجویی'), last: col('نام خانوادگی'), first: col('نام'), nid: col('شماره ملی', 'کد ملی'), major: col('نام رشته تحصیلی', 'رشته') };
-for (const [k, v] of Object.entries(C)) if (v < 0) { console.error('Column not found: ' + k + '. Header: ' + header.join(' | ')); process.exit(1); }
+for (const [k, v] of Object.entries(C)) if (v < 0) { console.error(`Column not found: ${k}. Header: ${header.join(' | ')}`); process.exit(1); }
 
 const db = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : undefined });
 await db.connect();
-const el = await db.query('SELECT a."slug", e.id, e.status, e."title" FROM "Elections" e JOIN "AssociationYears" ay ON ay.id = e."associationYearId" JOIN "Associations" a ON a.id = ay."associationId" JOIN "AcademicYears" y ON y.id = ay."academicYearId" WHERE y."title" = \'1405-1406\'');
+const el = await db.query(`SELECT a."slug", e.id, e.status, e."title" FROM "Elections" e
+  JOIN "AssociationYears" ay ON ay.id = e."associationYearId" JOIN "Associations" a ON a.id = ay."associationId"
+  JOIN "AcademicYears" y ON y.id = ay."academicYearId" WHERE y."title" = '1405-1406'`);
 const elections = Object.fromEntries(el.rows.map((r) => [r.slug, r]));
-const majors = Object.fromEntries((await db.query('SELECT id, "name" FROM "Majors"')).rows.map((r) => [norm(r.name), r.id]));
+const majors = Object.fromEntries((await db.query(`SELECT id, "name" FROM "Majors"`)).rows.map((r) => [norm(r.name), r.id]));
 const OPEN = ['Draft', 'Candidacy Open', 'Candidate Review', 'Final List'];
 
 const problems = {}; const unmapped = {}; const out = []; const seen = new Set();
@@ -115,15 +122,15 @@ for (const r of table.slice(1)) {
   const a = associationFor(majorName);
   if (!a) { bump(unmapped, majorName || '(خالی)'); continue; }
   const e = elections[a[0]]; const majorId = majors[norm(a[1])];
-  if (!e || !majorId) { bump(problems, 'انتخابات/رشته‌ی ' + a[0] + ' در دیتابیس نیست (npm run migrate اجرا شده؟)'); continue; }
-  if (!OPEN.includes(e.status)) { bump(problems, '«' + e.title + '» در وضعیت ' + e.status + ' است و قفل است'); continue; }
-  out.push({ e, sn, majorId, fullName: norm(r[C.first] + ' ' + r[C.last]).slice(0, 150), majorName: majorName.slice(0, 150),
-    hash: createHmac('sha256', pepper).update('nid:v2:' + e.id + ':' + nid).digest('hex'), last4: nid.slice(-4) });
+  if (!e || !majorId) { bump(problems, `انتخابات/رشته‌ی ${a[0]} در دیتابیس نیست (npm run migrate اجرا شده؟)`); continue; }
+  if (!OPEN.includes(e.status)) { bump(problems, `«${e.title}» در وضعیت ${e.status} است و قفل است`); continue; }
+  out.push({ e, sn, majorId, fullName: norm(`${r[C.first]} ${r[C.last]}`).slice(0, 150), majorName: majorName.slice(0, 150),
+    hash: createHmac('sha256', pepper).update(`nid:v2:${e.id}:${nid}`).digest('hex'), last4: nid.slice(-4) });
 }
 
 const per = {};
 for (const v of out) bump(per, v.e.title);
-console.log('\nردیف‌های معتبر: ' + out.length + ' از ' + (table.length - 1));
+console.log(`\nردیف‌های معتبر: ${out.length} از ${table.length - 1}`);
 console.table(Object.entries(per).map(([t, n]) => ({ انتخابات: t, رأی‌دهنده: n })));
 if (Object.keys(problems).length) { console.log('ردشده‌ها:'); console.table(problems); }
 if (Object.keys(unmapped).length) { console.log('رشته‌های بدون انجمن (وارد نشدند):'); console.table(unmapped); }
@@ -133,13 +140,14 @@ let inserted = 0;
 await db.query('BEGIN');
 try {
   for (const v of out) {
-    const r = await db.query('INSERT INTO "EligibleVoters" ("studentNumber", "election", "major", "fullName", "majorName", "nationalIdHash", "nationalIdLast4") VALUES ($1, jsonb_build_array($2::text), jsonb_build_array($3::text), $4, $5, $6, $7) ON CONFLICT ("electionId", "studentNumber") DO NOTHING',
+    const r = await db.query(`INSERT INTO "EligibleVoters" ("studentNumber", "election", "major", "fullName", "majorName", "nationalIdHash", "nationalIdLast4")
+      VALUES ($1, jsonb_build_array($2::text), jsonb_build_array($3::text), $4, $5, $6, $7) ON CONFLICT ("electionId", "studentNumber") DO NOTHING`,
       [v.sn, v.e.id, v.majorId, v.fullName, v.majorName, v.hash, v.last4]);
     inserted += r.rowCount;
   }
-  await db.query('INSERT INTO "AuditLogs" ("action", "entity", "entityId", "details", "actorEmail") VALUES (\'create\', \'voters\', \'all-1405\', $1, \'script:import-voters\')',
-    ['imported ' + inserted + ' voters (' + (out.length - inserted) + ' already present)']);
+  await db.query(`INSERT INTO "AuditLogs" ("action", "entity", "entityId", "details", "actorEmail") VALUES ('create', 'voters', 'all-1405', $1, 'script:import-voters')`,
+    [`imported ${inserted} voters (${out.length - inserted} already present)`]);
   await db.query('COMMIT');
 } catch (e) { await db.query('ROLLBACK'); throw e; }
-console.log('\n✓ ثبت شد: ' + inserted + ' رأی‌دهنده‌ی جدید (' + (out.length - inserted) + ' از قبل بودند).');
+console.log(`\n✓ ثبت شد: ${inserted} رأی‌دهنده‌ی جدید (${out.length - inserted} از قبل بودند).`);
 await db.end();

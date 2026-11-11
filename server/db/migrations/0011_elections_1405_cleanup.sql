@@ -1,8 +1,10 @@
 -- 0011: پاک‌سازی انتخابات ۱۴۰۵-۱۴۰۶ پس از تطبیق فایل نامزدها با فهرست دانشجویان
 -- 1) انجمن مهندسی برق و مهندسی پزشکی یک انجمن است.
--- 2) نگاشت رشته ← انجمن (AssociationMajors) برای هر ۱۳ انجمن؛ بدون آن هیچ رأی‌دهنده‌ای احراز نمی‌شود.
--- 3) نامزدهای با شماره‌ی دانشجویی نامعتبر: شماره خالی + «نیاز به بررسی». Idempotent.
+-- 2) نگاشت رشته ← انجمن (AssociationMajors) برای هر ۱۳ انجمن ساخته می‌شود؛ بدون آن هیچ رأی‌دهنده‌ای احراز نمی‌شود.
+-- 3) نامزدهایی که شماره‌ی دانشجویی‌شان در فهرست نیست یا مال شخص دیگری است: شماره خالی + «نیاز به بررسی».
+-- Idempotent.
 
+-- 1) Electrical + Biomedical
 UPDATE "Associations" a
 SET "name" = 'انجمن علمی مهندسی برق و مهندسی پزشکی',
     "shortDescription" = 'انجمن علمی دانشجویی رشته‌های مهندسی برق و مهندسی پزشکی دانشگاه شمال',
@@ -19,6 +21,7 @@ UPDATE "Elections" SET "title" = 'انتخابات انجمن علمی مهند�
   "description" = replace("description", 'انجمن علمی مهندسی برق،', 'انجمن علمی مهندسی برق و مهندسی پزشکی،')
 WHERE "title" = 'انتخابات انجمن علمی مهندسی برق — ۱۴۰۵-۱۴۰۶';
 
+-- 2) Major → association mapping for 1405-1406 (one row per association major)
 INSERT INTO "AssociationMajors" ("label", "associationYear", "major", "needsUniversityApproval")
 SELECT a."name" || ' ← ' || m."name", jsonb_build_array(ay.id), jsonb_build_array(m.id), false
 FROM "Associations" a
@@ -28,6 +31,8 @@ JOIN LATERAL jsonb_array_elements_text(a."major") mj(id) ON true
 JOIN "Majors" m ON m.id = mj.id
 ON CONFLICT ("associationYearId", "majorId") DO NOTHING;
 
+-- 3) Candidates needing manual review
+-- 3a) Student number belongs to another person in the university student list
 UPDATE "Candidates" c SET "studentNumber" = NULL,
   "reviewNote" = 'نیاز به بررسی: شماره‌ی دانشجویی ' || v.s || ' در فهرست دانشجویان به نام «' || v.owner || '» است.'
 FROM (VALUES
@@ -38,6 +43,7 @@ FROM (VALUES
 ) AS v(n, s, owner)
 WHERE c."fullName" = v.n AND c."studentNumber" = v.s;
 
+-- 3b) Student number not in the university student list
 UPDATE "Candidates" c SET "studentNumber" = NULL,
   "reviewNote" = 'نیاز به بررسی: شماره‌ی دانشجویی ' || v.s || ' در فهرست دانشجویان وجود ندارد.'
 FROM (VALUES
@@ -47,13 +53,17 @@ FROM (VALUES
 ) AS v(n, s)
 WHERE c."fullName" = v.n AND c."studentNumber" = v.s;
 
+-- 3c) Name typo in the candidate file (student list: نگین درزی)
 UPDATE "Candidates" SET "fullName" = 'نگین درزی'
 WHERE "fullName" = 'نگین رزی' AND "studentNumber" = '4021272040';
 
+-- 3d) «فاطمه کرد» was entered from the student list in place of the candidate «ملینا نجاریان»
+--     (the candidate file lists ملینا نجاریان with that number). Keep the real candidate, flagged.
 DELETE FROM "Candidates" WHERE "fullName" = 'فاطمه کرد' AND "studentNumber" = '4042283002';
 UPDATE "Candidates" SET "reviewNote" = 'نیاز به بررسی: در فایل نامزدها با شماره‌ی 4042283002 آمده که در فهرست دانشجویان به نام «فاطمه کرد» است.'
 WHERE "fullName" = 'ملینا نجاریان';
 
+-- 3e) Listed without a student number
 UPDATE "Candidates" SET "reviewNote" = 'نیاز به بررسی: در فایل نامزدها شماره‌ی دانشجویی ندارد.'
 WHERE "fullName" = 'جواد محمدپور' AND "studentNumber" IS NULL;
 UPDATE "Candidates" SET "reviewNote" = 'نیاز به بررسی: بدون شماره‌ی دانشجویی؛ احتمالاً همان «سیده ماهان طباطبایی» (4032272006) است.'
