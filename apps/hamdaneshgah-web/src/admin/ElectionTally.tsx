@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -19,7 +20,7 @@ export default function ElectionTally() {
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
         <h1 className="text-2xl font-extrabold">شمارش آرا</h1>
-        <p className="mt-2 text-sm text-muted-foreground">شمارش فقط پس از پایان رأی‌گیری نمایش داده می‌شود. مراحل به ترتیب: پایان رأی‌گیری ← شمارش ← تأیید نتایج ← اعلام عمومی ← بایگانی.</p>
+        <p className="mt-2 text-sm text-muted-foreground">شمارش فقط پس از پایان رأی‌گیری نمایش داده می‌شود. مراحل به ترتیب: پایان رأی‌گیری ← شمارش ← تأیید نتایج ← اعلام عمومی ← بایگانی. صورت‌جلسه‌ی رسمی و خروجی‌ها در <Link to="/admin/reports" className="font-bold text-primary underline">گزارش رسمی نتایج</Link>.</p>
       </div>
       <div className="grid gap-2 rounded-2xl border bg-card p-5">
         <Label>انتخابات</Label>

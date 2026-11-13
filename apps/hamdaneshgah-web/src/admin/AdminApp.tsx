@@ -1,7 +1,7 @@
 import { createContext, useContext, useState } from 'react';
 import { Link, NavLink, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { LayoutDashboard, Users, Building2, BookOpen, Newspaper, CalendarDays, Tags, Image, ShieldCheck, ScrollText, Settings, Inbox, Menu, LogOut, ExternalLink, Loader2, Lock, CalendarRange, Network, GitMerge, BadgeCheck, UserCog, Vote, UserCheck, ListChecks, Upload, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Users, Building2, BookOpen, Newspaper, CalendarDays, Tags, Image, ShieldCheck, ScrollText, Settings, Inbox, Menu, LogOut, ExternalLink, Loader2, Lock, CalendarRange, Network, GitMerge, BadgeCheck, UserCog, Vote, UserCheck, ListChecks, Upload, BarChart3, FileBarChart } from 'lucide-react';
 import { useAuth, logout } from '../lib/auth';
 import { getMyAccess, claimSuperAdmin, adminOptions, GetMyAccessOutputType } from '../lib/api';
 import { Button } from '@project/components/ui/button';
@@ -37,6 +37,7 @@ const NAV = [
   { to: '/admin/voters', label: 'واجدین رأی', icon: ListChecks, entity: 'voters' },
   { to: '/admin/voter-import', label: 'ورود فهرست واجدین', icon: Upload, entity: 'voters' },
   { to: '/admin/tally', label: 'شمارش آرا', icon: BarChart3, entity: 'elections' },
+  { to: '/admin/reports', label: 'گزارش رسمی نتایج', icon: FileBarChart, entity: 'elections' },
   { to: '/admin/categories', label: 'دسته‌بندی‌ها', icon: Tags, entity: 'categories' },
   { to: '/admin/media', label: 'رسانه‌ها', icon: Image, entity: 'media' },
   { to: '/admin/messages', label: 'پیام‌ها', icon: Inbox, entity: 'messages' },

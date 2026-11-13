@@ -16,6 +16,9 @@ import { HowToVote, MajorFinder, ElectionFaq } from '../components/site/Election
 import { useTitle } from '../lib/useTitle';
 import { placeVoter } from '../lib/majorMap';
 import { faDate, faNum } from '../lib/format';
+import { getElectionReports } from '../lib/api';
+import ReportExportBar from '../components/report/ReportExportBar';
+import { shortPrint, type ElectionReport } from '../lib/reportExport';
 
 const useElections = () => useQuery({ queryKey: ['publicElections'], queryFn: () => listPublicElections({}) });
 const short = (e: Election) => (e.association ?? e.title).replace(/^انجمن علمی\s*/, '');
@@ -168,6 +171,7 @@ export function ElectionDetail() {
             <h2 className="text-xl font-extrabold">{e.isDemo ? 'نتایج نمایشی (غیررسمی)' : 'نتایج رسمی'}</h2>
             <Turnout turnout={Number(e.turnout ?? 0)} eligible={Number(e.eligible ?? 0)} />
             {Number(e.blank ?? 0) > 0 && <p className="text-sm text-muted-foreground">رأی سفید: {faNum(e.blank)}</p>}
+            {!e.isDemo && <PublicReport electionId={e.id} />}
           </section>
         )}
 
@@ -221,3 +225,15 @@ function VoteBar({ votes, max }: { votes: number; max: number }) {
 }
 
 export { VotePage } from './Vote';
+
+function PublicReport({ electionId }: { electionId: string }) {
+  const q = useQuery({ queryKey: ['publicReport', electionId], queryFn: () => getElectionReports({ electionId }) as Promise<{ reports: ElectionReport[] }> });
+  const reports = q.data?.reports ?? [];
+  if (!reports.length) return null;
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div><p className="font-bold">صورت‌جلسه‌ی رسمی نتایج</p><p className="text-xs text-muted-foreground">با اثر انگشت رمزنگاری‌شده برای راستی‌آزمایی: <code dir="ltr">{shortPrint(reports[0].fingerprint)}…</code></p></div>
+      <ReportExportBar reports={reports} formats={['pdf', 'xlsx', 'csv']} />
+    </div>
+  );
+}

@@ -52,6 +52,8 @@ export const adminSave = (input?: any): Promise<any> => call('adminSave', input)
 export type AdminSaveInputType = any;
 export type AdminSaveOutputType = any;
 export const adminTally = (input?: any): Promise<any> => call('adminTally', input);
+export const adminElectionReports = (input?: any): Promise<any> => call('adminElectionReports', input);
+export const getElectionReports = (input?: any): Promise<any> => call('getElectionReports', input);
 export type AdminTallyInputType = any;
 export type AdminTallyOutputType = any;
 export const castVote = (input?: any): Promise<any> => call('castVote', input);

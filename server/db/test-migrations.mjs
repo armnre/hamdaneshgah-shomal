@@ -194,3 +194,26 @@ console.log(process.exitCode ? 'MIGRATION TESTS FAILED' : 'ALL MIGRATION TESTS P
 try { await db.exec(`UPDATE "Elections" SET "isDemo" = true WHERE id = 'e4'`); console.log('FAIL: demo row accepted on Neon'); process.exitCode = 1; } catch { console.log('pass (rejected): demo data on Neon (0007)'); }
 { const r = (await q(`SELECT count(*)::int n FROM "Associations" WHERE active`)).rows[0].n;
   console.log(r <= 13 ? `pass: 0016 — ${r} انجمن فعال (حداکثر ۱۳)` : `FAIL 0016: ${r}`); if (r > 13) process.exitCode = 1; }
+
+// ───────── گزارش رسمی نتایج روی پایگاه داده‌ی واقعی (همان پرس‌وجوهای reportData.ts) ─────────
+{ const src = fs.readFileSync(new URL('../src/lib/reportData.ts', import.meta.url), 'utf8');
+  const sqls = [...src.matchAll(/query: `([\s\S]*?)`/g)].map((m) => m[1].replace(/\$\{electionId \? 'AND e\.id = \$2' : ''\}/, ''));
+  const { buildElectionReport } = await import(new URL('../src/lib/electionReport.ts', import.meta.url));
+  const post = ['Closed', 'Counting', 'Results Confirmed', 'Results Published', 'Archived'];
+  const els = (await db.query(sqls[0], [post])).rows;
+  const ids = els.map((r) => r.id);
+  const [cands, ballots, stats] = await Promise.all([db.query(sqls[1], [ids]), db.query(sqls[2], [ids]), db.query(sqls[3], [ids])]);
+  let ok = els.length > 0;
+  for (const e of els) {
+    const st = stats.rows.find((s) => s.id === e.id);
+    const b = ballots.rows.filter((x) => x.eid === e.id).map((x) => String(x.ids ?? '').split(',').filter(Boolean));
+    const raw = (await db.query(`SELECT count(*)::int n FROM "Ballots" WHERE "electionId" = $1`, [e.id])).rows[0].n;
+    const rep = await buildElectionReport({ election: { id: e.id, title: e.title, association: e.association, academicYear: e.year, status: e.status, seats: e.seats, maxChoicesPerVoter: e.maxChoicesPerVoter, votingStart: null, votingEnd: null },
+      candidates: cands.rows.filter((c) => c.eid === e.id).map((c) => ({ id: c.id, fullName: c.fullName })), ballots: b, eligible: st.eligible, turnout: st.turnout, generatedAt: new Date().toISOString() });
+    const sum = rep.rows.reduce((s, r) => s + r.votes, 0);
+    if (rep.stats.ballots !== raw || sum !== rep.stats.totalVotes || rep.stats.turnout !== rep.stats.ballots) { ok = false; console.log('FAIL report', e.id, rep.stats, raw, sum); }
+    else console.log(`pass: گزارش رسمی ${e.id} — ${rep.stats.ballots} برگه، ${rep.stats.totalVotes} رأی، مشارکت ${rep.stats.turnoutPercent}٪، منتخبان ${rep.elected.length}، صحت ${rep.integrity.ok ? 'سالم' : 'هشدار'}`);
+  }
+  const draft = (await db.query(sqls[0], [['Voting Open', 'Final List']])).rows.length;
+  console.log(ok ? 'pass: پرس‌وجوهای گزارش روی پایگاه داده درست اجرا شدند' : 'FAIL report queries'); if (!ok) process.exitCode = 1;
+  console.log(`info: ${draft} انتخابات در حال رأی‌گیری/پیش از آن (گزارش ادمین آن‌ها را نمی‌خواند چون وضعیتشان در فهرست مجاز نیست)`); }

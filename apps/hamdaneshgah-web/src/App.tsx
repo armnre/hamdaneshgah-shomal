@@ -23,6 +23,7 @@ const Dashboard = lazy(() => import('./admin/Dashboard'));
 const ResourcePage = lazy(() => import('./admin/ResourcePage'));
 const VoterImport = lazy(() => import('./admin/VoterImport'));
 const ElectionTally = lazy(() => import('./admin/ElectionTally'));
+const ElectionReports = lazy(() => import('./admin/ElectionReports'));
 const AuditPage = lazy(() => import('./admin/OtherPages').then((m) => ({ default: m.AuditPage })));
 const MessagesPage = lazy(() => import('./admin/OtherPages').then((m) => ({ default: m.MessagesPage })));
 const SettingsPage = lazy(() => import('./admin/OtherPages').then((m) => ({ default: m.SettingsPage })));
@@ -69,6 +70,7 @@ export default function App() {
             <Route path="messages" element={<MessagesPage />} />
             <Route path="voter-import" element={<VoterImport />} />
             <Route path="tally" element={<ElectionTally />} />
+            <Route path="reports" element={<ElectionReports />} />
             <Route path=":entity" element={<ResourcePage />} />
           </Route>
         </Routes>
