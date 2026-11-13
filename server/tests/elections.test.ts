@@ -257,3 +257,9 @@ test('فقط ۱۳ انجمن رسمی فعال‌اند: مایگریشن 0016 �
   assert.equal(lists.length, 2);
   for (const l of lists) assert.deepEqual(l, official);
 });
+
+test('فهرست انجمن‌ها: هر انجمن یک‌بار (رشته‌ها با زیرپرس‌وجو، نه JOIN که ردیف تکراری می‌سازد)', () => {
+  const src = read('../src/api/listAssociations.ts');
+  assert.doesNotMatch(src, /LEFT JOIN "AssociationsMajors"/);
+  assert.match(src, /string_agg\(m\."name"/);
+});

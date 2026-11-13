@@ -13,12 +13,11 @@ export default createEndpoint({
     if (input.facultyId) { params.push(input.facultyId); where += ` AND f."id" = $${params.length}`; }
     const res = await zite.sql({
       query: `SELECT a."id", a."name", a."slug", a."shortDescription", a."logoUrl", a."coverUrl", a."featured",
-        f."id" AS "facultyId", f."name" AS "facultyName", m."name" AS "majorName"
+        f."id" AS "facultyId", f."name" AS "facultyName",
+        (SELECT string_agg(m."name", '، ' ORDER BY m."name") FROM "AssociationsMajors" am JOIN "Majors" m ON m."id" = am."majorsId" WHERE am."associationsId" = a."id") AS "majorName"
         FROM "Associations" a
         LEFT JOIN "AssociationsFaculties" af ON af."associationsId" = a."id"
         LEFT JOIN "Faculties" f ON f."id" = af."facultiesId"
-        LEFT JOIN "AssociationsMajors" am ON am."associationsId" = a."id"
-        LEFT JOIN "Majors" m ON m."id" = am."majorsId"
         WHERE ${where} ORDER BY a."featured" DESC NULLS LAST, a."name" LIMIT 200`,
       params,
     });
