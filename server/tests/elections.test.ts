@@ -248,3 +248,12 @@ test('انجمن مشترک برق و مهندسی پزشکی: هر دو رشت�
   const sys = SYSTEM_MAJORS.filter((s) => s.slug === 'electrical-engineering').map((s) => s.major).sort();
   assert.deepEqual(sys, ['مهندسی برق', 'مهندسی پزشکی']);
 });
+
+test('فقط ۱۳ انجمن رسمی فعال‌اند: مایگریشن 0016 با ASSOCIATION_FACULTY هم‌خوان است', () => {
+  const sql = read('../db/migrations/0016_official_associations_only.sql');
+  const lists = [...sql.matchAll(/IN \(([^)]*)\)/g)].map((m) => [...m[1].matchAll(/'([a-z-]+)'/g)].map((x) => x[1]).sort());
+  const official = Object.keys(ASSOCIATION_FACULTY).sort();
+  assert.equal(official.length, 13);
+  assert.equal(lists.length, 2);
+  for (const l of lists) assert.deepEqual(l, official);
+});

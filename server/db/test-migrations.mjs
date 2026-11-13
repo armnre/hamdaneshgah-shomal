@@ -192,3 +192,5 @@ const late = await castTx({ sessionHash: '6c'.repeat(32), electionId: 'e4', code
 console.log(late === 'invalid_session' ? 'pass: vote after close_election rejected' : (process.exitCode = 1, `FAIL: late vote ${late}`));
 console.log(process.exitCode ? 'MIGRATION TESTS FAILED' : 'ALL MIGRATION TESTS PASSED');
 try { await db.exec(`UPDATE "Elections" SET "isDemo" = true WHERE id = 'e4'`); console.log('FAIL: demo row accepted on Neon'); process.exitCode = 1; } catch { console.log('pass (rejected): demo data on Neon (0007)'); }
+{ const r = (await q(`SELECT count(*)::int n FROM "Associations" WHERE active`)).rows[0].n;
+  console.log(r <= 13 ? `pass: 0016 — ${r} انجمن فعال (حداکثر ۱۳)` : `FAIL 0016: ${r}`); if (r > 13) process.exitCode = 1; }
