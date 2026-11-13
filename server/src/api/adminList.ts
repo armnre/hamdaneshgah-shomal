@@ -20,8 +20,14 @@ export default createEndpoint({
   outputSchema: z.any(),
   execute: async ({ input, context }) => {
     const access = await requireAccess(context.user, input.entity);
-    const table = tableOf(input.entity) as unknown as { findAll: (p: object) => Promise<{ records: Record<string, unknown>[] }> };
-    const { records } = await table.findAll({ limit: 2000 });
+    const table = tableOf(input.entity) as unknown as { findAll: (p: object) => Promise<{ records: Record<string, unknown>[]; hasMore?: boolean }> };
+    // همه‌ی ردیف‌ها، صفحه‌به‌صفحه (هر صفحه حداکثر ۲۰۰۰) — فهرست واجدین بیش از ۲۰۰۰ نفر است
+    const records: Record<string, unknown>[] = [];
+    for (let offset = 0; ; offset += 2000) {
+      const page = await table.findAll({ limit: 2000, offset });
+      records.push(...page.records);
+      if (!page.hasMore || page.records.length < 2000) break;
+    }
     let rows = records.map((r) => {
       const out: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(r)) out[k] = Array.isArray(v) && ['faculty', 'major', 'category', 'association', 'member', 'actor', 'academicYear', 'associationYear', 'position', 'election'].includes(k) ? first(v as string[]) : v;

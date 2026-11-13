@@ -15,6 +15,25 @@ const q=(s)=>db.query(s);
 const expectFail=async(n,s)=>{try{await db.exec(s);console.log('FAIL (accepted):',n);process.exitCode=1}catch(e){console.log('pass (rejected):',n)}};
 { const c=await db.query(`SELECT (SELECT count(*) FROM "Candidates")::int n, (SELECT count(*) FROM "Candidates" WHERE "reviewNote" LIKE 'نیاز به بررسی%')::int r, (SELECT count(*) FROM "AssociationMajors")::int am`); console.log('0011:', JSON.stringify(c.rows[0])); }
 // 0008 ships real 1405-1406 election data; the fixtures below need empty tables.
+// 0015: همه‌ی رشته‌های رسمی ثبت شده‌اند، هر کدام دانشکده دارد و (جز محیط زیست) به انجمن درست نگاشت شده؛ اجرای دوباره چیزی اضافه نمی‌کند
+{ const sql0015 = fs.readFileSync(new URL('0015_major_catalog.sql', dir), 'utf8');
+  const names = [...sql0015.matchAll(/^  \('([^']+)', '([a-z-]+)', (NULL|'([a-z-]+)')\)/gm)].map((m) => ({ name: m[1], slug: m[4] ?? null }));
+  const strip = (s) => s.replace(/[\s\u200c]/g, '');
+  const cnt = async () => (await q(`SELECT (SELECT count(*) FROM "Majors")::int m, (SELECT count(*) FROM "AssociationMajors")::int am`)).rows[0];
+  const before = await cnt();
+  let bad = 0;
+  for (const n of names) {
+    const all = (await q(`SELECT id, name, faculty FROM "Majors"`)).rows.filter((x) => strip(x.name) === strip(n.name));
+    if (all.length !== 1) { bad++; console.log('FAIL major count', n.name, all.length); continue; }
+    if (!all[0].faculty.length) { bad++; console.log('FAIL no faculty', n.name); }
+    const s = (await q(`SELECT a.slug FROM "AssociationMajors" am JOIN "AssociationYears" ay ON ay.id = am."associationYearId" JOIN "Associations" a ON a.id = ay."associationId" JOIN "AcademicYears" y ON y.id = ay."academicYearId" AND y.title = '1405-1406' WHERE am."majorId" = '${all[0].id}'`)).rows.map((x) => x.slug);
+    if (n.slug ? (s.length !== 1 || s[0] !== n.slug) : s.length !== 0) { bad++; console.log('FAIL mapping', n.name, s, n.slug); }
+  }
+  const { splitSql: sp } = await import(new URL('./splitSql.mjs', import.meta.url));
+  await db.transaction(async (tx) => { for (const st of sp(sql0015)) await tx.exec(st); });
+  const after = await cnt();
+  if (bad || names.length < 40 || before.m !== after.m || before.am !== after.am) { console.log('FAIL 0015', bad, names.length, before, after); process.exitCode = 1; }
+  else console.log(`pass: 0015 — ${names.length} رشته‌ی رسمی، هر کدام یک‌بار، با دانشکده و نگاشت درست؛ اجرای دوباره بی‌اثر`); }
 await db.exec(`DELETE FROM "AssociationMajors"; DELETE FROM "Candidates"; DELETE FROM "Elections"; DELETE FROM "AssociationYears"; DELETE FROM "Associations"; DELETE FROM "AcademicYears"; DELETE FROM "Majors"; DELETE FROM "Faculties";`);
 await db.exec(`INSERT INTO "Faculties"(id,name) VALUES('f1','F'); INSERT INTO "Majors"(id,name) VALUES('m1','PE'),('m2','SS');
 INSERT INTO "Associations"(id,name) VALUES('a1','Sport'),('a2','Other');
