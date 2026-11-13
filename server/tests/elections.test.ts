@@ -213,3 +213,38 @@ test('فهرست رسمی رشته‌ها: دانشکده‌ی هر رشته ب�
 test('فهرست ادمین همه‌ی ردیف‌ها را صفحه‌به‌صفحه می‌آورد (نه فقط ۲۰۰۰)', () => {
   assert.match(read('../src/api/adminList.ts'), /offset \+= 2000/);
 });
+
+// رشته‌های چارت رسمی سه دانشکده (همه‌ی مقاطع) — هر کدام یا انجمن خودش را دارد یا در pool دانشکده است
+test('چارت رسمی رشته‌ها: همه‌ی رشته‌ها جای رأی درست دارند', () => {
+  const CHART: Record<string, string> = {
+    'مهندسی عمران (حمل‌ونقل)': 'civil-engineering', 'مهندسی عمران': 'civil-engineering', 'مهندسی معماری': 'architecture',
+    'مهندسی و علم کامپیوتر': 'computer-engineering', 'مهندسی برق': 'electrical-engineering', 'مهندسی پزشکی': 'electrical-engineering',
+    'مهندسی مکاترونیک': 'mechanical-engineering', 'مهندسی شیمی': 'chemical-engineering', 'مهندسی صنایع': 'industrial-engineering',
+    'معماری داخلی': 'architecture', 'مهندسی شهرسازی': 'civil-engineering', 'مهندسی کامپیوتر': 'computer-engineering',
+    'مهندسی صنایع و سیستم‌ها': 'industrial-engineering', 'مهندسی مکانیک': 'mechanical-engineering', 'مهندسی نقشه‌برداری': 'civil-engineering',
+    'عمران': 'civil-engineering', 'الکترونیک کاربردی': 'electrical-engineering', 'برق قدرت': 'electrical-engineering',
+    'کامپیوتر نرم‌افزار': 'computer-engineering', 'معماری': 'architecture',
+    'حسابداری': 'accounting', 'حسابرسی': 'accounting', 'حسابداری قضایی': 'accounting', 'حقوق بین‌الملل': 'law', 'حقوق خصوصی': 'law',
+    'حقوق عمومی': 'law', 'حقوق کیفری و جرم‌شناسی': 'law', 'مدیریت دولتی': 'management', 'مدیریت صنعتی': 'management',
+    'مدیریت کسب‌وکار': 'management', 'حقوق': 'law', 'علوم قضایی': 'law', 'روان‌شناسی': 'psychology', 'علوم تربیتی': 'educational-sciences',
+    'مدیریت بازرگانی': 'management', 'مدیریت مالی': 'management',
+    'مدیریت ورزشی': 'sport-sciences', 'آسیب‌شناسی ورزشی و تمرینات اصلاحی': 'sport-sciences', 'فیزیولوژی ورزشی': 'sport-sciences',
+    'علوم ورزشی': 'sport-sciences', 'تربیت بدنی': 'sport-sciences',
+  };
+  for (const [m, slug] of Object.entries(CHART)) {
+    const p = placeVoter(m);
+    assert.equal(p?.kind, 'association', m);
+    if (p?.kind === 'association') assert.equal(p.rule.slug, slug, m);
+  }
+  const env = placeVoter('علوم و مهندسی محیط زیست');
+  assert.equal(env?.kind, 'faculty');
+  if (env?.kind === 'faculty') assert.ok(env.associations.some((a) => a.slug === 'electrical-engineering'));
+});
+
+test('انجمن مشترک برق و مهندسی پزشکی: هر دو رشته به یک انجمن، با رشته‌ی سیستمی جدا', () => {
+  const b = associationForMajor('مهندسي برق - سيستم هاي قدرت'), p = associationForMajor('مهندسي پزشكي-بيوالكتريك');
+  assert.equal(b?.slug, 'electrical-engineering'); assert.equal(p?.slug, 'electrical-engineering');
+  assert.equal(b?.major, 'مهندسی برق'); assert.equal(p?.major, 'مهندسی پزشکی');
+  const sys = SYSTEM_MAJORS.filter((s) => s.slug === 'electrical-engineering').map((s) => s.major).sort();
+  assert.deepEqual(sys, ['مهندسی برق', 'مهندسی پزشکی']);
+});
