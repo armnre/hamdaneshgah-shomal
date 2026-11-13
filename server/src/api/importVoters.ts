@@ -3,6 +3,7 @@ import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from 'zitejs/db';
 import { requireAccess, audit } from '../lib/server';
 import { normalizeNationalId, normalizeStudentNumber, resolveMajor } from '../lib/policy';
+import { associationForMajor, normalizeMajor } from '../lib/majorMap';
 import { hashNationalId, requirePepper, mappedMajors } from '../lib/voterHash';
 
 const Row = z.object({ studentNumber: z.string(), nationalId: z.string(), fullName: z.string().optional(), majorName: z.string().optional() });
@@ -41,7 +42,9 @@ export default createEndpoint({
       const nid = normalizeNationalId(r.nationalId);
       if (!sn) { errors.push({ row, message: 'شماره دانشجویی نامعتبر است' }); continue; }
       if (!nid) { errors.push({ row, message: 'کد ملی نامعتبر است' }); continue; }
-      const majorId = resolveMajor(r.majorName, majors);
+      // گرایش‌ها و نام‌های دانشگاه (مثلاً «مهندسی عمران-سازه») هم با قواعد majorMap به رشته‌ی اصلی می‌رسند
+      const rule = associationForMajor(r.majorName);
+      const majorId = resolveMajor(r.majorName, majors) ?? (rule ? majors.find((m) => normalizeMajor(m.name) === normalizeMajor(rule.major))?.id ?? null : null);
       if (!majorId) {
         needsReview++;
         errors.push({ row, message: r.majorName?.trim() ? 'رشته به انجمن این انتخابات نگاشت نشده است — نیازمند بررسی دستی' : 'رشته خالی است — نیازمند بررسی دستی' });

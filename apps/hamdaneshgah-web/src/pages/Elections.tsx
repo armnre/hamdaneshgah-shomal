@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Vote, Trophy, Search, ScrollText, ArrowRight, ChevronLeft, IdCard, ListChecks, ShieldCheck, Users, Armchair, CalendarClock, Building2 } from 'lucide-react';
+import { Vote, Trophy, Search, ScrollText, ArrowRight, ChevronLeft, ShieldCheck, GraduationCap, Users, Armchair, CalendarClock, Building2 } from 'lucide-react';
 import { CandidateAvatar } from '../components/site/CandidateAvatar';
 import { DemoBadge, STAGE, StatusPill, type Election } from '../components/site/ElectionCards';
 import { StageTimeline, Countdown } from '../components/site/ElectionUI';
@@ -12,17 +12,13 @@ import { Input } from '@project/components/ui/input';
 import { Skeleton } from '@project/components/ui/skeleton';
 import { EmptyState, ErrorState } from '../components/site/ui';
 import { useSettings } from '../components/site/PublicLayout';
+import { HowToVote, MajorFinder, ElectionFaq } from '../components/site/ElectionGuide';
 import { useTitle } from '../lib/useTitle';
+import { placeVoter } from '../lib/majorMap';
 import { faDate, faNum } from '../lib/format';
 
 const useElections = () => useQuery({ queryKey: ['publicElections'], queryFn: () => listPublicElections({}) });
 const short = (e: Election) => (e.association ?? e.title).replace(/^انجمن علمی\s*/, '');
-
-const HOW = [
-  { icon: Search, t: 'انجمن رشته‌ات را پیدا کن', d: 'هر دانشجو فقط در انجمن رشته‌ی خودش رأی می‌دهد.' },
-  { icon: IdCard, t: 'با شماره دانشجویی و کد ملی وارد شو', d: 'کد ملی ذخیره نمی‌شود؛ فقط برای تطبیق است.' },
-  { icon: ListChecks, t: 'نامزدت را انتخاب و رأی را ثبت کن', d: 'رأی بی‌نام ذخیره می‌شود و کد پیگیری می‌گیری.' },
-];
 
 export function ElectionsList() {
   useTitle('انتخابات انجمن‌های علمی', 'زمان‌بندی، نامزدهای تأییدشده و نتایج رسمی انتخابات انجمن‌های علمی دانشگاه شمال');
@@ -30,7 +26,9 @@ export function ElectionsList() {
   const q = useElections();
   const list = q.data?.elections ?? [];
   const [text, setText] = useState('');
-  const shown = list.filter((e) => !text.trim() || `${e.association ?? ''} ${e.title}`.includes(text.trim()));
+  const place = text.trim().length > 1 ? placeVoter(text) : null;
+  const slugs = place?.kind === 'association' ? [place.rule.slug] : place?.kind === 'faculty' ? place.associations.map((a) => a.slug) : [];
+  const shown = list.filter((e) => !text.trim() || `${e.association ?? ''} ${e.title}`.includes(text.trim()) || slugs.includes(e.associationSlug ?? ''));
   const sum = useMemo(() => {
     const real = list.filter((e) => !e.isDemo);
     return {
@@ -51,7 +49,7 @@ export function ElectionsList() {
           <div>
             <p className="text-sm font-semibold text-accent">سال تحصیلی ۱۴۰۵–۱۴۰۶</p>
             <h1 className="font-display mt-2 text-3xl font-black leading-[1.4] sm:text-5xl">انتخابات انجمن‌های علمی</h1>
-            <p className="mt-4 max-w-lg leading-8 text-primary-foreground/80">همه‌ی انجمن‌ها هم‌زمان رأی می‌دهند. انجمن رشته‌ات را پیدا کن، نامزدها را بشناس و در روز رأی‌گیری رأی بده.</p>
+            <p className="mt-4 max-w-lg leading-8 text-primary-foreground/80">همه‌ی انجمن‌ها هم‌زمان رأی می‌دهند. با شماره دانشجویی و کد ملی وارد شو؛ انجمن رشته‌ات خودکار پیدا می‌شود.</p>
             {sum.count > 0 && (
               <div className="mt-6 flex flex-wrap gap-2 text-sm">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/10 px-3 py-1.5"><Building2 className="h-4 w-4 text-accent" />{faNum(sum.count)} انجمن</span>
@@ -59,7 +57,10 @@ export function ElectionsList() {
                 {sum.start && <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/10 px-3 py-1.5"><CalendarClock className="h-4 w-4 text-accent" />{faDate(sum.start)}</span>}
               </div>
             )}
-            {sum.open && <Button asChild size="lg" className="mt-6 h-12 w-full rounded-full bg-accent px-8 font-bold text-accent-foreground hover:bg-accent/90 sm:w-auto"><Link to="/vote"><Vote className="ms-2 h-5 w-5" />ورود به رأی‌گیری</Link></Button>}
+            <div className="mt-7 flex flex-col gap-2 sm:flex-row">
+              {sum.open && <Button asChild size="lg" className="h-12 rounded-full bg-accent px-8 font-bold text-accent-foreground hover:bg-accent/90"><Link to="/vote"><Vote className="ms-2 h-5 w-5" />ورود به رأی‌گیری</Link></Button>}
+              <Button asChild size="lg" variant="ghost" className="h-12 rounded-full border border-primary-foreground/25 px-6 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"><a href="#finder"><GraduationCap className="ms-2 h-5 w-5" />رشته‌ام کدام انجمن است؟</a></Button>
+            </div>
           </div>
           {sum.start && (
             <div className="min-w-0 rounded-2xl bg-card p-3 text-card-foreground shadow-xl sm:p-6">
@@ -69,21 +70,13 @@ export function ElectionsList() {
         </div>
       </section>
 
-      <div className="container-page -mt-8 pb-16">
-        <ol className="grid gap-3 rounded-2xl border bg-card p-3 shadow-[var(--shadow-md)] sm:grid-cols-3 sm:p-4">
-          {HOW.map(({ icon: Icon, t, d }, i) => (
-            <li key={t} className="flex items-start gap-3 rounded-xl p-2">
-              <span className="relative grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /><span className="absolute -end-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-accent text-[10px] font-black text-accent-foreground">{faNum(i + 1)}</span></span>
-              <span className="min-w-0"><span className="block text-sm font-bold leading-6">{t}</span><span className="text-xs leading-6 text-muted-foreground">{d}</span></span>
-            </li>
-          ))}
-        </ol>
-
-        <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div><h2 className="text-xl font-black sm:text-2xl">انجمن‌ها و نامزدها</h2><p className="mt-1 text-sm text-muted-foreground">روی انجمن بزن تا نامزدهایش را ببینی.</p></div>
+      <div className="container-page space-y-12 py-10 sm:py-14">
+        <div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div><h2 className="text-xl font-black sm:text-2xl">انجمن‌ها و نامزدها</h2><p className="mt-1 text-sm text-muted-foreground">روی هر انجمن بزن تا نامزدهایش را ببینی.</p></div>
           <div className="relative sm:w-72">
             <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-            <Input aria-label="جست‌وجوی انجمن" placeholder="جست‌وجوی انجمن…" value={text} onChange={(x) => setText(x.target.value)} className="h-11 rounded-full ps-9" />
+            <Input aria-label="جست‌وجوی انجمن" placeholder="نام انجمن یا رشته…" value={text} onChange={(x) => setText(x.target.value)} className="h-11 rounded-full ps-9" />
           </div>
         </div>
 
@@ -94,6 +87,12 @@ export function ElectionsList() {
             : !shown.length ? <EmptyState title="انجمنی با این نام یافت نشد" action={<Button variant="outline" onClick={() => setText('')}>پاک کردن جست‌وجو</Button>} />
             : <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{shown.map((e, i) => <Tile key={e.id} e={e} i={i} />)}</div>}
         </div>
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <HowToVote />
+          <MajorFinder elections={list.filter((e) => !e.isDemo)} />
+        </div>
+        <ElectionFaq className="max-w-3xl" />
       </div>
     </>
   );

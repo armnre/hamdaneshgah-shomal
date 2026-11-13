@@ -41,7 +41,7 @@ export default createEndpoint({
     if (!sn || !nid) return reject('format');
 
     const v = await zite.sql({
-      query: `SELECT v.id, v."nationalIdHash" AS h, mm."majorsId" AS major FROM "EligibleVoters" v
+      query: `SELECT v.id, v."nationalIdHash" AS h, v."choiceGroup" AS g, mm."majorsId" AS major FROM "EligibleVoters" v
         JOIN "ElectionsEligibleVoters" l ON l."eligibleVotersId" = v.id
         LEFT JOIN "EligibleVotersMajors" mm ON mm."eligibleVotersId" = v.id
         WHERE l."electionsId" = $1 AND v."studentNumber" = $2 LIMIT 1`,
@@ -53,8 +53,11 @@ export default createEndpoint({
     if (!row || !timingSafeEqual(String(row.h ?? ''), hash)) return reject('identity');
 
     // Major → association rule (AssociationMajors of the election's academic year), enforced on the server
-    const majors = await mappedMajors(input.electionId);
-    if (!row.major || !majors.some((m) => m.id === String(row.major))) return reject('major_not_mapped');
+    // رشته‌های بدون انجمن (choiceGroup) از طریق دانشکده واجد شرایط‌اند، نه نگاشت رشته
+    if (!row.g) {
+      const majors = await mappedMajors(input.electionId);
+      if (!row.major || !majors.some((m) => m.id === String(row.major))) return reject('major_not_mapped');
+    }
 
     const voted = await zite.sql({
       query: `SELECT 1 FROM "EligibleVotersVoterParticipation" vp JOIN "ElectionsVoterParticipation" ep ON ep."voterParticipationId" = vp."voterParticipationId" WHERE vp."eligibleVotersId" = $1 AND ep."electionsId" = $2 LIMIT 1`,
@@ -62,6 +65,14 @@ export default createEndpoint({
     });
     // Identity proven — this attempt is not a failure
     await releaseAttempt(reservation);
+    const votedInGroup = row.g ? await zite.sql({
+      query: `SELECT 1 FROM "VoterParticipation" p JOIN "EligibleVoters" v ON v.id = p."voterId" WHERE v."choiceGroup" = $1 AND v."studentNumber" = $2 LIMIT 1`,
+      params: [row.g, sn],
+    }) : { rows: [] };
+    if (votedInGroup.rows.length && !voted.rows.length) {
+      await audit(anon, 'vote_verify_group_voted', 'elections', input.electionId, `sn=${masked}`);
+      fail('شما قبلاً در انتخابات یکی دیگر از انجمن‌های دانشکده‌تان رأی داده‌اید؛ هر نفر فقط یک رأی دارد.', 'CONFLICT');
+    }
     if (voted.rows.length) {
       await audit(anon, 'vote_verify_already_voted', 'elections', input.electionId, `sn=${masked}`);
       fail('با این مشخصات قبلاً رأی ثبت شده است.', 'CONFLICT');

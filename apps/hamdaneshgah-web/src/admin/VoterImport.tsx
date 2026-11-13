@@ -8,6 +8,7 @@ import { Textarea } from '@project/components/ui/textarea';
 import { Label } from '@project/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@project/components/ui/select';
 import { useOptions } from './AdminApp';
+import AutoVoterImport from './AutoVoterImport';
 import { errMsg, faNum } from '../lib/format';
 
 type Row = { studentNumber: string; nationalId: string; fullName?: string; majorName?: string };
@@ -47,6 +48,10 @@ export default function VoterImport() {
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
         <h1 className="text-2xl font-extrabold">ورود فهرست واجدین رأی</h1>
+      </div>
+      <AutoVoterImport />
+      <div>
+        <h2 className="text-lg font-extrabold">ورود دستی برای یک انتخابات</h2>
         <p className="mt-2 text-sm leading-7 text-muted-foreground">ستون‌ها به ترتیب: <b>شماره دانشجویی، کد ملی، نام، رشته</b>. می‌توانید ردیف‌ها را مستقیم از اکسل کپی کنید یا فایل CSV بارگذاری کنید. کد ملی خام ذخیره نمی‌شود؛ فقط نسخه‌ی رمزنگاری‌شده و ۴ رقم آخر.</p>
       </div>
       <div className="grid gap-4 rounded-2xl border bg-card p-5">

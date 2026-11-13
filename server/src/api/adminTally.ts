@@ -21,7 +21,7 @@ export default createEndpoint({
     const [cands, ballots, stats] = await Promise.all([
       zite.sql({ query: `SELECT c.id, c."fullName" FROM "Candidates" c JOIN "CandidatesElections" l ON l."candidatesId" = c.id WHERE l."electionsId" = $1 AND c.status = 'Approved'`, params: [input.electionId] }),
       zite.sql({ query: `SELECT b."candidateIds" AS ids FROM "Ballots" b JOIN "BallotsElections" l ON l."ballotsId" = b.id WHERE l."electionsId" = $1`, params: [input.electionId] }),
-      zite.sql({ query: `SELECT (SELECT COUNT(*) FROM "ElectionsEligibleVoters" WHERE "electionsId" = $1)::int AS eligible, (SELECT COUNT(*) FROM "ElectionsVoterParticipation" WHERE "electionsId" = $1)::int AS turnout`, params: [input.electionId] }),
+      zite.sql({ query: `SELECT (SELECT COUNT(*) FROM "EligibleVoters" v WHERE v."electionId" = $1 AND (v."choiceGroup" IS NULL OR EXISTS (SELECT 1 FROM "VoterParticipation" p WHERE p."voterId" = v.id)))::int AS eligible, (SELECT COUNT(*) FROM "ElectionsVoterParticipation" WHERE "electionsId" = $1)::int AS turnout`, params: [input.electionId] }),
     ]);
     const tally = new Map<string, number>();
     for (const b of ballots.rows) for (const id of String(b.ids ?? '').split(',').filter(Boolean)) tally.set(id, (tally.get(id) ?? 0) + 1);

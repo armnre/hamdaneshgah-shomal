@@ -25,7 +25,7 @@ const SCHEMA: Record<string, Record<string, Kind>> = {
   LeadershipTerms: { label: 'text', personName: 'text', personEmail: 'text', academicYear: 'link', associationYear: 'link', position: 'link', status: 'text', startDate: 'ts', endDate: 'ts', publishName: 'bool', notes: 'text' },
   Elections: { title: 'text', associationYear: 'link', status: 'text', candidacyStart: 'ts', candidacyEnd: 'ts', votingStart: 'ts', votingEnd: 'ts', seats: 'num', maxChoicesPerVoter: 'num', description: 'text' },
   Candidates: { fullName: 'text', election: 'link', studentNumber: 'text', status: 'text', statement: 'text', photoUrl: 'text', reviewNote: 'text' },
-  EligibleVoters: { studentNumber: 'text', election: 'link', major: 'link', fullName: 'text', majorName: 'text', nationalIdHash: 'text', nationalIdLast4: 'text' },
+  EligibleVoters: { studentNumber: 'text', election: 'link', major: 'link', fullName: 'text', majorName: 'text', nationalIdHash: 'text', nationalIdLast4: 'text', choiceGroup: 'text' },
   VoterParticipation: { label: 'text', election: 'link', voter: 'link', votedOn: 'ts' },
   Ballots: { receipt: 'text', election: 'link', candidateIds: 'text' },
   PendingBallots: { receipt: 'text', election: 'link', candidateIds: 'text' },

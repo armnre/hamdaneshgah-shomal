@@ -54,6 +54,13 @@ export default createEndpoint({
       params: [voterId, electionId],
     });
     if (voted.rows.length) fail('با این مشخصات قبلاً رأی ثبت شده است.', 'CONFLICT');
+    // رشته‌های بدون انجمن: یک رأی در کل انجمن‌های دانشکده (روی Postgres تریگر 0014 هم تضمین می‌کند)
+    const group = await zite.sql({
+      query: `SELECT 1 FROM "EligibleVoters" me JOIN "EligibleVoters" v ON v."choiceGroup" = me."choiceGroup" AND v."studentNumber" = me."studentNumber"
+        JOIN "VoterParticipation" p ON p."voterId" = v.id WHERE me.id = $1 AND me."choiceGroup" IS NOT NULL LIMIT 1`,
+      params: [voterId],
+    });
+    if (group.rows.length) fail('با این مشخصات قبلاً رأی ثبت شده است.', 'CONFLICT');
     await zite.voterParticipation.create({ record: { label: code, election: [electionId], voter: [voterId], votedOn } });
     // Pending only: moved to Ballots (shuffled) when the election closes — see adminElectionStage / lib/sealBallots
     await zite.pendingBallots.create({ record: { receipt: ballotUuid, election: [electionId], candidateIds: choices.join(',') } });

@@ -12,6 +12,7 @@ import { readFileSync } from 'node:fs';
 import { inflateRawSync } from 'node:zlib';
 import { createHmac } from 'node:crypto';
 import pg from 'pg';
+import { associationForMajor } from '../src/lib/majorMap.ts';
 
 const file = process.argv[2];
 const commit = process.argv.includes('--commit');
@@ -73,26 +74,8 @@ function nationalId(raw) {
   return (sum < 2 ? Number(c[9]) === sum : Number(c[9]) === 11 - sum) ? c : null;
 }
 
-// University major name → [association slug, system major name]. Order matters.
-function associationFor(major) {
-  const m = norm(major).replace(/ /g, '');
-  const has = (...w) => w.some((x) => m.includes(x.replace(/ /g, '')));
-  if (has('مهندسی پزشکی')) return ['electrical-engineering', 'مهندسی پزشکی'];
-  if (has('برق', 'الکترونیک')) return ['electrical-engineering', 'مهندسی برق'];
-  if (has('کامپیوتر')) return ['computer-engineering', 'مهندسی کامپیوتر'];
-  if (has('معماری')) return ['architecture', 'مهندسی معماری'];
-  if (has('عمران', 'نقشه برداری', 'شهرسازی')) return ['civil-engineering', 'مهندسی عمران'];
-  if (has('صنایع')) return ['industrial-engineering', 'مهندسی صنایع'];
-  if (has('شیمی')) return ['chemical-engineering', 'مهندسی شیمی'];
-  if (has('مکانیک', 'مکاترونیک')) return ['mechanical-engineering', 'مهندسی مکانیک'];
-  if (has('حقوق', 'علوم قضایی')) return ['law', 'حقوق'];
-  if (has('حسابداری', 'حسابرسی')) return ['accounting', 'حسابداری'];
-  if (has('ورزش', 'تربیت بدنی')) return ['sport-sciences', 'علوم ورزشی'];
-  if (has('مدیریت')) return ['management', 'مدیریت'];
-  if (has('روانشناسی')) return ['psychology', 'روان‌شناسی'];
-  if (has('علوم تربیتی')) return ['educational-sciences', 'علوم تربیتی'];
-  return null;
-}
+// رشته → انجمن: همان قواعد پنل مدیریت (src/lib/majorMap.ts)
+const associationFor = (major) => { const r = associationForMajor(major); return r ? [r.slug, r.major] : null; };
 
 // ── main ─────────────────────────────────────────────────────────────────
 const table = /\.csv$|\.txt$/i.test(file) ? readCsv(file) : readXlsx(file);

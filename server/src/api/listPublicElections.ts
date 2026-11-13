@@ -40,7 +40,7 @@ export default createEndpoint({
       zite.sql({ query: `SELECT c.id, c."fullName", c.statement, c."photoUrl", l."electionsId" AS eid FROM "Candidates" c JOIN "CandidatesElections" l ON l."candidatesId" = c.id WHERE c.status = 'Approved' AND l."electionsId" = ANY($1) ORDER BY c."fullName"`, params: [ids] }),
       // Ballots are read only for elections whose results are public — never before
       zite.sql({ query: `SELECT l."electionsId" AS eid, b."candidateIds" AS ids FROM "Ballots" b JOIN "BallotsElections" l ON l."ballotsId" = b.id JOIN "Elections" e ON e.id = l."electionsId" WHERE e.status = ANY($1)`, params: [stages] }),
-      zite.sql({ query: `SELECT e.id, (SELECT COUNT(*) FROM "ElectionsVoterParticipation" p WHERE p."electionsId" = e.id)::int AS turnout, (SELECT COUNT(*) FROM "ElectionsEligibleVoters" v WHERE v."electionsId" = e.id)::int AS eligible FROM "Elections" e WHERE e.status = ANY($1)`, params: [stages] }),
+      zite.sql({ query: `SELECT e.id, (SELECT COUNT(*) FROM "ElectionsVoterParticipation" p WHERE p."electionsId" = e.id)::int AS turnout, (SELECT COUNT(*) FROM "EligibleVoters" v WHERE v."electionId" = e.id AND (v."choiceGroup" IS NULL OR EXISTS (SELECT 1 FROM "VoterParticipation" p WHERE p."voterId" = v.id)))::int AS eligible FROM "Elections" e WHERE e.status = ANY($1)`, params: [stages] }),
     ]);
     const tally = new Map<string, number>();
     const blankByElection = new Map<string, number>();
