@@ -29,6 +29,9 @@ const expectFail=async(n,s)=>{try{await db.exec(s);console.log('FAIL (accepted):
     if (expect[e.slug] !== e.n) { bad++; console.log('FAIL 0017 candidates', e.slug, e.n, 'expected', expect[e.slug]); }
   }
   const total = E.reduce((s, e) => s + e.n, 0);
+  const both = (await q(`SELECT count(*)::int n FROM "Candidates" WHERE status = 'Approved' AND "fullName" IN ('فاطمه کرد','ملینا نجاریان','سیده ماهان طباطبایی')`)).rows[0].n;
+  const plainMahan = (await q(`SELECT count(*)::int n FROM "Candidates" WHERE status = 'Approved' AND "fullName" = 'ماهان طباطبایی'`)).rows[0].n;
+  if (both !== 3 || plainMahan !== 0) { bad++; console.log('FAIL 0018', both, plainMahan); } else console.log('pass: 0018 — سیده ماهان طباطبایی، فاطمه کرد و ملینا نجاریان هر سه نامزد تأییدشده');
   const names = (await q(`SELECT "fullName" FROM "Candidates" WHERE status = 'Approved' AND "fullName" IN ('سبا عزیزپور','نگین درزی','صبا عزیزپور','نگین رزی')`)).rows.map((r) => r.fullName).sort();
   if (names.join() !== ['سبا عزیزپور', 'نگین درزی'].sort().join()) { bad++; console.log('FAIL 0017 typo names', names); }
   const map = (await q(`SELECT a.slug FROM "AssociationMajors" am JOIN "AssociationYears" ay ON ay.id = am."associationYearId" JOIN "Associations" a ON a.id = ay."associationId" JOIN "AcademicYears" y ON y.id = ay."academicYearId" AND y.title = '1405-1406' JOIN "Majors" m ON m.id = am."majorId" AND m.name = 'مهندسی نقشه‌برداری'`)).rows.map((r) => r.slug);
@@ -38,10 +41,11 @@ const expectFail=async(n,s)=>{try{await db.exec(s);console.log('FAIL (accepted):
   // اجرای دوباره بی‌اثر است
   const before = (await q(`SELECT count(*)::int n FROM "Candidates"`)).rows[0].n;
   await db.transaction(async (tx) => { for (const st of splitSql(fs.readFileSync(new URL('0017_elections_1405_reschedule.sql', dir), 'utf8'))) await tx.exec(st); });
+  await db.transaction(async (tx) => { for (const st of splitSql(fs.readFileSync(new URL('0018_candidates_final_fixes.sql', dir), 'utf8'))) await tx.exec(st); });
   const after = (await q(`SELECT count(*)::int n FROM "Candidates"`)).rows[0].n;
   if (before !== after) { bad++; console.log('FAIL 0017 not idempotent', before, after); }
   // نام‌های تأییدشده دقیقاً همان فهرست نهایی‌اند
-  const fin = [...fs.readFileSync(new URL('0017_elections_1405_reschedule.sql', dir), 'utf8').matchAll(/^  \('([a-z-]+)', '([^']+)', (?:'\d+'|NULL)\)/gm)].map((m) => `${m[1]}|${m[2]}`.replace(/[\s\u200c]/g, '')).sort();
+  const fin = [...fs.readFileSync(new URL('0017_elections_1405_reschedule.sql', dir), 'utf8').matchAll(/^  \('([a-z-]+)', '([^']+)', (?:'\d+'|NULL)\)/gm)].map((m) => `${m[1]}|${m[2] === 'ماهان طباطبایی' ? 'سیده ماهان طباطبایی' : m[2]}`.replace(/[\s\u200c]/g, '')).sort();
   const got = (await q(`SELECT a.slug || '|' || c."fullName" k FROM "Candidates" c JOIN "Elections" e ON e.id = c."electionId" JOIN "AssociationYears" ay ON ay.id = e."associationYearId" JOIN "Associations" a ON a.id = ay."associationId" WHERE c.status = 'Approved' AND e."isDemo" = false`)).rows.map((r) => r.k.replace(/[\s\u200c]/g, '')).sort();
   if (fin.length !== 122 || JSON.stringify(fin) !== JSON.stringify(got)) { bad++; console.log('FAIL 0017 names', fin.filter((x) => !got.includes(x)), got.filter((x) => !fin.includes(x))); }
   const wd = (await q(`SELECT "fullName" FROM "Candidates" WHERE status = 'Withdrawn'`)).rows.map((r) => r.fullName);
