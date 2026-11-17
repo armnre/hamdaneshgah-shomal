@@ -14,6 +14,13 @@ for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.sql')).sort()) {
 const q=(s)=>db.query(s);
 const expectFail=async(n,s)=>{try{await db.exec(s);console.log('FAIL (accepted):',n);process.exitCode=1}catch(e){console.log('pass (rejected):',n)}};
 { const c=await db.query(`SELECT (SELECT count(*) FROM "Candidates")::int n, (SELECT count(*) FROM "Candidates" WHERE "reviewNote" LIKE 'نیاز به بررسی%')::int r, (SELECT count(*) FROM "AssociationMajors")::int am`); console.log('0011:', JSON.stringify(c.rows[0])); }
+// 0019: انتخابات منتشرشده‌ی بدون رأی به فهرست نهایی و ۱ آذر برمی‌گردد
+{ const id = (await q(`SELECT id FROM "Elections" WHERE title = 'انتخابات انجمن علمی مهندسی کامپیوتر — ۱۴۰۵-۱۴۰۶'`)).rows[0].id;
+  await q(`UPDATE "Elections" SET status = 'Results Published', "votingStart" = '2026-11-14T08:00:00+03:30', "votingEnd" = '2026-11-14T22:00:00+03:30' WHERE id = '${id}'`);
+  await db.transaction(async (tx) => { for (const st of splitSql(fs.readFileSync(new URL('0019_reset_computer_election.sql', dir), 'utf8'))) await tx.exec(st); });
+  const r = (await q(`SELECT status, "votingStart" FROM "Elections" WHERE id = '${id}'`)).rows[0];
+  const ok = r.status === 'Final List' && new Date(r.votingStart).toISOString() === '2026-11-22T04:30:00.000Z';
+  console.log(ok ? 'pass: 0019 — انتخابات کامپیوتر از «نتایج منتشرشده» به «فهرست نهایی» و ۱ آذر برگشت' : 'FAIL 0019 ' + JSON.stringify(r)); if (!ok) process.exitCode = 1; }
 // 0017: زمان جدید، انجمن نقشه‌برداری، فهرست نهایی ۱۲۲ نامزد در ۱۴ انجمن
 { const E = (await q(`SELECT e.id, e.title, e.status, e."votingStart", e."votingEnd", a.slug,
       (SELECT count(*) FROM "Candidates" c WHERE c."electionId" = e.id AND c.status = 'Approved')::int n
