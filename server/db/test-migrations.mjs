@@ -14,10 +14,45 @@ for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.sql')).sort()) {
 const q=(s)=>db.query(s);
 const expectFail=async(n,s)=>{try{await db.exec(s);console.log('FAIL (accepted):',n);process.exitCode=1}catch(e){console.log('pass (rejected):',n)}};
 { const c=await db.query(`SELECT (SELECT count(*) FROM "Candidates")::int n, (SELECT count(*) FROM "Candidates" WHERE "reviewNote" LIKE 'نیاز به بررسی%')::int r, (SELECT count(*) FROM "AssociationMajors")::int am`); console.log('0011:', JSON.stringify(c.rows[0])); }
+// 0017: زمان جدید، انجمن نقشه‌برداری، فهرست نهایی ۱۲۲ نامزد در ۱۴ انجمن
+{ const E = (await q(`SELECT e.id, e.title, e.status, e."votingStart", e."votingEnd", a.slug,
+      (SELECT count(*) FROM "Candidates" c WHERE c."electionId" = e.id AND c.status = 'Approved')::int n
+    FROM "Elections" e JOIN "AssociationYears" ay ON ay.id = e."associationYearId" JOIN "Associations" a ON a.id = ay."associationId"
+    WHERE e.title LIKE '%۱۴۰۵-۱۴۰۶' AND e."isDemo" = false ORDER BY a.slug`)).rows;
+  const expect = { 'electrical-engineering': 11, law: 9, 'civil-engineering': 8, 'computer-engineering': 6, 'sport-sciences': 6, architecture: 9, 'chemical-engineering': 9,
+    'mechanical-engineering': 6, management: 17, psychology: 14, 'industrial-engineering': 8, 'educational-sciences': 6, accounting: 8, 'surveying-engineering': 5 };
+  let bad = 0;
+  if (E.length !== 14) { bad++; console.log('FAIL 0017 elections', E.length); }
+  for (const e of E) {
+    if (new Date(e.votingStart).toISOString() !== '2026-11-22T04:30:00.000Z' || new Date(e.votingEnd).toISOString() !== '2026-11-22T18:30:00.000Z') { bad++; console.log('FAIL 0017 date', e.title, e.votingStart); }
+    if (e.status !== 'Final List') { bad++; console.log('FAIL 0017 status', e.title, e.status); }
+    if (expect[e.slug] !== e.n) { bad++; console.log('FAIL 0017 candidates', e.slug, e.n, 'expected', expect[e.slug]); }
+  }
+  const total = E.reduce((s, e) => s + e.n, 0);
+  const names = (await q(`SELECT "fullName" FROM "Candidates" WHERE status = 'Approved' AND "fullName" IN ('سبا عزیزپور','نگین درزی','صبا عزیزپور','نگین رزی')`)).rows.map((r) => r.fullName).sort();
+  if (names.join() !== ['سبا عزیزپور', 'نگین درزی'].sort().join()) { bad++; console.log('FAIL 0017 typo names', names); }
+  const map = (await q(`SELECT a.slug FROM "AssociationMajors" am JOIN "AssociationYears" ay ON ay.id = am."associationYearId" JOIN "Associations" a ON a.id = ay."associationId" JOIN "AcademicYears" y ON y.id = ay."academicYearId" AND y.title = '1405-1406' JOIN "Majors" m ON m.id = am."majorId" AND m.name = 'مهندسی نقشه‌برداری'`)).rows.map((r) => r.slug);
+  if (map.join() !== 'surveying-engineering') { bad++; console.log('FAIL 0017 mapping', map); }
+  const act = (await q(`SELECT count(*)::int n FROM "Associations" WHERE active`)).rows[0].n;
+  if (act !== 14) { bad++; console.log('FAIL 0017 active associations', act); }
+  // اجرای دوباره بی‌اثر است
+  const before = (await q(`SELECT count(*)::int n FROM "Candidates"`)).rows[0].n;
+  await db.transaction(async (tx) => { for (const st of splitSql(fs.readFileSync(new URL('0017_elections_1405_reschedule.sql', dir), 'utf8'))) await tx.exec(st); });
+  const after = (await q(`SELECT count(*)::int n FROM "Candidates"`)).rows[0].n;
+  if (before !== after) { bad++; console.log('FAIL 0017 not idempotent', before, after); }
+  // نام‌های تأییدشده دقیقاً همان فهرست نهایی‌اند
+  const fin = [...fs.readFileSync(new URL('0017_elections_1405_reschedule.sql', dir), 'utf8').matchAll(/^  \('([a-z-]+)', '([^']+)', (?:'\d+'|NULL)\)/gm)].map((m) => `${m[1]}|${m[2]}`.replace(/[\s\u200c]/g, '')).sort();
+  const got = (await q(`SELECT a.slug || '|' || c."fullName" k FROM "Candidates" c JOIN "Elections" e ON e.id = c."electionId" JOIN "AssociationYears" ay ON ay.id = e."associationYearId" JOIN "Associations" a ON a.id = ay."associationId" WHERE c.status = 'Approved' AND e."isDemo" = false`)).rows.map((r) => r.k.replace(/[\s\u200c]/g, '')).sort();
+  if (fin.length !== 122 || JSON.stringify(fin) !== JSON.stringify(got)) { bad++; console.log('FAIL 0017 names', fin.filter((x) => !got.includes(x)), got.filter((x) => !fin.includes(x))); }
+  const wd = (await q(`SELECT "fullName" FROM "Candidates" WHERE status = 'Withdrawn'`)).rows.map((r) => r.fullName);
+  console.log('0017 withdrawn (not in final list):', wd.join('، ') || '—');
+  if (bad || total !== 122) { console.log('FAIL 0017', bad, total); process.exitCode = 1; }
+  else console.log(`pass: 0017 — ۱۴ انتخابات، ${total} نامزد تأییدشده، همه یکشنبه ۱ آذر ۱۴۰۵ ساعت ۸ تا ۲۲ تهران، نقشه‌برداری مستقل، املای اصلاح‌شده، اجرای دوباره بی‌اثر`);
+  console.log('0017 per association:', E.map((e) => `${e.slug}=${e.n}`).join(' ')); }
 // 0008 ships real 1405-1406 election data; the fixtures below need empty tables.
 // 0015: همه‌ی رشته‌های رسمی ثبت شده‌اند، هر کدام دانشکده دارد و (جز محیط زیست) به انجمن درست نگاشت شده؛ اجرای دوباره چیزی اضافه نمی‌کند
 { const sql0015 = fs.readFileSync(new URL('0015_major_catalog.sql', dir), 'utf8');
-  const names = [...sql0015.matchAll(/^  \('([^']+)', '([a-z-]+)', (NULL|'([a-z-]+)')\)/gm)].map((m) => ({ name: m[1], slug: m[4] ?? null }));
+  const names = [...sql0015.matchAll(/^  \('([^']+)', '([a-z-]+)', (NULL|'([a-z-]+)')\)/gm)].map((m) => ({ name: m[1], slug: m[1] === 'مهندسی نقشه‌برداری' ? 'surveying-engineering' : m[4] ?? null })); // 0017: نقشه‌برداری انجمن مستقل
   const strip = (s) => s.replace(/[\s\u200c]/g, '');
   const cnt = async () => (await q(`SELECT (SELECT count(*) FROM "Majors")::int m, (SELECT count(*) FROM "AssociationMajors")::int am`)).rows[0];
   const before = await cnt();
@@ -30,7 +65,8 @@ const expectFail=async(n,s)=>{try{await db.exec(s);console.log('FAIL (accepted):
     if (n.slug ? (s.length !== 1 || s[0] !== n.slug) : s.length !== 0) { bad++; console.log('FAIL mapping', n.name, s, n.slug); }
   }
   const { splitSql: sp } = await import(new URL('./splitSql.mjs', import.meta.url));
-  await db.transaction(async (tx) => { for (const st of sp(sql0015)) await tx.exec(st); });
+  // پس از 0017 نقشه‌برداری انجمن مستقل دارد؛ اجرای دوباره‌ی 0015 با همان حقیقت فعلی
+  await db.transaction(async (tx) => { for (const st of sp(sql0015.replace("('مهندسی نقشه‌برداری', 'engineering', 'civil-engineering')", "('مهندسی نقشه‌برداری', 'engineering', 'surveying-engineering')"))) await tx.exec(st); });
   const after = await cnt();
   if (bad || names.length < 40 || before.m !== after.m || before.am !== after.am) { console.log('FAIL 0015', bad, names.length, before, after); process.exitCode = 1; }
   else console.log(`pass: 0015 — ${names.length} رشته‌ی رسمی، هر کدام یک‌بار، با دانشکده و نگاشت درست؛ اجرای دوباره بی‌اثر`); }
@@ -193,7 +229,7 @@ console.log(late === 'invalid_session' ? 'pass: vote after close_election reject
 console.log(process.exitCode ? 'MIGRATION TESTS FAILED' : 'ALL MIGRATION TESTS PASSED');
 try { await db.exec(`UPDATE "Elections" SET "isDemo" = true WHERE id = 'e4'`); console.log('FAIL: demo row accepted on Neon'); process.exitCode = 1; } catch { console.log('pass (rejected): demo data on Neon (0007)'); }
 { const r = (await q(`SELECT count(*)::int n FROM "Associations" WHERE active`)).rows[0].n;
-  console.log(r <= 13 ? `pass: 0016 — ${r} انجمن فعال (حداکثر ۱۳)` : `FAIL 0016: ${r}`); if (r > 13) process.exitCode = 1; }
+  console.log(r <= 14 ? `pass: 0016/0017 — ${r} انجمن فعال (حداکثر ۱۴)` : `FAIL 0016: ${r}`); if (r > 14) process.exitCode = 1; }
 
 // ───────── گزارش رسمی نتایج روی پایگاه داده‌ی واقعی (همان پرس‌وجوهای reportData.ts) ─────────
 { const src = fs.readFileSync(new URL('../src/lib/reportData.ts', import.meta.url), 'utf8');

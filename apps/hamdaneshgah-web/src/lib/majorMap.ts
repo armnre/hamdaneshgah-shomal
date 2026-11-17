@@ -14,7 +14,8 @@ export const ASSOCIATION_RULES: AssociationRule[] = [
   { slug: 'electrical-engineering', association: 'مهندسی برق و مهندسی پزشکی', major: 'مهندسی برق', match: ['برق', 'الکترونیک'] },
   { slug: 'computer-engineering', association: 'مهندسی کامپیوتر', major: 'مهندسی کامپیوتر', match: ['کامپیوتر'] },
   { slug: 'architecture', association: 'مهندسی معماری', major: 'مهندسی معماری', match: ['معماری'] },
-  { slug: 'civil-engineering', association: 'مهندسی عمران', major: 'مهندسی عمران', match: ['عمران', 'نقشه برداری', 'شهرسازی'] },
+  { slug: 'civil-engineering', association: 'مهندسی عمران', major: 'مهندسی عمران', match: ['عمران', 'شهرسازی'] },
+  { slug: 'surveying-engineering', association: 'مهندسی نقشه‌برداری', major: 'مهندسی نقشه‌برداری', match: ['نقشه برداری'] },
   { slug: 'chemical-engineering', association: 'مهندسی شیمی', major: 'مهندسی شیمی', match: ['شیمی'] },
   { slug: 'industrial-engineering', association: 'مهندسی صنایع', major: 'مهندسی صنایع', match: ['صنایع'] },
   { slug: 'mechanical-engineering', association: 'مهندسی مکانیک', major: 'مهندسی مکانیک', match: ['مکانیک', 'مکاترونیک'] },
@@ -51,7 +52,7 @@ export const FACULTIES: Record<FacultySlug, string> = {
 export const ASSOCIATION_FACULTY: Record<string, FacultySlug> = {
   'electrical-engineering': 'engineering', 'computer-engineering': 'engineering', architecture: 'engineering',
   'civil-engineering': 'engineering', 'chemical-engineering': 'engineering', 'industrial-engineering': 'engineering',
-  'mechanical-engineering': 'engineering',
+  'mechanical-engineering': 'engineering', 'surveying-engineering': 'engineering',
   law: 'humanities', accounting: 'humanities', management: 'humanities', psychology: 'humanities', 'educational-sciences': 'humanities',
   'sport-sciences': 'sport-sciences',
 };

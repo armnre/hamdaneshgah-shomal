@@ -16,7 +16,7 @@ const UNIVERSITY_MAJORS: Record<string, string> = {
   'علوم قضايي': 'law', 'آسيب شناسي ورزشي و تمرينات اصلاحي- تمرينات اصلاحي': 'sport-sciences', 'مهندسي شيمي': 'chemical-engineering',
   'حقوق خصوصي': 'law', 'تربيت بدني': 'sport-sciences', 'حقوق كيفري و جرم شناسي': 'law', 'علوم تربيتي': 'educational-sciences',
   'مهندسي صنايع وسيستمها': 'industrial-engineering', 'مهندسي برق': 'electrical-engineering', 'فيزيولوژي ورزشي -  فيزيولوژي ورزشي كاربردي': 'sport-sciences',
-  'علوم ورزشي': 'sport-sciences', 'مهندسي نقشه برداري': 'civil-engineering', 'مهندسي مكانيك': 'mechanical-engineering', 'مهندسي صنايع': 'industrial-engineering',
+  'علوم ورزشي': 'sport-sciences', 'مهندسي نقشه برداري': 'surveying-engineering', 'مهندسي مكانيك': 'mechanical-engineering', 'مهندسي صنايع': 'industrial-engineering',
   'مهندسي و علم كامپيوتر - هوش مصنوعي': 'computer-engineering', 'فيزيولوژي ورزشي-فيزيولوژي ورزشي و تندرستي': 'sport-sciences',
   'مديريت دولتي-توسعه منابع انساني': 'management', 'مديريت ورزشي-مديريت سازمان ها و باشگاه هاي ورزشي': 'sport-sciences',
   'مهندسي پزشكي-بيوالكتريك': 'electrical-engineering', 'حسابرسي': 'accounting', 'مهندسي حرفه اي كامپيوتر-نرم افزار': 'computer-engineering',
@@ -61,9 +61,13 @@ test('نسخه‌ی سایت majorMap دقیقاً همان قواعد سرور 
 
 test('همه‌ی رشته‌های سیستمی و انجمن‌ها در مایگریشن ۰۰۱۳ نگاشت شده‌اند', () => {
   const mig = read('../db/migrations/0013_major_mapping_complete.sql');
-  for (const { slug, major } of SYSTEM_MAJORS) assert.ok(mig.includes(`('${slug}', '${major}')`), `${slug} ← ${major}`);
+  const m17 = read('../db/migrations/0017_elections_1405_reschedule.sql');
+  for (const { slug, major } of SYSTEM_MAJORS) {
+    if (slug === 'surveying-engineering') { assert.match(m17, /'انجمن علمی مهندسی نقشه‌برداری ← مهندسی نقشه‌برداری'/); continue; } // 0017
+    assert.ok(mig.includes(`('${slug}', '${major}')`), `${slug} ← ${major}`);
+  }
   assert.match(mig, /ON CONFLICT \("associationYearId", "majorId"\) DO NOTHING/);
-  assert.equal(new Set(ASSOCIATION_RULES.map((r) => r.slug)).size, 13);
+  assert.equal(new Set(ASSOCIATION_RULES.map((r) => r.slug)).size, 14);
 });
 
 test('اسکریپت CLI، ورود دستی و ورود کل فهرست همه از majorMap مشترک استفاده می‌کنند', () => {
@@ -118,10 +122,15 @@ test('هش کد ملی برای هر انتخابات جداست و مقایسه
 });
 
 test('ساعت انتخابات: باز شدن در شروع و بسته شدن در پایان', () => {
-  const s = '2026-11-14T08:00:00+03:30', e = '2026-11-14T22:00:00+03:30';
-  assert.equal(clockTarget('Final List', s, e, new Date('2026-11-14T07:59:00+03:30')), null);
-  assert.equal(clockTarget('Final List', s, e, new Date('2026-11-14T08:00:00+03:30')), 'Voting Open');
-  assert.equal(clockTarget('Voting Open', s, e, new Date('2026-11-14T22:00:01+03:30')), 'Closed');
+  // زمان جدید: یکشنبه ۱ آذر ۱۴۰۵ ساعت ۸ تا ۲۲ تهران
+  const s = '2026-11-22T08:00:00+03:30', e = '2026-11-22T22:00:00+03:30';
+  const fa = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('fa-IR-u-ca-persian', { timeZone: 'Asia/Tehran', ...o }).format(new Date(s));
+  assert.equal(fa({ weekday: 'long' }), 'یکشنبه'); assert.equal(fa({ day: 'numeric' }), '۱'); assert.equal(fa({ month: 'long' }), 'آذر'); assert.match(fa({ year: 'numeric' }), /۱۴۰۵/);
+  assert.equal(new Date(e).getTime() - new Date(s).getTime(), 14 * 3600_000);
+  assert.equal(clockTarget('Final List', s, e, new Date('2026-11-18T12:00:00+03:30')), null);
+  assert.equal(clockTarget('Final List', s, e, new Date('2026-11-22T07:59:00+03:30')), null);
+  assert.equal(clockTarget('Final List', s, e, new Date('2026-11-22T08:00:00+03:30')), 'Voting Open');
+  assert.equal(clockTarget('Voting Open', s, e, new Date('2026-11-22T22:00:01+03:30')), 'Closed');
 });
 
 test('چرخه‌ی وضعیت: بازگشت پس از شروع رأی‌گیری ممنوع، فهرست‌ها پس از بررسی قفل', () => {
@@ -138,7 +147,7 @@ import { placeVoter, facultyAssociations, facultyFromName, choiceGroupKey, ASSOC
 const OFFICIAL: Record<string, string> = {
   'مهندسی عمران (حمل‌ونقل)': 'civil-engineering', 'مهندسی و علم کامپیوتر': 'computer-engineering', 'مهندسی مکاترونیک': 'mechanical-engineering',
   'معماری داخلی': 'architecture', 'مهندسی شهرسازی': 'civil-engineering', 'مهندسی صنایع و سیستم‌ها': 'industrial-engineering',
-  'مهندسی نقشه‌برداری': 'civil-engineering', 'عمران': 'civil-engineering', 'الکترونیک کاربردی': 'electrical-engineering', 'برق قدرت': 'electrical-engineering',
+  'مهندسی نقشه‌برداری': 'surveying-engineering', 'عمران': 'civil-engineering', 'الکترونیک کاربردی': 'electrical-engineering', 'برق قدرت': 'electrical-engineering',
   'کامپیوتر نرم‌افزار': 'computer-engineering', 'معماری': 'architecture', 'مهندسی پزشکی': 'electrical-engineering', 'مهندسی برق': 'electrical-engineering',
   'حسابرسی': 'accounting', 'حسابداری قضایی': 'accounting', 'حقوق بین‌الملل': 'law', 'حقوق کیفری و جرم‌شناسی': 'law', 'علوم قضایی': 'law',
   'مدیریت دولتی': 'management', 'مدیریت صنعتی': 'management', 'مدیریت کسب‌وکار': 'management', 'مدیریت بازرگانی': 'management', 'مدیریت مالی': 'management',
@@ -164,7 +173,7 @@ test('محیط زیست انجمن ندارد → انتخاب یکی از ۷ ا
   assert.equal(p?.kind, 'faculty');
   if (p?.kind !== 'faculty') return;
   assert.equal(p.faculty, 'engineering');
-  assert.deepEqual(p.associations.map((a) => a.slug).sort(), ['architecture', 'chemical-engineering', 'civil-engineering', 'computer-engineering', 'electrical-engineering', 'industrial-engineering', 'mechanical-engineering']);
+  assert.deepEqual(p.associations.map((a) => a.slug).sort(), ['architecture', 'chemical-engineering', 'civil-engineering', 'computer-engineering', 'electrical-engineering', 'industrial-engineering', 'mechanical-engineering', 'surveying-engineering']);
   assert.equal(placeVoter('مهندسي محيط زيست')?.kind, 'faculty');
 });
 
@@ -204,7 +213,9 @@ test('فهرست رسمی رشته‌ها: دانشکده‌ی هر رشته ب�
     const slug = p!.kind === 'association' ? p!.rule.slug : null;
     if (p!.kind === 'association') assert.equal(ASSOCIATION_FACULTY[p!.rule.slug], c.faculty, c.name);
     else assert.equal(p!.faculty, c.faculty, c.name);
-    assert.deepEqual(rows[i], [c.name, c.faculty, slug], c.name);
+    // 0017 نقشه‌برداری را از عمران به انجمن مستقل خودش منتقل کرد
+    const after0017 = rows[i][2] === 'civil-engineering' && c.name === 'مهندسی نقشه‌برداری' ? 'surveying-engineering' : rows[i][2];
+    assert.deepEqual([rows[i][0], rows[i][1], after0017], [c.name, c.faculty, slug], c.name);
   });
   assert.equal(new Set(MAJOR_CATALOG.map((c) => c.name)).size, MAJOR_CATALOG.length);
   assert.equal(MAJOR_CATALOG.filter((c) => placeVoter(c.name)?.kind === 'faculty').map((c) => c.name).join(), 'علوم و مهندسی محیط زیست');
@@ -221,7 +232,7 @@ test('چارت رسمی رشته‌ها: همه‌ی رشته‌ها جای رأ
     'مهندسی و علم کامپیوتر': 'computer-engineering', 'مهندسی برق': 'electrical-engineering', 'مهندسی پزشکی': 'electrical-engineering',
     'مهندسی مکاترونیک': 'mechanical-engineering', 'مهندسی شیمی': 'chemical-engineering', 'مهندسی صنایع': 'industrial-engineering',
     'معماری داخلی': 'architecture', 'مهندسی شهرسازی': 'civil-engineering', 'مهندسی کامپیوتر': 'computer-engineering',
-    'مهندسی صنایع و سیستم‌ها': 'industrial-engineering', 'مهندسی مکانیک': 'mechanical-engineering', 'مهندسی نقشه‌برداری': 'civil-engineering',
+    'مهندسی صنایع و سیستم‌ها': 'industrial-engineering', 'مهندسی مکانیک': 'mechanical-engineering', 'مهندسی نقشه‌برداری': 'surveying-engineering',
     'عمران': 'civil-engineering', 'الکترونیک کاربردی': 'electrical-engineering', 'برق قدرت': 'electrical-engineering',
     'کامپیوتر نرم‌افزار': 'computer-engineering', 'معماری': 'architecture',
     'حسابداری': 'accounting', 'حسابرسی': 'accounting', 'حسابداری قضایی': 'accounting', 'حقوق بین‌الملل': 'law', 'حقوق خصوصی': 'law',
@@ -249,13 +260,15 @@ test('انجمن مشترک برق و مهندسی پزشکی: هر دو رشت�
   assert.deepEqual(sys, ['مهندسی برق', 'مهندسی پزشکی']);
 });
 
-test('فقط ۱۳ انجمن رسمی فعال‌اند: مایگریشن 0016 با ASSOCIATION_FACULTY هم‌خوان است', () => {
+test('فقط ۱۴ انجمن رسمی فعال‌اند: مایگریشن 0016 با ASSOCIATION_FACULTY هم‌خوان است', () => {
   const sql = read('../db/migrations/0016_official_associations_only.sql');
   const lists = [...sql.matchAll(/IN \(([^)]*)\)/g)].map((m) => [...m[1].matchAll(/'([a-z-]+)'/g)].map((x) => x[1]).sort());
   const official = Object.keys(ASSOCIATION_FACULTY).sort();
-  assert.equal(official.length, 13);
+  assert.equal(official.length, 14);
   assert.equal(lists.length, 2);
-  for (const l of lists) assert.deepEqual(l, official);
+  // 0016 سیزده انجمن را فعال کرد؛ 0017 انجمن نقشه‌برداری را اضافه و فعال می‌کند
+  for (const l of lists) assert.deepEqual([...l, 'surveying-engineering'].sort(), official);
+  assert.match(read('../db/migrations/0017_elections_1405_reschedule.sql'), /UPDATE "Associations" SET "active" = true WHERE "slug" = 'surveying-engineering'/);
 });
 
 test('فهرست انجمن‌ها: هر انجمن یک‌بار (رشته‌ها با زیرپرس‌وجو، نه JOIN که ردیف تکراری می‌سازد)', () => {
